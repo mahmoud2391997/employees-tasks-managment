@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 
+import { Button } from '@/components/ui/button'
+import { Modal } from '@/components/ui/modal'
+
 type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
 type Department = { id: string; name: string; icon: string | null; managerId: string | null; manager?: Profile | null }
 
@@ -20,6 +23,11 @@ export function DepartmentsContainer({
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
 
+  const [editing, setEditing] = useState<Department | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editManagerId, setEditManagerId] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<Department | null>(null)
+
   const canCreate = permissions.includes('departments.create')
   const canEdit = permissions.includes('departments.edit')
   const canDelete = permissions.includes('departments.delete')
@@ -32,8 +40,91 @@ export function DepartmentsContainer({
 
   return (
     <div className="space-y-4">
+      <Modal
+        open={Boolean(editing)}
+        title="Edit department"
+        description="Update department name and manager."
+        onClose={() => setEditing(null)}
+      >
+        <form
+          className="grid gap-3 md:grid-cols-2"
+          onSubmit={async (e) => {
+            e.preventDefault()
+            if (!editing) return
+            const res = await fetch(`/api/departments/${editing.id}`, {
+              method: 'PATCH',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ name: editName.trim() || undefined, managerId: editManagerId || null }),
+            })
+            const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
+            if (!res.ok || !json?.success) {
+              setError(json?.message || 'تعذر الحفظ')
+              return
+            }
+            setEditing(null)
+            await refresh()
+          }}
+        >
+          <label className="block text-sm font-medium md:col-span-2">
+            Name
+            <input
+              className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            Manager
+            <select
+              className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
+              value={editManagerId}
+              onChange={(e) => setEditManagerId(e.target.value)}
+            >
+              <option value="">—</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-end justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={Boolean(confirmDelete)}
+        title="Delete department"
+        description="This will permanently delete the department."
+        onClose={() => setConfirmDelete(null)}
+      >
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="secondary" type="button" onClick={() => setConfirmDelete(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            type="button"
+            onClick={async () => {
+              if (!confirmDelete) return
+              await fetch(`/api/departments/${confirmDelete.id}`, { method: 'DELETE' })
+              setConfirmDelete(null)
+              await refresh()
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      </Modal>
+
       {canCreate ? (
-        <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="text-sm font-semibold">New department</div>
           <form
             className="mt-3 grid gap-3 md:grid-cols-3"
@@ -59,11 +150,11 @@ export function DepartmentsContainer({
           >
             <label className="block text-sm font-medium">
               Name
-              <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} required />
+              <input className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
               Manager
-              <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+              <select className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
                 <option value="">—</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -73,16 +164,16 @@ export function DepartmentsContainer({
               </select>
             </label>
             <div className="flex items-end">
-              <button className="h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
+              <Button className="w-full" disabled={pending} type="submit">
                 {pending ? '...' : 'Create'}
-              </button>
+              </Button>
             </div>
             {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
           </form>
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-right text-sm">
           <thead className="bg-[#f6f8fa] text-[#656d76]">
             <tr>
@@ -99,30 +190,24 @@ export function DepartmentsContainer({
                 <td className="px-3 py-2">
                   <div className="flex gap-2">
                     {canEdit ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold"
+                      <Button
+                        size="sm"
+                        variant="secondary"
                         type="button"
-                        onClick={async () => {
-                          const next = prompt('Department name', d.name)
-                          if (!next) return
-                          await fetch(`/api/departments/${d.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: next }) })
-                          await refresh()
+                        onClick={() => {
+                          setError('')
+                          setEditing(d)
+                          setEditName(d.name)
+                          setEditManagerId(d.managerId ?? '')
                         }}
                       >
-                        Rename
-                      </button>
+                        Edit
+                      </Button>
                     ) : null}
                     {canDelete ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#ffebe9] px-2 py-1 text-xs font-semibold text-[#cf222e]"
-                        type="button"
-                        onClick={async () => {
-                          await fetch(`/api/departments/${d.id}`, { method: 'DELETE' })
-                          await refresh()
-                        }}
-                      >
+                      <Button size="sm" variant="danger" type="button" onClick={() => setConfirmDelete(d)}>
                         Delete
-                      </button>
+                      </Button>
                     ) : null}
                   </div>
                 </td>

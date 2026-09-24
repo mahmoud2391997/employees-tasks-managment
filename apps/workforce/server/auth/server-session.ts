@@ -2,23 +2,10 @@ import { cookies } from 'next/headers'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
 const COOKIE_NAME = 'wf_auth'
-
-const DEMO_SESSION: ServerSession = {
-  userId: 'demo-user',
-  email: 'demo@example.com',
-  profile: {
-    id: 'demo-profile',
-    email: 'demo@example.com',
-    firstName: 'Demo',
-    lastName: 'User',
-    role: 'ADMIN',
-    teamId: null,
-  },
-  permissions: [...DEFAULT_ROLES.ADMIN.permissions],
-}
 
 export type ServerSession = {
   userId: string
@@ -47,7 +34,7 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
 }
 
 export async function getServerSession(): Promise<ServerSession | null> {
-  if (process.env.WORKFORCE_DEMO_MODE !== 'false') return DEMO_SESSION
+  if (isDemoModeEnabled()) return await getOrCreateDemoSession()
 
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value

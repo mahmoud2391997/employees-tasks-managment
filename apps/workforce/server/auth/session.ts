@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { getAccessTokenFromRequest, verifyAccessToken } from '@/server/auth/jwt'
 
 export type SessionUser = {
@@ -31,6 +32,11 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
 }
 
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
+  if (isDemoModeEnabled()) {
+    const demo = await getOrCreateDemoSession()
+    return { id: demo.userId, email: demo.email, profile: demo.profile, permissions: demo.permissions }
+  }
+
   const token = getAccessTokenFromRequest(req)
   if (!token) return null
   const payload = await verifyAccessToken(token)

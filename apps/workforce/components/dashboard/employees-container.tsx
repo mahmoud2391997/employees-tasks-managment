@@ -1,6 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 
 type Department = { id: string; name: string }
 type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
@@ -31,6 +34,8 @@ export function EmployeesContainer({
 }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
@@ -50,6 +55,10 @@ export function EmployeesContainer({
       return name.includes(query) || email.includes(query) || position.includes(query) || dept.includes(query)
     })
   }, [employees, q])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   async function refresh() {
     const res = await fetch('/api/employees', { cache: 'no-store' })
@@ -87,7 +96,10 @@ export function EmployeesContainer({
           className="h-10 w-full max-w-sm rounded-md border border-[#d0d7de] px-3 text-sm"
           placeholder="Search employees..."
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setPage(1)
+          }}
         />
         {canCreate ? (
           <button
@@ -115,7 +127,7 @@ export function EmployeesContainer({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((e) => (
+            {pageRows.map((e) => (
               <tr key={e.id} className="border-t border-[#d0d7de]">
                 <td className="px-3 py-2">
                   <div className="font-semibold">
@@ -130,6 +142,12 @@ export function EmployeesContainer({
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex justify-end gap-2">
+                    <Link
+                      className="rounded-md border border-[#d0d7de] bg-white px-2 py-1 text-xs font-semibold hover:bg-[#f6f8fa]"
+                      href={`/employees/${e.id}`}
+                    >
+                      View
+                    </Link>
                     {canEdit ? (
                       <button
                         className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold"
@@ -165,6 +183,37 @@ export function EmployeesContainer({
           </tbody>
         </table>
       </div>
+
+      {filtered.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-3 text-sm shadow-sm">
+          <div className="text-[#656d76]">
+            Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>
+              First
+            </Button>
+            <Button variant="secondary" size="sm" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+              Prev
+            </Button>
+            <div className="min-w-20 text-center text-xs text-[#656d76]">
+              Page {currentPage} / {totalPages}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+            <Button variant="secondary" size="sm" type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
+              Last
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
