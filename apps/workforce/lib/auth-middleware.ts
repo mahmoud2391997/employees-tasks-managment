@@ -38,6 +38,9 @@ export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const pathname = request.nextUrl.pathname
 
+  // Demo mode keeps the preview accessible without requiring an account.
+  if (process.env.WORKFORCE_DEMO_MODE !== 'false') return NextResponse.next()
+
   const allowWithoutSession =
     pathname.startsWith('/auth/login') ||
     pathname.startsWith('/auth/sign-up') ||

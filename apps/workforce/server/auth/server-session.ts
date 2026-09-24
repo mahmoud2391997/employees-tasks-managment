@@ -6,6 +6,20 @@ import { verifyAccessToken } from '@/server/auth/jwt'
 
 const COOKIE_NAME = 'wf_auth'
 
+const DEMO_SESSION: ServerSession = {
+  userId: 'demo-user',
+  email: 'demo@example.com',
+  profile: {
+    id: 'demo-profile',
+    email: 'demo@example.com',
+    firstName: 'Demo',
+    lastName: 'User',
+    role: 'ADMIN',
+    teamId: null,
+  },
+  permissions: [...DEFAULT_ROLES.ADMIN.permissions],
+}
+
 export type ServerSession = {
   userId: string
   email: string
@@ -33,6 +47,8 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
 }
 
 export async function getServerSession(): Promise<ServerSession | null> {
+  if (process.env.WORKFORCE_DEMO_MODE !== 'false') return DEMO_SESSION
+
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) return null
