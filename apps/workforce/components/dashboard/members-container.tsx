@@ -80,8 +80,8 @@ export function MembersContainer({
 
       {inviteUrl ? (
         <div className="rounded-lg border border-[#0969da33] bg-[#ddf4ff] p-4 text-sm text-[#0969da] shadow-sm">
-          <div className="font-semibold">Invite link</div>
-          <div className="mt-1 break-all font-mono text-xs">{inviteUrl}</div>
+          <div className="font-semibold">رابط الدعوة</div>
+          <div className="ltr mt-1 break-all font-mono text-xs">{inviteUrl}</div>
         </div>
       ) : null}
 
@@ -89,10 +89,10 @@ export function MembersContainer({
         <table className="w-full text-right text-sm">
           <thead className="bg-[#f6f8fa] text-[#656d76]">
             <tr>
-              <th className="px-3 py-2 font-medium">Member</th>
-              <th className="px-3 py-2 font-medium">Role</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Actions</th>
+              <th className="px-3 py-2 font-medium">العضو</th>
+              <th className="px-3 py-2 font-medium">الدور</th>
+              <th className="px-3 py-2 font-medium">الحالة</th>
+              <th className="px-3 py-2 font-medium">إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +105,7 @@ export function MembersContainer({
                 <tr key={m.id} className="border-t border-[#d0d7de]">
                   <td className="px-3 py-2">
                     <div className="font-semibold">{display}</div>
-                    <div className="text-xs text-[#656d76]">{m.user.email}</div>
+                    <div className="ltr text-xs text-[#656d76]">{m.user.email}</div>
                   </td>
                   <td className="px-3 py-2">
                     {canAssign ? (
@@ -132,7 +132,7 @@ export function MembersContainer({
                       <span className="font-mono text-xs">{m.role}</span>
                     )}
                   </td>
-                  <td className="px-3 py-2">{m.isActive ? <Badge label="ACTIVE" kind="good" /> : <Badge label="INACTIVE" kind="neutral" />}</td>
+                  <td className="px-3 py-2">{m.isActive ? <Badge label="نشط" kind="good" /> : <Badge label="غير نشط" kind="neutral" />}</td>
                   <td className="px-3 py-2">
                     {canRemove ? (
                       <button
@@ -143,7 +143,7 @@ export function MembersContainer({
                           await refresh()
                         }}
                       >
-                        Remove
+                        إزالة
                       </button>
                     ) : null}
                   </td>
@@ -153,7 +153,7 @@ export function MembersContainer({
             {members.length === 0 ? (
               <tr>
                 <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={4}>
-                  No members
+                  لا يوجد أعضاء
                 </td>
               </tr>
             ) : null}
@@ -162,18 +162,18 @@ export function MembersContainer({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
-        <div className="border-b border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold text-[#656d76]">Pending invitations</div>
+        <div className="border-b border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold text-[#656d76]">الدعوات المعلقة</div>
         <div className="p-3">
-          {invitations.length === 0 ? <div className="text-sm text-[#656d76]">No pending invitations</div> : null}
+          {invitations.length === 0 ? <div className="text-sm text-[#656d76]">لا توجد دعوات معلقة</div> : null}
           <div className="space-y-2">
             {invitations.map((inv) => (
               <div key={inv.id} className="rounded-lg border border-[#d0d7de] bg-white p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <div className="font-semibold">{inv.email}</div>
+                    <div className="ltr font-semibold">{inv.email}</div>
                     <div className="text-xs text-[#656d76]">
-                      role: <span className="font-mono">{inv.role}</span>
-                      {inv.expiresAt ? ` · expires: ${inv.expiresAt.slice(0, 10)}` : ''}
+                      الدور: <span className="ltr font-mono">{inv.role}</span>
+                      {inv.expiresAt ? ` · ينتهي: ${inv.expiresAt.slice(0, 10)}` : ''}
                     </div>
                   </div>
                   <button
@@ -185,7 +185,7 @@ export function MembersContainer({
                       navigator.clipboard?.writeText(url).catch(() => {})
                     }}
                   >
-                    Copy invite link
+                    نسخ رابط الدعوة
                   </button>
                 </div>
               </div>
@@ -205,7 +205,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
 
   return (
     <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="text-lg font-semibold">Invite member</div>
+      <div className="text-lg font-semibold">دعوة عضو</div>
       <form
         className="mt-4 grid gap-3 md:grid-cols-3"
         onSubmit={async (e) => {
@@ -224,11 +224,11 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
         }}
       >
         <label className="block text-sm font-medium md:col-span-2">
-          Email
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          البريد الإلكتروني
+          <input className="ltr mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label className="block text-sm font-medium">
-          Role
+          الدور
           <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value)}>
             {roleOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -239,7 +239,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
         </label>
         {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <button className="md:col-span-3 h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
-          {pending ? '...' : 'Send invite'}
+          {pending ? '...' : 'إرسال الدعوة'}
         </button>
       </form>
     </div>

@@ -9,7 +9,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   if (!session?.permissions.includes('employees.view' as any)) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Employee</h1>
+        <h1 className="text-xl font-semibold">الموظف</h1>
         <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
       </main>
     )
@@ -19,7 +19,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   if (!teamId) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Employee</h1>
+        <h1 className="text-xl font-semibold">الموظف</h1>
         <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
       </main>
     )
@@ -47,23 +47,23 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold">{displayName}</h1>
-          <p className="mt-1 text-sm text-[#656d76]">{employee.profile.email}</p>
+          <p className="ltr mt-1 text-sm text-[#656d76]">{employee.profile.email}</p>
         </div>
         <Link className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold" href="/employees">
-          ← Back
+          رجوع →
         </Link>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <InfoCard label="Department" value={employee.department?.name ?? '—'} />
-        <InfoCard label="Position" value={employee.position ?? '—'} />
-        <InfoCard label="Status" value={employee.status} />
+        <InfoCard label="القسم" value={employee.department?.name ?? '—'} />
+        <InfoCard label="المسمى" value={employee.position ?? '—'} />
+        <InfoCard label="الحالة" value={employee.status} />
       </div>
 
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-sm font-semibold">Assigned tasks</div>
-          <div className="text-xs text-[#656d76]">{tasks.length} tasks</div>
+          <div className="text-sm font-semibold">المهام المسندة</div>
+          <div className="text-xs text-[#656d76]">{tasks.length} مهمة</div>
         </div>
         <div className="space-y-2">
           {tasks.map((t) => (
@@ -79,13 +79,13 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#656d76]">
-                {t.department?.name ? <span>Dept: {t.department.name}</span> : null}
-                {t.creator ? <span>· Created by: {(t.creator.firstName || t.creator.email) + (t.creator.lastName ? ` ${t.creator.lastName}` : '')}</span> : null}
-                {t.dueDate ? <span>· Due: {t.dueDate.toISOString().slice(0, 10)}</span> : null}
+                {t.department?.name ? <span>القسم: {t.department.name}</span> : null}
+                {t.creator ? <span>· أنشأها: {(t.creator.firstName || t.creator.email) + (t.creator.lastName ? ` ${t.creator.lastName}` : '')}</span> : null}
+                {t.dueDate ? <span>· الاستحقاق: <span className="ltr">{t.dueDate.toISOString().slice(0, 10)}</span></span> : null}
               </div>
             </div>
           ))}
-          {tasks.length === 0 ? <div className="rounded-lg border border-[#d0d7de] bg-[#f6f8fa] p-6 text-sm text-[#656d76]">No tasks assigned.</div> : null}
+          {tasks.length === 0 ? <div className="rounded-lg border border-[#d0d7de] bg-[#f6f8fa] p-6 text-sm text-[#656d76]">لا توجد مهام مسندة.</div> : null}
         </div>
       </div>
     </main>

@@ -7,7 +7,7 @@ export default async function EmployeesPage() {
   if (!session?.permissions.includes('employees.view' as any)) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Employees</h1>
+        <h1 className="text-xl font-semibold">الموظفون</h1>
         <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
       </main>
     )
@@ -17,7 +17,7 @@ export default async function EmployeesPage() {
   if (!teamId) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Employees</h1>
+        <h1 className="text-xl font-semibold">الموظفون</h1>
         <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
       </main>
     )
@@ -36,8 +36,8 @@ export default async function EmployeesPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Employees</h1>
-        <p className="mt-2 text-sm text-[#656d76]">Employees directory مع صلاحيات.</p>
+        <h1 className="text-xl font-semibold">الموظفون</h1>
+        <p className="mt-2 text-sm text-[#656d76]">سجل الموظفين داخل الفريق مع تطبيق الصلاحيات.</p>
       </div>
       <EmployeesContainer
         initialEmployees={employees as any}

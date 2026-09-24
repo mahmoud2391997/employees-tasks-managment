@@ -94,7 +94,7 @@ export function EmployeesContainer({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
         <input
           className="h-10 w-full max-w-sm rounded-md border border-[#d0d7de] px-3 text-sm"
-          placeholder="Search employees..."
+          placeholder="ابحث عن موظف..."
           value={q}
           onChange={(e) => {
             setQ(e.target.value)
@@ -110,7 +110,7 @@ export function EmployeesContainer({
               setShowForm(true)
             }}
           >
-            + Add Employee
+            + إضافة موظف
           </button>
         ) : null}
       </div>
@@ -119,11 +119,11 @@ export function EmployeesContainer({
         <table className="w-full text-right text-sm">
           <thead className="bg-[#f6f8fa] text-[#656d76]">
             <tr>
-              <th className="px-3 py-2 font-medium">Employee</th>
-              <th className="px-3 py-2 font-medium">Department</th>
-              <th className="px-3 py-2 font-medium">Position</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Actions</th>
+              <th className="px-3 py-2 font-medium">الموظف</th>
+              <th className="px-3 py-2 font-medium">القسم</th>
+              <th className="px-3 py-2 font-medium">المسمى</th>
+              <th className="px-3 py-2 font-medium">الحالة</th>
+              <th className="px-3 py-2 font-medium">إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -133,7 +133,7 @@ export function EmployeesContainer({
                   <div className="font-semibold">
                     {(e.profile.firstName || e.profile.email) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
                   </div>
-                  <div className="text-xs text-[#656d76]">{e.profile.email}</div>
+                  <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div>
                 </td>
                 <td className="px-3 py-2">{e.department?.name ?? '—'}</td>
                 <td className="px-3 py-2">{e.position ?? '—'}</td>
@@ -146,7 +146,7 @@ export function EmployeesContainer({
                       className="rounded-md border border-[#d0d7de] bg-white px-2 py-1 text-xs font-semibold hover:bg-[#f6f8fa]"
                       href={`/employees/${e.id}`}
                     >
-                      View
+                      عرض
                     </Link>
                     {canEdit ? (
                       <button
@@ -157,7 +157,7 @@ export function EmployeesContainer({
                           setShowForm(true)
                         }}
                       >
-                        Edit
+                        تعديل
                       </button>
                     ) : null}
                     {canDelete ? (
@@ -166,7 +166,7 @@ export function EmployeesContainer({
                         type="button"
                         onClick={() => deleteEmployee(e.id)}
                       >
-                        Delete
+                        حذف
                       </button>
                     ) : null}
                   </div>
@@ -176,7 +176,7 @@ export function EmployeesContainer({
             {filtered.length === 0 ? (
               <tr>
                 <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={5}>
-                  No employees
+                  لا يوجد موظفون
                 </td>
               </tr>
             ) : null}
@@ -187,17 +187,17 @@ export function EmployeesContainer({
       {filtered.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-3 text-sm shadow-sm">
           <div className="text-[#656d76]">
-            Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}
+            عرض {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} من {filtered.length}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>
-              First
+              الأولى
             </Button>
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-              Prev
+              السابق
             </Button>
             <div className="min-w-20 text-center text-xs text-[#656d76]">
-              Page {currentPage} / {totalPages}
+              صفحة {currentPage} / {totalPages}
             </div>
             <Button
               variant="secondary"
@@ -206,10 +206,10 @@ export function EmployeesContainer({
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              Next
+              التالي
             </Button>
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
-              Last
+              الأخيرة
             </Button>
           </div>
         </div>
@@ -250,9 +250,9 @@ function EmployeeForm({
   return (
     <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">{isEdit ? 'Edit Employee' : 'New Employee'}</div>
+        <div className="text-lg font-semibold">{isEdit ? 'تعديل موظف' : 'موظف جديد'}</div>
         <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-1.5 text-sm font-semibold" type="button" onClick={onClose}>
-          Close
+          إغلاق
         </button>
       </div>
 
@@ -302,27 +302,27 @@ function EmployeeForm({
         {!isEdit ? (
           <>
             <label className="block text-sm font-medium md:col-span-2">
-              Email
-              <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              البريد الإلكتروني
+              <input className="ltr mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              First name
+              الاسم الأول
               <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              Last name
+              الاسم الأخير
               <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </label>
             <label className="block text-sm font-medium md:col-span-2">
-              Role
+              الدور
               <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value)} />
-              <div className="mt-1 text-xs text-[#656d76]">Use a default role (ADMIN/MANAGER/EMPLOYEE) or a custom role name.</div>
+              <div className="mt-1 text-xs text-[#656d76]">استخدم دوراً افتراضياً (ADMIN/MANAGER/EMPLOYEE) أو اسم دور مخصص.</div>
             </label>
           </>
         ) : null}
 
         <label className="block text-sm font-medium">
-          Department
+          القسم
           <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
@@ -333,7 +333,7 @@ function EmployeeForm({
           </select>
         </label>
         <label className="block text-sm font-medium">
-          Manager
+          المدير
           <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
@@ -344,30 +344,30 @@ function EmployeeForm({
           </select>
         </label>
         <label className="block text-sm font-medium">
-          Position
+          المسمى الوظيفي
           <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={position} onChange={(e) => setPosition(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
-          Status
+          الحالة
           <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value as any)}>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-            <option value="ON_LEAVE">ON_LEAVE</option>
-            <option value="TERMINATED">TERMINATED</option>
+            <option value="ACTIVE">نشط</option>
+            <option value="INACTIVE">غير نشط</option>
+            <option value="ON_LEAVE">إجازة</option>
+            <option value="TERMINATED">منتهي</option>
           </select>
         </label>
         <label className="block text-sm font-medium">
-          Join date
+          تاريخ الانضمام
           <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
-          Salary (optional)
+          الراتب (اختياري)
           <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
         </label>
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <button className="md:col-span-2 h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
-          {pending ? '...' : 'Save'}
+          {pending ? '...' : 'حفظ'}
         </button>
       </form>
     </div>
@@ -375,6 +375,15 @@ function EmployeeForm({
 }
 
 function StatusBadge({ status }: { status: Employee['status'] }) {
+  const label =
+    status === 'ACTIVE'
+      ? 'نشط'
+      : status === 'INACTIVE'
+        ? 'غير نشط'
+        : status === 'ON_LEAVE'
+          ? 'إجازة'
+          : 'منتهي'
+
   const meta =
     status === 'ACTIVE'
       ? { bg: 'bg-[#dafbe1]', bd: 'border-[#1f883d33]', fg: 'text-[#1f883d]' }
@@ -384,6 +393,6 @@ function StatusBadge({ status }: { status: Employee['status'] }) {
           ? { bg: 'bg-[#ffebe9]', bd: 'border-[#ff818266]', fg: 'text-[#cf222e]' }
           : { bg: 'bg-[#f6f8fa]', bd: 'border-[#d0d7de]', fg: 'text-[#656d76]' }
 
-  return <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${meta.bg} ${meta.bd} ${meta.fg}`}>{status}</span>
+  return <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${meta.bg} ${meta.bd} ${meta.fg}`}>{label}</span>
 }
 

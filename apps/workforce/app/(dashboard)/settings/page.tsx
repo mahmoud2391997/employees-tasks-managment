@@ -13,17 +13,17 @@ export default async function SettingsPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm text-[#656d76]">Team settings (basic).</p>
+        <h1 className="text-xl font-semibold">الإعدادات</h1>
+        <p className="mt-2 text-sm text-[#656d76]">إعدادات الفريق (أساسية).</p>
       </div>
 
       <div className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <div className="text-sm font-semibold">Team</div>
+        <div className="text-sm font-semibold">الفريق</div>
         <div className="mt-2 grid gap-2 text-sm">
           <div>
-            <span className="text-[#656d76]">Name:</span> {team?.name ?? '—'}
+            <span className="text-[#656d76]">الاسم:</span> {team?.name ?? '—'}
           </div>
-          <div className="font-mono text-xs text-[#656d76]">id: {team?.id ?? '—'}</div>
+          <div className="ltr font-mono text-xs text-[#656d76]">id: {team?.id ?? '—'}</div>
         </div>
       </div>
     </main>

@@ -9,7 +9,7 @@ export default async function NotificationsPage() {
   if (!profileId) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Notifications</h1>
+        <h1 className="text-xl font-semibold">الإشعارات</h1>
         <p className="mt-2 text-sm text-[#656d76]">غير مصرح.</p>
       </main>
     )
@@ -23,7 +23,7 @@ export default async function NotificationsPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Notifications</h1>
+        <h1 className="text-xl font-semibold">الإشعارات</h1>
         <p className="mt-2 text-sm text-[#656d76]">آخر التنبيهات.</p>
       </div>
       <NotificationsContainer initial={rows as any} />

@@ -7,7 +7,7 @@ export default async function RolesPage() {
   if (!session?.permissions.includes('roles.manage' as any)) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Roles</h1>
+        <h1 className="text-xl font-semibold">الأدوار</h1>
         <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
       </main>
     )
@@ -17,7 +17,7 @@ export default async function RolesPage() {
   if (!teamId) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Roles</h1>
+        <h1 className="text-xl font-semibold">الأدوار</h1>
         <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
       </main>
     )
@@ -31,7 +31,7 @@ export default async function RolesPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Roles</h1>
+        <h1 className="text-xl font-semibold">الأدوار</h1>
         <p className="mt-2 text-sm text-[#656d76]">إدارة الأدوار والصلاحيات.</p>
       </div>
       <RolesContainer initialRoles={roles as any} />

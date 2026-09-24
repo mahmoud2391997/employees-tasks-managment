@@ -43,7 +43,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
     <div className="space-y-4">
       {creating ? (
         <RoleEditor
-          title="New Role"
+          title="دور جديد"
           grouped={grouped}
           initial={{ name: '', label: '', permissions: [] }}
           onClose={() => setCreating(false)}
@@ -60,7 +60,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
 
       {editing ? (
         <RoleEditor
-          title={`Edit Role: ${editing.name}`}
+          title={`تعديل الدور: ${editing.name}`}
           grouped={grouped}
           initial={{ name: editing.name, label: editing.label, permissions: editing.permissions ?? [] }}
           onClose={() => setEditing(null)}
@@ -77,11 +77,11 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
         <div>
-          <div className="text-sm font-semibold">Roles</div>
-          <div className="text-xs text-[#656d76]">{roles.length} roles</div>
+          <div className="text-sm font-semibold">الأدوار</div>
+          <div className="text-xs text-[#656d76]">{roles.length} دور</div>
         </div>
         <button className="h-10 rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white" type="button" onClick={() => setCreating(true)}>
-          + New Role
+          + دور جديد
         </button>
       </div>
 
@@ -89,10 +89,10 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
         <table className="w-full text-right text-sm">
           <thead className="bg-[#f6f8fa] text-[#656d76]">
             <tr>
-              <th className="px-3 py-2 font-medium">Name</th>
-              <th className="px-3 py-2 font-medium">Label</th>
-              <th className="px-3 py-2 font-medium">Permissions</th>
-              <th className="px-3 py-2 font-medium">Actions</th>
+              <th className="px-3 py-2 font-medium">الاسم</th>
+              <th className="px-3 py-2 font-medium">الوصف</th>
+              <th className="px-3 py-2 font-medium">الصلاحيات</th>
+              <th className="px-3 py-2 font-medium">إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -108,7 +108,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                       type="button"
                       onClick={() => setEditing(r)}
                     >
-                      {RESERVED.has(r.name) ? 'View' : 'Edit'}
+                      {RESERVED.has(r.name) ? 'عرض' : 'تعديل'}
                     </button>
                     {!RESERVED.has(r.name) ? (
                       <button
@@ -119,7 +119,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                           await refresh()
                         }}
                       >
-                        Delete
+                        حذف
                       </button>
                     ) : null}
                   </div>
@@ -129,7 +129,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
             {roles.length === 0 ? (
               <tr>
                 <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={4}>
-                  No roles
+                  لا توجد أدوار
                 </td>
               </tr>
             ) : null}
@@ -168,7 +168,7 @@ function RoleEditor({
       <div className="flex items-center justify-between">
         <div className="text-lg font-semibold">{title}</div>
         <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-1.5 text-sm font-semibold" type="button" onClick={onClose}>
-          Close
+          إغلاق
         </button>
       </div>
 
@@ -188,7 +188,7 @@ function RoleEditor({
       >
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block text-sm font-medium">
-            Name
+            الاسم
             <input
               className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm font-mono"
               value={name}
@@ -198,13 +198,13 @@ function RoleEditor({
             />
           </label>
           <label className="block text-sm font-medium">
-            Label
+            الوصف
             <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(readOnly)} required />
           </label>
         </div>
 
         <div className="rounded-lg border border-[#d0d7de] p-4">
-          <div className="mb-3 text-sm font-semibold">Permissions</div>
+          <div className="mb-3 text-sm font-semibold">الصلاحيات</div>
           <div className="grid gap-4 md:grid-cols-2">
             {grouped.map(([group, perms]) => (
               <div key={group} className="rounded-lg border border-[#d0d7de] bg-[#f6f8fa] p-3">
@@ -236,7 +236,7 @@ function RoleEditor({
         {error ? <div className="rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         {!readOnly ? (
           <button className="h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
-            {pending ? '...' : 'Save'}
+            {pending ? '...' : 'حفظ'}
           </button>
         ) : null}
       </form>

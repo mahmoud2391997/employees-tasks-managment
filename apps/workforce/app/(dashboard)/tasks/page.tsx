@@ -7,7 +7,7 @@ export default async function TasksPage() {
   if (!session?.permissions.includes('tasks.view' as any)) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Tasks</h1>
+        <h1 className="text-xl font-semibold">المهام</h1>
         <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
       </main>
     )
@@ -17,7 +17,7 @@ export default async function TasksPage() {
   if (!teamId) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Tasks</h1>
+        <h1 className="text-xl font-semibold">المهام</h1>
         <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
       </main>
     )
@@ -36,8 +36,8 @@ export default async function TasksPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Tasks</h1>
-        <p className="mt-2 text-sm text-[#656d76]">Kanban board مع صلاحيات.</p>
+        <h1 className="text-xl font-semibold">المهام</h1>
+        <p className="mt-2 text-sm text-[#656d76]">لوحة كانبان لإدارة المهام مع تطبيق الصلاحيات.</p>
       </div>
       <TasksContainer
         initialTasks={tasks as any}

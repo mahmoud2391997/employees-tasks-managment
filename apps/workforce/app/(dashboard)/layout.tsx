@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         permissions={perms as string[]}
         hasTeam={hasTeam}
       />
-      <main className="min-h-screen pl-[72px] transition-[padding] duration-200 md:pl-64">
+      <main className="min-h-screen pr-[72px] transition-[padding] duration-200 md:pr-64">
         <div className="mx-auto max-w-[1400px] p-6 md:p-8">{children}</div>
       </main>
     </div>

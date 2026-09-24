@@ -42,8 +42,8 @@ export function DepartmentsContainer({
     <div className="space-y-4">
       <Modal
         open={Boolean(editing)}
-        title="Edit department"
-        description="Update department name and manager."
+        title="تعديل القسم"
+        description="تحديث اسم القسم وتحديد المدير."
         onClose={() => setEditing(null)}
       >
         <form
@@ -66,7 +66,7 @@ export function DepartmentsContainer({
           }}
         >
           <label className="block text-sm font-medium md:col-span-2">
-            Name
+            الاسم
             <input
               className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
               value={editName}
@@ -75,7 +75,7 @@ export function DepartmentsContainer({
             />
           </label>
           <label className="block text-sm font-medium">
-            Manager
+            المدير
             <select
               className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
               value={editManagerId}
@@ -91,22 +91,22 @@ export function DepartmentsContainer({
           </label>
           <div className="flex items-end justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setEditing(null)}>
-              Cancel
+              إلغاء
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">حفظ</Button>
           </div>
         </form>
       </Modal>
 
       <Modal
         open={Boolean(confirmDelete)}
-        title="Delete department"
-        description="This will permanently delete the department."
+        title="حذف القسم"
+        description="سيتم حذف القسم نهائياً."
         onClose={() => setConfirmDelete(null)}
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="secondary" type="button" onClick={() => setConfirmDelete(null)}>
-            Cancel
+            إلغاء
           </Button>
           <Button
             variant="danger"
@@ -118,14 +118,14 @@ export function DepartmentsContainer({
               await refresh()
             }}
           >
-            Delete
+            حذف
           </Button>
         </div>
       </Modal>
 
       {canCreate ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-sm font-semibold">New department</div>
+          <div className="text-sm font-semibold">قسم جديد</div>
           <form
             className="mt-3 grid gap-3 md:grid-cols-3"
             onSubmit={async (e) => {
@@ -149,11 +149,11 @@ export function DepartmentsContainer({
             }}
           >
             <label className="block text-sm font-medium">
-              Name
+              الاسم
               <input className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              Manager
+              المدير
               <select className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
                 <option value="">—</option>
                 {profiles.map((p) => (
@@ -165,7 +165,7 @@ export function DepartmentsContainer({
             </label>
             <div className="flex items-end">
               <Button className="w-full" disabled={pending} type="submit">
-                {pending ? '...' : 'Create'}
+                {pending ? '...' : 'إنشاء'}
               </Button>
             </div>
             {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
@@ -177,9 +177,9 @@ export function DepartmentsContainer({
         <table className="w-full text-right text-sm">
           <thead className="bg-[#f6f8fa] text-[#656d76]">
             <tr>
-              <th className="px-3 py-2 font-medium">Name</th>
-              <th className="px-3 py-2 font-medium">Manager</th>
-              <th className="px-3 py-2 font-medium">Actions</th>
+              <th className="px-3 py-2 font-medium">الاسم</th>
+              <th className="px-3 py-2 font-medium">المدير</th>
+              <th className="px-3 py-2 font-medium">إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -206,7 +206,7 @@ export function DepartmentsContainer({
                     ) : null}
                     {canDelete ? (
                       <Button size="sm" variant="danger" type="button" onClick={() => setConfirmDelete(d)}>
-                        Delete
+                        حذف
                       </Button>
                     ) : null}
                   </div>
@@ -216,7 +216,7 @@ export function DepartmentsContainer({
             {rows.length === 0 ? (
               <tr>
                 <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={3}>
-                  No departments
+                  لا توجد أقسام
                 </td>
               </tr>
             ) : null}

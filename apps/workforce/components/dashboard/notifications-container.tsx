@@ -28,7 +28,7 @@ export function NotificationsContainer({ initial }: { initial: Notification[] })
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
-        <div className="text-sm font-semibold">Unread: {unread}</div>
+        <div className="text-sm font-semibold">غير مقروء: {unread}</div>
       </div>
 
       <div className="space-y-2">
@@ -39,20 +39,20 @@ export function NotificationsContainer({ initial }: { initial: Notification[] })
                 <div className="font-semibold">{n.title}</div>
                 <div className="mt-1 text-sm text-[#656d76]">{n.message}</div>
                 <div className="mt-2 text-xs text-[#656d76]">
-                  <span className="font-mono">{n.type}</span> · {n.createdAt.slice(0, 19).replace('T', ' ')}
+                  <span className="ltr font-mono">{n.type}</span> · <span className="ltr">{n.createdAt.slice(0, 19).replace('T', ' ')}</span>
                 </div>
               </div>
               {!n.read ? (
                 <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold" type="button" onClick={() => markRead(n.id)}>
-                  Mark read
+                  تحديد كمقروء
                 </button>
               ) : (
-                <span className="inline-flex rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold text-[#656d76]">Read</span>
+                <span className="inline-flex rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold text-[#656d76]">مقروء</span>
               )}
             </div>
           </div>
         ))}
-        {rows.length === 0 ? <div className="rounded-lg border border-[#d0d7de] bg-white p-6 text-sm text-[#656d76] shadow-sm">No notifications</div> : null}
+        {rows.length === 0 ? <div className="rounded-lg border border-[#d0d7de] bg-white p-6 text-sm text-[#656d76] shadow-sm">لا توجد إشعارات</div> : null}
       </div>
     </div>
   )

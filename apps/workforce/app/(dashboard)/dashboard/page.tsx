@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   if (!session?.permissions.includes('dashboard.view' as any)) {
     return (
       <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="text-xl font-semibold">لوحة التحكم</h1>
         <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
       </main>
     )
@@ -18,10 +18,10 @@ export default async function DashboardPage() {
     return (
       <main className="space-y-4">
         <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-          <h1 className="text-xl font-semibold">Dashboard</h1>
+          <h1 className="text-xl font-semibold">لوحة التحكم</h1>
           <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط بهذا الحساب.</p>
           <a className="mt-4 inline-flex rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold" href="/create-team">
-            Create Team
+            إنشاء فريق
           </a>
         </div>
       </main>
@@ -49,19 +49,19 @@ export default async function DashboardPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="text-xl font-semibold">لوحة التحكم</h1>
         <p className="mt-2 text-sm text-[#656d76]">إحصائيات عامة عن الفريق والمهام.</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
-        <Stat label="Employees" value={String(employees)} />
-        <Stat label="Departments" value={String(departments)} />
-        <Stat label="Tasks" value={String(tasks)} />
-        <Stat label="Completed" value={String(completed)} />
+        <Stat label="الموظفون" value={String(employees)} />
+        <Stat label="الأقسام" value={String(departments)} />
+        <Stat label="المهام" value={String(tasks)} />
+        <Stat label="المكتملة" value={String(completed)} />
       </div>
 
       <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-        <div className="mb-2 text-sm font-semibold">Task status</div>
+        <div className="mb-2 text-sm font-semibold">حالة المهام</div>
         <TaskStatusChart data={statusRows} />
       </div>
     </main>
