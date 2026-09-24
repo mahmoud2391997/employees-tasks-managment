@@ -21,7 +21,6 @@ package-lock.json
 apps/*/dist
 packages/*/dist
 packages/database/generated
-packages/workforce-database/src/generated
 
 # Logs
 *.log
