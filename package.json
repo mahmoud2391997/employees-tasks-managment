@@ -1,0 +1,14 @@
+{
+  "name": "workforce",
+  "private": true,
+  "packageManager": "pnpm@12.3.4",
+  "scripts": {
+    "dev": "pnpm -C packages/workforce-database generate && pnpm -C apps/workforce dev",
+    "build": "pnpm -C packages/workforce-database generate && pnpm -C apps/workforce build",
+    "start": "pnpm -C packages/workforce-database generate && pnpm -C apps/workforce start",
+    "db:push": "pnpm -C packages/workforce-database db:push",
+    "db:migrate": "pnpm -C packages/workforce-database migrate:dev",
+    "db:deploy": "pnpm -C packages/workforce-database migrate:deploy"
+  },
+  "devDependencies": {}
+}
