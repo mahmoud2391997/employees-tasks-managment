@@ -21,7 +21,7 @@ export type DemoSession = {
 }
 
 export function isDemoModeEnabled() {
-  return process.env.WORKFORCE_DEMO_MODE !== 'false'
+  return process.env.WORKFORCE_DEMO_MODE === 'true'
 }
 
 async function ensureDefaultRoles(teamId: string) {

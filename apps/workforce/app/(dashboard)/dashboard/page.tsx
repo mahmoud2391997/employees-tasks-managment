@@ -19,10 +19,7 @@ export default async function DashboardPage() {
       <main className="space-y-4">
         <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
           <h1 className="text-xl font-semibold">لوحة التحكم</h1>
-          <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط بهذا الحساب.</p>
-          <a className="mt-4 inline-flex rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold" href="/create-team">
-            إنشاء فريق
-          </a>
+          <p className="mt-2 text-sm text-[#656d76]">هذا الحساب غير مرتبط بالشركة. اطلب من المسؤول إضافتك.</p>
         </div>
       </main>
     )

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+import { ensureCompany } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
@@ -36,6 +37,7 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
 
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
+  await ensureCompany()
 
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value

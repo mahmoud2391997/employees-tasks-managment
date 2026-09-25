@@ -13,11 +13,19 @@ const protectedRoutes = [
   '/members',
   '/notifications',
   '/profile',
-  '/create-team',
 ]
 
 function isProtectedRoute(pathname: string) {
   return protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+}
+
+function isClosedOnboardingPage(pathname: string) {
+  return (
+    pathname.startsWith('/auth/sign-up') ||
+    pathname.startsWith('/auth/create-team') ||
+    pathname === '/create-team' ||
+    pathname.startsWith('/create-team/')
+  )
 }
 
 async function verifyTokenEdge(token: string) {
@@ -37,18 +45,22 @@ async function verifyTokenEdge(token: string) {
 export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const pathname = request.nextUrl.pathname
+  const demo = process.env.WORKFORCE_DEMO_MODE === 'true'
+  const payload = !demo && token ? await verifyTokenEdge(token) : null
 
-  // Demo mode keeps the preview accessible without requiring an account.
-  if (process.env.WORKFORCE_DEMO_MODE !== 'false') return NextResponse.next()
+  if (isClosedOnboardingPage(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = demo || payload ? '/dashboard' : '/auth/login'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  if (demo) return NextResponse.next()
 
   const allowWithoutSession =
     pathname.startsWith('/auth/login') ||
-    pathname.startsWith('/auth/sign-up') ||
-    pathname.startsWith('/auth/create-team') ||
     pathname.startsWith('/invite/') ||
     pathname.startsWith('/api/auth/login') ||
-    pathname.startsWith('/api/auth/signup') ||
-    pathname.startsWith('/api/auth/create-team') ||
     pathname.startsWith('/api/invitations/accept') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
@@ -57,7 +69,6 @@ export async function updateSession(request: NextRequest) {
 
   if (allowWithoutSession) return NextResponse.next()
 
-  const payload = token ? await verifyTokenEdge(token) : null
   if (isProtectedRoute(pathname) && !payload) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
@@ -67,4 +78,3 @@ export async function updateSession(request: NextRequest) {
 
   return NextResponse.next()
 }
-
