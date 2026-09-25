@@ -61,12 +61,13 @@ async function provisionCompanyOnce(config: CompanyConfig) {
         data: { name: config.name, ownerId: user.id },
         select: { id: true, name: true },
       })
-    } else if (team.name === DEMO_TEAM_NAME && team.name !== config.name) {
-      team = await tx.workforceTeam.update({
+    } else {
+      const name = team.name === DEMO_TEAM_NAME ? config.name : team.name
+      await tx.workforceTeam.update({
         where: { id: team.id },
-        data: { name: config.name },
-        select: { id: true, name: true },
+        data: { name, ownerId: user.id },
       })
+      team = { id: team.id, name }
     }
 
     const profile = await tx.workforceProfile.upsert({
