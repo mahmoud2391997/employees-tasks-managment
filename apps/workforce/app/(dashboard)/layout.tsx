@@ -11,7 +11,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session) redirect('/auth/login')
 
   const perms = session.permissions
-  const hasTeam = Boolean(session.profile?.teamId)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,7 +18,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         name={`${session.profile?.firstName || ''} ${session.profile?.lastName || ''}`.trim()}
         role={session.profile?.role}
         permissions={perms as string[]}
-        hasTeam={hasTeam}
       />
       <main className="min-h-screen pr-[72px] transition-[padding] duration-200 md:pr-64">
         <div className="mx-auto max-w-[1400px] p-6 md:p-8">{children}</div>

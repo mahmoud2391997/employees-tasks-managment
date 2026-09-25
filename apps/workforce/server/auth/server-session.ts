@@ -1,7 +1,9 @@
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+import { ensureCompany } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
@@ -33,8 +35,9 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
   return raw.filter((p): p is Permission => typeof p === 'string') as Permission[]
 }
 
-export async function getServerSession(): Promise<ServerSession | null> {
+export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
+  await ensureCompany()
 
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
@@ -67,5 +70,5 @@ export async function getServerSession(): Promise<ServerSession | null> {
       : null,
     permissions: perms,
   }
-}
+})
 

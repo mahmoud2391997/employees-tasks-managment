@@ -21,7 +21,7 @@ export type DemoSession = {
 }
 
 export function isDemoModeEnabled() {
-  return process.env.WORKFORCE_DEMO_MODE !== 'false'
+  return process.env.WORKFORCE_DEMO_MODE === 'true'
 }
 
 async function ensureDefaultRoles(teamId: string) {
@@ -36,14 +36,33 @@ async function ensureDefaultRoles(teamId: string) {
   })
 }
 
-export async function getOrCreateDemoSession(): Promise<DemoSession> {
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: unknown }).code === 'P2002'
+}
+
+const userSelect = { id: true, email: true, profileId: true } as const
+
+async function buildDemoSessionOnce(): Promise<DemoSession> {
+  const alreadyExists = await prisma.workforceUser.findUnique({
+    where: { email: DEMO_EMAIL },
+    select: { id: true },
+  })
+  const passwordHash = alreadyExists ? null : await bcrypt.hash('demo-password', 10)
+
   const created = await prisma.$transaction(async (tx) => {
-    const user = await tx.workforceUser.upsert({
+    const existingUser = await tx.workforceUser.findUnique({
       where: { email: DEMO_EMAIL },
-      update: {},
-      create: { email: DEMO_EMAIL, passwordHash: await bcrypt.hash('demo-password', 10) },
-      select: { id: true, email: true, profileId: true },
+      select: userSelect,
     })
+    const user =
+      existingUser ??
+      (await tx.workforceUser.create({
+        data: {
+          email: DEMO_EMAIL,
+          passwordHash: passwordHash ?? (await bcrypt.hash('demo-password', 10)),
+        },
+        select: userSelect,
+      }))
 
     let team = await tx.workforceTeam.findFirst({
       where: { ownerId: user.id, name: DEMO_TEAM_NAME },
@@ -191,5 +210,29 @@ export async function getOrCreateDemoSession(): Promise<DemoSession> {
     },
     permissions: perms,
   }
+}
+
+async function buildDemoSession(): Promise<DemoSession> {
+  let lastError: unknown
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await buildDemoSessionOnce()
+    } catch (error) {
+      lastError = error
+      if (!isUniqueConstraintError(error)) throw error
+    }
+  }
+  throw lastError
+}
+
+let demoSessionInFlight: Promise<DemoSession> | null = null
+
+export function getOrCreateDemoSession(): Promise<DemoSession> {
+  if (!demoSessionInFlight) {
+    demoSessionInFlight = buildDemoSession().finally(() => {
+      demoSessionInFlight = null
+    })
+  }
+  return demoSessionInFlight
 }
 

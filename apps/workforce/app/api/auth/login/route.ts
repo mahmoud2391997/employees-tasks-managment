@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { prisma } = await import('@/server/db')
+  const { ensureCompany } = await import('@/server/company')
   const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
+
+  await ensureCompany()
 
   const email = parsed.data.email.toLowerCase().trim()
   const user = await prisma.workforceUser.findUnique({ where: { email } })

@@ -23,14 +23,10 @@ const sections = [
   ]},
 ]
 
-export function Sidebar({ name, role, permissions, hasTeam }: { name: string; role?: string | null; permissions: string[]; hasTeam: boolean }) {
+export function Sidebar({ name, role, permissions }: { name: string; role?: string | null; permissions: string[] }) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
-  const visibleSections = hasTeam ? sections : [{ label: '', items: [
-    { href: '/create-team', label: 'إنشاء فريق', icon: Users, permission: null },
-    { href: '/notifications', label: 'الإشعارات', icon: Bell, permission: null },
-    { href: '/profile', label: 'الملف الشخصي', icon: User, permission: null },
-  ]}]
+  const visibleSections = sections
 
   return (
     <aside className={`fixed inset-y-0 right-0 z-40 flex flex-col border-l border-slate-200 bg-white transition-all duration-200 ${collapsed ? 'w-[72px]' : 'w-64'}`}>
@@ -39,7 +35,7 @@ export function Sidebar({ name, role, permissions, hasTeam }: { name: string; ro
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0 text-right">
               <div className="truncate text-base font-bold text-slate-900">TeamFlow</div>
-              <div className="truncate text-xs text-slate-400">إدارة الفريق</div>
+              <div className="truncate text-xs text-slate-400">نظام الشركة</div>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
               <Menu size={21} />
