@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 
 import { prisma } from '@/server/db'
@@ -33,7 +34,7 @@ async function permissionsFor(role: string, teamId: string | null): Promise<Perm
   return raw.filter((p): p is Permission => typeof p === 'string') as Permission[]
 }
 
-export async function getServerSession(): Promise<ServerSession | null> {
+export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
 
   const cookieStore = await cookies()
@@ -67,5 +68,5 @@ export async function getServerSession(): Promise<ServerSession | null> {
       : null,
     permissions: perms,
   }
-}
+})
 
