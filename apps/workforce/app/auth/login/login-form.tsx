@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Building2, LockKeyhole } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 export function LoginForm({ companyName }: { companyName: string }) {
   const router = useRouter()
@@ -11,45 +16,62 @@ export function LoginForm({ companyName }: { companyName: string }) {
   const [pending, setPending] = useState(false)
 
   return (
-    <main className="mx-auto mt-16 max-w-md rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
-      <h1 className="text-xl font-semibold">تسجيل الدخول</h1>
-      <p className="mt-2 text-sm text-[#656d76]">نظام {companyName} للموظفين. ادخل بالبريد وكلمة المرور.</p>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-50 via-slate-50 to-white" />
+      <div className="pointer-events-none absolute -top-24 right-[-120px] h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 left-[-120px] h-80 w-80 rounded-full bg-emerald-200/20 blur-3xl" />
 
-      <form
-        className="mt-4 space-y-3"
-        onSubmit={async (e) => {
-          e.preventDefault()
-          setPending(true)
-          setError('')
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          })
-          const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
-          setPending(false)
-          if (!res.ok || !json?.success) {
-            setError(json?.message || 'تعذر تسجيل الدخول')
-            return
-          }
-          router.replace('/dashboard')
-        }}
-      >
-        <label className="block text-sm font-medium">
-          البريد
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <label className="block text-sm font-medium">
-          كلمة المرور
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        {error ? <div className="rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
-        <button className="inline-flex h-10 w-full items-center justify-center rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
-          {pending ? '...' : 'دخول'}
-        </button>
-      </form>
+      <div className="relative w-full max-w-md">
+        <Card>
+          <CardHeader>
+            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+              <Building2 size={22} />
+            </div>
+            <CardTitle>تسجيل الدخول</CardTitle>
+            <CardDescription>نظام {companyName} للموظفين. ادخل بالبريد وكلمة المرور.</CardDescription>
+          </CardHeader>
+          <CardBody>
+            <form
+              className="space-y-3"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setPending(true)
+                setError('')
+                const res = await fetch('/api/auth/login', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ email, password }),
+                })
+                const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
+                setPending(false)
+                if (!res.ok || !json?.success) {
+                  setError(json?.message || 'تعذر تسجيل الدخول')
+                  return
+                }
+                router.replace('/dashboard')
+              }}
+            >
+              <label className="block text-sm font-medium text-slate-700">
+                البريد الإلكتروني
+                <Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@company.com" />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                كلمة المرور
+                <Input className="mt-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </label>
 
-      <p className="mt-4 text-sm text-[#656d76]">الحسابات يضيفها مسؤول الشركة عبر الدعوة.</p>
+              {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
+
+              <Button className="w-full" disabled={pending} type="submit">
+                <LockKeyhole size={16} />
+                {pending ? '...' : 'دخول'}
+              </Button>
+            </form>
+
+            <p className="mt-4 text-sm text-slate-500">الحسابات يضيفها مسؤول الشركة عبر الدعوة.</p>
+          </CardBody>
+        </Card>
+      </div>
     </main>
   )
 }

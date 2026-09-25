@@ -4,7 +4,7 @@
   * { @apply border-slate-200; }
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+    font-family: var(--font-cairo), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
     direction: rtl;
     text-align: right;
   }

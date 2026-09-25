@@ -23,7 +23,17 @@ const sections = [
   ]},
 ]
 
-export function Sidebar({ name, role, permissions }: { name: string; role?: string | null; permissions: string[] }) {
+export function Sidebar({
+  name,
+  role,
+  permissions,
+  companyName,
+}: {
+  name: string
+  role?: string | null
+  permissions: string[]
+  companyName: string
+}) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const visibleSections = sections
@@ -35,7 +45,7 @@ export function Sidebar({ name, role, permissions }: { name: string; role?: stri
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0 text-right">
               <div className="truncate text-base font-bold text-slate-900">TeamFlow</div>
-              <div className="truncate text-xs text-slate-400">نظام الشركة</div>
+              <div className="truncate text-xs text-slate-400">نظام {companyName}</div>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
               <Menu size={21} />

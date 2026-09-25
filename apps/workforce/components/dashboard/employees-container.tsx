@@ -3,7 +3,13 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
+import { Select } from '@/components/ui/select'
+import { Table, TableWrapper, TD, TH, THead } from '@/components/ui/table'
 
 type Department = { id: string; name: string }
 type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
@@ -91,66 +97,70 @@ export function EmployeesContainer({
         />
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
-        <input
-          className="h-10 w-full max-w-sm rounded-md border border-[#d0d7de] px-3 text-sm"
-          placeholder="ابحث عن موظف..."
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value)
-            setPage(1)
-          }}
-        />
-        {canCreate ? (
-          <button
-            className="h-10 rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white"
-            type="button"
-            onClick={() => {
-              setEditing(null)
-              setShowForm(true)
-            }}
-          >
-            + إضافة موظف
-          </button>
-        ) : null}
-      </div>
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full max-w-sm">
+            <Input
+              placeholder="ابحث عن موظف..."
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value)
+                setPage(1)
+              }}
+            />
+          </div>
+          {canCreate ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setEditing(null)
+                setShowForm(true)
+              }}
+            >
+              + إضافة موظف
+            </Button>
+          ) : null}
+        </div>
+      </Card>
 
-      <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-[#f6f8fa] text-[#656d76]">
+      <TableWrapper>
+        <div className="overflow-x-auto">
+          <Table>
+          <THead>
             <tr>
-              <th className="px-3 py-2 font-medium">الموظف</th>
-              <th className="px-3 py-2 font-medium">القسم</th>
-              <th className="px-3 py-2 font-medium">المسمى</th>
-              <th className="px-3 py-2 font-medium">الحالة</th>
-              <th className="px-3 py-2 font-medium">إجراءات</th>
+              <TH className="min-w-72">الموظف</TH>
+              <TH className="min-w-44">القسم</TH>
+              <TH className="min-w-48">المسمى</TH>
+              <TH className="min-w-32">الحالة</TH>
+              <TH className="min-w-44 text-left">إجراءات</TH>
             </tr>
-          </thead>
+          </THead>
           <tbody>
             {pageRows.map((e) => (
-              <tr key={e.id} className="border-t border-[#d0d7de]">
-                <td className="px-3 py-2">
+              <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                <TD>
                   <div className="font-semibold">
                     {(e.profile.firstName || e.profile.email) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
                   </div>
                   <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div>
-                </td>
-                <td className="px-3 py-2">{e.department?.name ?? '—'}</td>
-                <td className="px-3 py-2">{e.position ?? '—'}</td>
-                <td className="px-3 py-2">
+                </TD>
+                <TD>{e.department?.name ?? '—'}</TD>
+                <TD>{e.position ?? '—'}</TD>
+                <TD>
                   <StatusBadge status={e.status} />
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex justify-end gap-2">
+                </TD>
+                <TD className="text-left">
+                  <div className="flex justify-start gap-2">
                     <Link
-                      className="rounded-md border border-[#d0d7de] bg-white px-2 py-1 text-xs font-semibold hover:bg-[#f6f8fa]"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       href={`/employees/${e.id}`}
                     >
                       عرض
                     </Link>
                     {canEdit ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold"
+                      <Button
+                        size="sm"
+                        variant="secondary"
                         type="button"
                         onClick={() => {
                           setEditing(e)
@@ -158,35 +168,38 @@ export function EmployeesContainer({
                         }}
                       >
                         تعديل
-                      </button>
+                      </Button>
                     ) : null}
                     {canDelete ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#ffebe9] px-2 py-1 text-xs font-semibold text-[#cf222e]"
+                      <Button
+                        size="sm"
+                        variant="danger"
                         type="button"
                         onClick={() => deleteEmployee(e.id)}
                       >
                         حذف
-                      </button>
+                      </Button>
                     ) : null}
                   </div>
-                </td>
+                </TD>
               </tr>
             ))}
             {filtered.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={5}>
+                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={5}>
                   لا يوجد موظفون
                 </td>
               </tr>
             ) : null}
           </tbody>
-        </table>
-      </div>
+          </Table>
+        </div>
+      </TableWrapper>
 
       {filtered.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-3 text-sm shadow-sm">
-          <div className="text-[#656d76]">
+        <Card className="p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="text-slate-500">
             عرض {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} من {filtered.length}
           </div>
           <div className="flex items-center gap-2">
@@ -196,7 +209,7 @@ export function EmployeesContainer({
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
               السابق
             </Button>
-            <div className="min-w-20 text-center text-xs text-[#656d76]">
+            <div className="min-w-20 text-center text-xs text-slate-500">
               صفحة {currentPage} / {totalPages}
             </div>
             <Button
@@ -212,7 +225,8 @@ export function EmployeesContainer({
               الأخيرة
             </Button>
           </div>
-        </div>
+          </div>
+        </Card>
       ) : null}
     </div>
   )
@@ -248,16 +262,8 @@ function EmployeeForm({
   const [error, setError] = useState('')
 
   return (
-    <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">{isEdit ? 'تعديل موظف' : 'موظف جديد'}</div>
-        <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-1.5 text-sm font-semibold" type="button" onClick={onClose}>
-          إغلاق
-        </button>
-      </div>
-
-      <form
-        className="mt-4 grid gap-3 md:grid-cols-2"
+    <Modal open title={isEdit ? 'تعديل موظف' : 'موظف جديد'} onClose={onClose}>
+      <form className="grid gap-3 md:grid-cols-2"
         onSubmit={async (e) => {
           e.preventDefault()
           setPending(true)
@@ -303,19 +309,19 @@ function EmployeeForm({
           <>
             <label className="block text-sm font-medium md:col-span-2">
               البريد الإلكتروني
-              <input className="ltr mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
               الاسم الأول
-              <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <Input className="mt-2" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
               الاسم الأخير
-              <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <Input className="mt-2" value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </label>
             <label className="block text-sm font-medium md:col-span-2">
               الدور
-              <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value)} />
+              <Input className="mt-2" value={role} onChange={(e) => setRole(e.target.value)} />
               <div className="mt-1 text-xs text-[#656d76]">استخدم دوراً افتراضياً (ADMIN/MANAGER/EMPLOYEE) أو اسم دور مخصص.</div>
             </label>
           </>
@@ -323,54 +329,54 @@ function EmployeeForm({
 
         <label className="block text-sm font-medium">
           القسم
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          <Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           المدير
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+          <Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
                 {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           المسمى الوظيفي
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={position} onChange={(e) => setPosition(e.target.value)} />
+          <Input className="mt-2" value={position} onChange={(e) => setPosition(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
           الحالة
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+          <Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
             <option value="ACTIVE">نشط</option>
             <option value="INACTIVE">غير نشط</option>
             <option value="ON_LEAVE">إجازة</option>
             <option value="TERMINATED">منتهي</option>
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           تاريخ الانضمام
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
+          <Input className="mt-2" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
           الراتب (اختياري)
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
+          <Input className="mt-2" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
         </label>
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
-        <button className="md:col-span-2 h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
+        <Button className="md:col-span-2 w-full" disabled={pending} type="submit">
           {pending ? '...' : 'حفظ'}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Modal>
   )
 }
 
@@ -384,15 +390,7 @@ function StatusBadge({ status }: { status: Employee['status'] }) {
           ? 'إجازة'
           : 'منتهي'
 
-  const meta =
-    status === 'ACTIVE'
-      ? { bg: 'bg-[#dafbe1]', bd: 'border-[#1f883d33]', fg: 'text-[#1f883d]' }
-      : status === 'ON_LEAVE'
-        ? { bg: 'bg-[#fff8c5]', bd: 'border-[#9a670033]', fg: 'text-[#9a6700]' }
-        : status === 'TERMINATED'
-          ? { bg: 'bg-[#ffebe9]', bd: 'border-[#ff818266]', fg: 'text-[#cf222e]' }
-          : { bg: 'bg-[#f6f8fa]', bd: 'border-[#d0d7de]', fg: 'text-[#656d76]' }
-
-  return <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${meta.bg} ${meta.bd} ${meta.fg}`}>{label}</span>
+  const variant = status === 'ACTIVE' ? 'success' : status === 'ON_LEAVE' ? 'warning' : status === 'TERMINATED' ? 'danger' : 'neutral'
+  return <Badge variant={variant}>{label}</Badge>
 }
 

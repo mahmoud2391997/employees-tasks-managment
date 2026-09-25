@@ -2,6 +2,13 @@
 
 import { useMemo, useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Table, TableWrapper, TD, TH, THead } from '@/components/ui/table'
+
 type RoleOption = { name: string; label: string }
 
 type Member = {
@@ -79,22 +86,23 @@ export function MembersContainer({
       ) : null}
 
       {inviteUrl ? (
-        <div className="rounded-lg border border-[#0969da33] bg-[#ddf4ff] p-4 text-sm text-[#0969da] shadow-sm">
+        <Card className="border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
           <div className="font-semibold">رابط الدعوة</div>
           <div className="ltr mt-1 break-all font-mono text-xs">{inviteUrl}</div>
-        </div>
+        </Card>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-[#f6f8fa] text-[#656d76]">
+      <TableWrapper>
+        <div className="overflow-x-auto">
+        <Table>
+          <THead>
             <tr>
-              <th className="px-3 py-2 font-medium">العضو</th>
-              <th className="px-3 py-2 font-medium">الدور</th>
-              <th className="px-3 py-2 font-medium">الحالة</th>
-              <th className="px-3 py-2 font-medium">إجراءات</th>
+              <TH className="min-w-72">العضو</TH>
+              <TH className="min-w-56">الدور</TH>
+              <TH className="min-w-32">الحالة</TH>
+              <TH className="min-w-40 text-left">إجراءات</TH>
             </tr>
-          </thead>
+          </THead>
           <tbody>
             {members.map((m) => {
               const profile = m.user.profile
@@ -102,15 +110,15 @@ export function MembersContainer({
                 ? (profile.firstName || profile.email) + (profile.lastName ? ` ${profile.lastName}` : '')
                 : m.user.email
               return (
-                <tr key={m.id} className="border-t border-[#d0d7de]">
-                  <td className="px-3 py-2">
+                <tr key={m.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                  <TD>
                     <div className="font-semibold">{display}</div>
                     <div className="ltr text-xs text-[#656d76]">{m.user.email}</div>
-                  </td>
-                  <td className="px-3 py-2">
+                  </TD>
+                  <TD>
                     {canAssign ? (
-                      <select
-                        className="h-9 rounded-md border border-[#d0d7de] bg-white px-2 text-sm"
+                      <Select
+                        className="h-9 w-auto min-w-44"
                         value={m.role}
                         onChange={async (e) => {
                           await fetch(`/api/members/${m.id}`, {
@@ -127,16 +135,17 @@ export function MembersContainer({
                           </option>
                         ))}
                         {!roleOptions.some((o) => o.value === m.role) ? <option value={m.role}>{m.role}</option> : null}
-                      </select>
+                      </Select>
                     ) : (
-                      <span className="font-mono text-xs">{m.role}</span>
+                      <span className="ltr font-mono text-xs">{m.role}</span>
                     )}
-                  </td>
-                  <td className="px-3 py-2">{m.isActive ? <Badge label="نشط" kind="good" /> : <Badge label="غير نشط" kind="neutral" />}</td>
-                  <td className="px-3 py-2">
+                  </TD>
+                  <TD>{m.isActive ? <Badge variant="success">نشط</Badge> : <Badge variant="neutral">غير نشط</Badge>}</TD>
+                  <TD className="text-left">
                     {canRemove ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#ffebe9] px-2 py-1 text-xs font-semibold text-[#cf222e]"
+                      <Button
+                        size="sm"
+                        variant="danger"
                         type="button"
                         onClick={async () => {
                           await fetch(`/api/members/${m.id}`, { method: 'DELETE' })
@@ -144,30 +153,31 @@ export function MembersContainer({
                         }}
                       >
                         إزالة
-                      </button>
+                      </Button>
                     ) : null}
-                  </td>
+                  </TD>
                 </tr>
               )
             })}
             {members.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={4}>
+                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={4}>
                   لا يوجد أعضاء
                 </td>
               </tr>
             ) : null}
           </tbody>
-        </table>
-      </div>
+        </Table>
+        </div>
+      </TableWrapper>
 
-      <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
-        <div className="border-b border-[#d0d7de] bg-[#f6f8fa] px-3 py-2 text-sm font-semibold text-[#656d76]">الدعوات المعلقة</div>
-        <div className="p-3">
-          {invitations.length === 0 ? <div className="text-sm text-[#656d76]">لا توجد دعوات معلقة</div> : null}
+      <Card>
+        <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">الدعوات المعلقة</div>
+        <div className="p-5">
+          {invitations.length === 0 ? <div className="text-sm text-slate-500">لا توجد دعوات معلقة</div> : null}
           <div className="space-y-2">
             {invitations.map((inv) => (
-              <div key={inv.id} className="rounded-lg border border-[#d0d7de] bg-white p-3">
+              <div key={inv.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <div className="ltr font-semibold">{inv.email}</div>
@@ -176,8 +186,9 @@ export function MembersContainer({
                       {inv.expiresAt ? ` · ينتهي: ${inv.expiresAt.slice(0, 10)}` : ''}
                     </div>
                   </div>
-                  <button
-                    className="rounded-md border border-[#0969da33] bg-[#ddf4ff] px-2 py-1 text-xs font-semibold text-[#0969da]"
+                  <Button
+                    size="sm"
+                    variant="secondary"
                     type="button"
                     onClick={() => {
                       const url = `${window.location.origin}/invite/${inv.token}`
@@ -186,13 +197,13 @@ export function MembersContainer({
                     }}
                   >
                     نسخ رابط الدعوة
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
@@ -204,8 +215,8 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
   const [error, setError] = useState('')
 
   return (
-    <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="text-lg font-semibold">دعوة عضو</div>
+    <Card className="p-5">
+      <div className="text-lg font-semibold text-slate-900">دعوة عضو</div>
       <form
         className="mt-4 grid gap-3 md:grid-cols-3"
         onSubmit={async (e) => {
@@ -225,32 +236,24 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
       >
         <label className="block text-sm font-medium md:col-span-2">
           البريد الإلكتروني
-          <input className="ltr mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label className="block text-sm font-medium">
           الدور
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value)}>
+          <Select className="mt-2" value={role} onChange={(e) => setRole(e.target.value)}>
             {roleOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.value}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
-        <button className="md:col-span-3 h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
+        <Button className="md:col-span-3 w-full" disabled={pending} type="submit">
           {pending ? '...' : 'إرسال الدعوة'}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Card>
   )
-}
-
-function Badge({ label, kind }: { label: string; kind: 'good' | 'neutral' }) {
-  const cls =
-    kind === 'good'
-      ? 'border-[#1f883d33] bg-[#dafbe1] text-[#1f883d]'
-      : 'border-[#d0d7de] bg-[#f6f8fa] text-[#656d76]'
-  return <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${cls}`}>{label}</span>
 }
 

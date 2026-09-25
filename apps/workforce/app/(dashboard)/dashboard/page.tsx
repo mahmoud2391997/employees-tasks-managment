@@ -6,9 +6,9 @@ export default async function DashboardPage() {
   const session = await getServerSession()
   if (!session?.permissions.includes('dashboard.view' as any)) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">لوحة التحكم</h1>
-        <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
+        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
       </main>
     )
   }
@@ -17,9 +17,9 @@ export default async function DashboardPage() {
   if (!teamId) {
     return (
       <main className="space-y-4">
-        <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h1 className="text-xl font-semibold">لوحة التحكم</h1>
-          <p className="mt-2 text-sm text-[#656d76]">هذا الحساب غير مرتبط بالشركة. اطلب من المسؤول إضافتك.</p>
+          <p className="mt-2 text-sm text-slate-500">هذا الحساب غير مرتبط بالشركة. اطلب من المسؤول إضافتك.</p>
         </div>
       </main>
     )
@@ -45,9 +45,9 @@ export default async function DashboardPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">لوحة التحكم</h1>
-        <p className="mt-2 text-sm text-[#656d76]">إحصائيات عامة عن الفريق والمهام.</p>
+        <p className="mt-2 text-sm text-slate-500">إحصائيات عامة عن الفريق والمهام.</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
         <Stat label="المكتملة" value={String(completed)} />
       </div>
 
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-2 text-sm font-semibold">حالة المهام</div>
         <TaskStatusChart data={statusRows} />
       </div>
@@ -67,8 +67,8 @@ export default async function DashboardPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="text-sm text-[#656d76]">{label}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="text-sm text-slate-500">{label}</div>
       <div className="mt-2 text-3xl font-bold">{value}</div>
     </div>
   )
