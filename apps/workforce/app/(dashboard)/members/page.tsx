@@ -6,9 +6,9 @@ export default async function MembersPage() {
   const session = await getServerSession()
   if (!session?.permissions.includes('members.view' as any)) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأعضاء</h1>
-        <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
+        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
       </main>
     )
   }
@@ -16,9 +16,9 @@ export default async function MembersPage() {
 
   if (!teamId) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأعضاء</h1>
-        <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
+        <p className="mt-2 text-sm text-slate-500">لا يوجد فريق مرتبط.</p>
       </main>
     )
   }
@@ -47,9 +47,9 @@ export default async function MembersPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الأعضاء</h1>
-        <p className="mt-2 text-sm text-[#656d76]">إدارة أعضاء الفريق والدعوات.</p>
+        <p className="mt-2 text-sm text-slate-500">إدارة أعضاء الفريق والدعوات.</p>
       </div>
       <MembersContainer
         initialMembers={members as any}

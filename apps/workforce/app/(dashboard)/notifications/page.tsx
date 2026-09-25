@@ -8,9 +8,9 @@ export default async function NotificationsPage() {
 
   if (!profileId) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الإشعارات</h1>
-        <p className="mt-2 text-sm text-[#656d76]">غير مصرح.</p>
+        <p className="mt-2 text-sm text-slate-500">غير مصرح.</p>
       </main>
     )
   }
@@ -22,9 +22,9 @@ export default async function NotificationsPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الإشعارات</h1>
-        <p className="mt-2 text-sm text-[#656d76]">آخر التنبيهات.</p>
+        <p className="mt-2 text-sm text-slate-500">آخر التنبيهات.</p>
       </div>
       <NotificationsContainer initial={rows as any} />
     </main>

@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
 type Notification = {
   id: string
   type: string
@@ -27,32 +31,35 @@ export function NotificationsContainer({ initial }: { initial: Notification[] })
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
-        <div className="text-sm font-semibold">غير مقروء: {unread}</div>
-      </div>
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-slate-900">الإشعارات</div>
+          <Badge variant={unread ? 'info' : 'neutral'}>غير مقروء: {unread}</Badge>
+        </div>
+      </Card>
 
       <div className="space-y-2">
         {rows.map((n) => (
-          <div key={n.id} className={`rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm ${n.read ? 'opacity-75' : ''}`}>
+          <Card key={n.id} className={`p-4 ${n.read ? 'opacity-75' : ''}`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <div className="font-semibold">{n.title}</div>
-                <div className="mt-1 text-sm text-[#656d76]">{n.message}</div>
-                <div className="mt-2 text-xs text-[#656d76]">
+                <div className="mt-1 text-sm text-slate-500">{n.message}</div>
+                <div className="mt-2 text-xs text-slate-500">
                   <span className="ltr font-mono">{n.type}</span> · <span className="ltr">{n.createdAt.slice(0, 19).replace('T', ' ')}</span>
                 </div>
               </div>
               {!n.read ? (
-                <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold" type="button" onClick={() => markRead(n.id)}>
+                <Button size="sm" variant="secondary" type="button" onClick={() => markRead(n.id)}>
                   تحديد كمقروء
-                </button>
+                </Button>
               ) : (
-                <span className="inline-flex rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold text-[#656d76]">مقروء</span>
+                <Badge variant="neutral">مقروء</Badge>
               )}
             </div>
-          </div>
+          </Card>
         ))}
-        {rows.length === 0 ? <div className="rounded-lg border border-[#d0d7de] bg-white p-6 text-sm text-[#656d76] shadow-sm">لا توجد إشعارات</div> : null}
+        {rows.length === 0 ? <Card className="p-6 text-sm text-slate-500">لا توجد إشعارات</Card> : null}
       </div>
     </div>
   )

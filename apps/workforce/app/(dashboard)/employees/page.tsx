@@ -6,9 +6,9 @@ export default async function EmployeesPage() {
   const session = await getServerSession()
   if (!session?.permissions.includes('employees.view' as any)) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الموظفون</h1>
-        <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
+        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
       </main>
     )
   }
@@ -16,9 +16,9 @@ export default async function EmployeesPage() {
 
   if (!teamId) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الموظفون</h1>
-        <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
+        <p className="mt-2 text-sm text-slate-500">لا يوجد فريق مرتبط.</p>
       </main>
     )
   }
@@ -35,9 +35,9 @@ export default async function EmployeesPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الموظفون</h1>
-        <p className="mt-2 text-sm text-[#656d76]">سجل الموظفين داخل الفريق مع تطبيق الصلاحيات.</p>
+        <p className="mt-2 text-sm text-slate-500">سجل الموظفين داخل الفريق مع تطبيق الصلاحيات.</p>
       </div>
       <EmployeesContainer
         initialEmployees={employees as any}

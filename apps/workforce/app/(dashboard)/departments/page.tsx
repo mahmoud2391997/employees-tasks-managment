@@ -6,9 +6,9 @@ export default async function DepartmentsPage() {
   const session = await getServerSession()
   if (!session?.permissions.includes('departments.view' as any)) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-[#656d76]">ليس لديك صلاحية.</p>
+        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
       </main>
     )
   }
@@ -16,9 +16,9 @@ export default async function DepartmentsPage() {
 
   if (!teamId) {
     return (
-      <main className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm">
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-[#656d76]">لا يوجد فريق مرتبط.</p>
+        <p className="mt-2 text-sm text-slate-500">لا يوجد فريق مرتبط.</p>
       </main>
     )
   }
@@ -30,9 +30,9 @@ export default async function DepartmentsPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-[#656d76]">إدارة الأقسام.</p>
+        <p className="mt-2 text-sm text-slate-500">إدارة الأقسام.</p>
       </div>
       <DepartmentsContainer initialDepartments={departments as any} profiles={profiles as any} permissions={session.permissions as any} />
     </main>

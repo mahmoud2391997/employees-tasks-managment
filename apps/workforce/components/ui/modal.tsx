@@ -1,6 +1,7 @@
 'use client'
 
 import { type ReactNode, useEffect } from 'react'
+import { X } from 'lucide-react'
 
 export function Modal({
   open,
@@ -39,9 +40,19 @@ export function Modal({
         aria-modal="true"
         className="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-xl"
       >
-        <div className="border-b border-slate-100 p-5">
-          <div className="text-base font-semibold text-slate-900">{title}</div>
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
+          <div>
+            <div className="text-base font-semibold text-slate-900">{title}</div>
           {description ? <div className="mt-1 text-sm text-slate-500">{description}</div> : null}
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            onClick={onClose}
+            aria-label="إغلاق"
+          >
+            <X size={16} />
+          </button>
         </div>
         <div className="p-5">{children}</div>
       </div>

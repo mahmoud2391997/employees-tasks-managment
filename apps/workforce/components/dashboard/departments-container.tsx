@@ -3,7 +3,11 @@
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
+import { Select } from '@/components/ui/select'
+import { Table, TableWrapper, TD, TH, THead } from '@/components/ui/table'
 
 type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
 type Department = { id: string; name: string; icon: string | null; managerId: string | null; manager?: Profile | null }
@@ -67,27 +71,18 @@ export function DepartmentsContainer({
         >
           <label className="block text-sm font-medium md:col-span-2">
             الاسم
-            <input
-              className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              required
-            />
+            <Input className="mt-2" value={editName} onChange={(e) => setEditName(e.target.value)} required />
           </label>
           <label className="block text-sm font-medium">
             المدير
-            <select
-              className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
-              value={editManagerId}
-              onChange={(e) => setEditManagerId(e.target.value)}
-            >
+            <Select className="mt-2" value={editManagerId} onChange={(e) => setEditManagerId(e.target.value)}>
               <option value="">—</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <div className="flex items-end justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setEditing(null)}>
@@ -124,8 +119,8 @@ export function DepartmentsContainer({
       </Modal>
 
       {canCreate ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-sm font-semibold">قسم جديد</div>
+        <Card className="p-5">
+          <div className="text-sm font-semibold text-slate-900">قسم جديد</div>
           <form
             className="mt-3 grid gap-3 md:grid-cols-3"
             onSubmit={async (e) => {
@@ -150,18 +145,18 @@ export function DepartmentsContainer({
           >
             <label className="block text-sm font-medium">
               الاسم
-              <input className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input className="mt-2" value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
               المدير
-              <select className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+              <Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
                 <option value="">—</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
                     {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <div className="flex items-end">
               <Button className="w-full" disabled={pending} type="submit">
@@ -170,25 +165,26 @@ export function DepartmentsContainer({
             </div>
             {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
           </form>
-        </div>
+        </Card>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-[#f6f8fa] text-[#656d76]">
+      <TableWrapper>
+        <div className="overflow-x-auto">
+        <Table>
+          <THead>
             <tr>
-              <th className="px-3 py-2 font-medium">الاسم</th>
-              <th className="px-3 py-2 font-medium">المدير</th>
-              <th className="px-3 py-2 font-medium">إجراءات</th>
+              <TH className="min-w-64">الاسم</TH>
+              <TH className="min-w-64">المدير</TH>
+              <TH className="min-w-40 text-left">إجراءات</TH>
             </tr>
-          </thead>
+          </THead>
           <tbody>
             {rows.map((d) => (
-              <tr key={d.id} className="border-t border-[#d0d7de]">
-                <td className="px-3 py-2 font-semibold">{d.name}</td>
-                <td className="px-3 py-2">{d.manager ? (d.manager.firstName || d.manager.email) : '—'}</td>
-                <td className="px-3 py-2">
-                  <div className="flex gap-2">
+              <tr key={d.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                <TD className="font-semibold">{d.name}</TD>
+                <TD>{d.manager ? (d.manager.firstName || d.manager.email) : '—'}</TD>
+                <TD className="text-left">
+                  <div className="flex justify-start gap-2">
                     {canEdit ? (
                       <Button
                         size="sm"
@@ -201,7 +197,7 @@ export function DepartmentsContainer({
                           setEditManagerId(d.managerId ?? '')
                         }}
                       >
-                        Edit
+                        تعديل
                       </Button>
                     ) : null}
                     {canDelete ? (
@@ -210,19 +206,20 @@ export function DepartmentsContainer({
                       </Button>
                     ) : null}
                   </div>
-                </td>
+                </TD>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={3}>
+                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={3}>
                   لا توجد أقسام
                 </td>
               </tr>
             ) : null}
           </tbody>
-        </table>
-      </div>
+        </Table>
+        </div>
+      </TableWrapper>
     </div>
   )
 }

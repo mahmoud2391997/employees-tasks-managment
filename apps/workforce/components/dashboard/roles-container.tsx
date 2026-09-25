@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react'
 
 import { ALL_PERMISSIONS } from '@/lib/permissions'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
+import { Table, TableWrapper, TD, TH, THead } from '@/components/ui/table'
 
 type Role = {
   id: string
@@ -75,44 +80,44 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
         />
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
-        <div>
-          <div className="text-sm font-semibold">الأدوار</div>
-          <div className="text-xs text-[#656d76]">{roles.length} دور</div>
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">الأدوار</div>
+            <div className="text-xs text-slate-500">{roles.length} دور</div>
+          </div>
+          <Button type="button" onClick={() => setCreating(true)}>
+            + دور جديد
+          </Button>
         </div>
-        <button className="h-10 rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white" type="button" onClick={() => setCreating(true)}>
-          + دور جديد
-        </button>
-      </div>
+      </Card>
 
-      <div className="overflow-hidden rounded-lg border border-[#d0d7de] bg-white shadow-sm">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-[#f6f8fa] text-[#656d76]">
+      <TableWrapper>
+        <div className="overflow-x-auto">
+        <Table>
+          <THead>
             <tr>
-              <th className="px-3 py-2 font-medium">الاسم</th>
-              <th className="px-3 py-2 font-medium">الوصف</th>
-              <th className="px-3 py-2 font-medium">الصلاحيات</th>
-              <th className="px-3 py-2 font-medium">إجراءات</th>
+              <TH className="min-w-48">الاسم</TH>
+              <TH className="min-w-64">الوصف</TH>
+              <TH className="min-w-28">الصلاحيات</TH>
+              <TH className="min-w-44 text-left">إجراءات</TH>
             </tr>
-          </thead>
+          </THead>
           <tbody>
             {roles.map((r) => (
-              <tr key={r.id} className="border-t border-[#d0d7de]">
-                <td className="px-3 py-2 font-mono text-xs">{r.name}</td>
-                <td className="px-3 py-2">{r.label}</td>
-                <td className="px-3 py-2">{(r.permissions ?? []).length}</td>
-                <td className="px-3 py-2">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold"
-                      type="button"
-                      onClick={() => setEditing(r)}
-                    >
+              <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                <TD className="ltr font-mono text-xs">{r.name}</TD>
+                <TD>{r.label}</TD>
+                <TD className="text-slate-600">{(r.permissions ?? []).length}</TD>
+                <TD className="text-left">
+                  <div className="flex justify-start gap-2">
+                    <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(r)}>
                       {RESERVED.has(r.name) ? 'عرض' : 'تعديل'}
-                    </button>
+                    </Button>
                     {!RESERVED.has(r.name) ? (
-                      <button
-                        className="rounded-md border border-[#d0d7de] bg-[#ffebe9] px-2 py-1 text-xs font-semibold text-[#cf222e]"
+                      <Button
+                        size="sm"
+                        variant="danger"
                         type="button"
                         onClick={async () => {
                           await fetch(`/api/roles/${r.id}`, { method: 'DELETE' })
@@ -120,22 +125,23 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                         }}
                       >
                         حذف
-                      </button>
+                      </Button>
                     ) : null}
                   </div>
-                </td>
+                </TD>
               </tr>
             ))}
             {roles.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-sm text-[#656d76]" colSpan={4}>
+                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={4}>
                   لا توجد أدوار
                 </td>
               </tr>
             ) : null}
           </tbody>
-        </table>
-      </div>
+        </Table>
+        </div>
+      </TableWrapper>
     </div>
   )
 }
@@ -164,16 +170,8 @@ function RoleEditor({
   const [error, setError] = useState('')
 
   return (
-    <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">{title}</div>
-        <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-1.5 text-sm font-semibold" type="button" onClick={onClose}>
-          إغلاق
-        </button>
-      </div>
-
-      <form
-        className="mt-4 space-y-4"
+    <Modal open title={title} onClose={onClose}>
+      <form className="space-y-4"
         onSubmit={async (e) => {
           e.preventDefault()
           setPending(true)
@@ -189,8 +187,8 @@ function RoleEditor({
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block text-sm font-medium">
             الاسم
-            <input
-              className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm font-mono"
+            <Input
+              className="ltr mt-2 font-mono"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={!allowEditName || Boolean(readOnly)}
@@ -199,16 +197,16 @@ function RoleEditor({
           </label>
           <label className="block text-sm font-medium">
             الوصف
-            <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(readOnly)} required />
+            <Input className="mt-2" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(readOnly)} required />
           </label>
         </div>
 
-        <div className="rounded-lg border border-[#d0d7de] p-4">
+        <div className="rounded-2xl border border-slate-200 p-4">
           <div className="mb-3 text-sm font-semibold">الصلاحيات</div>
           <div className="grid gap-4 md:grid-cols-2">
             {grouped.map(([group, perms]) => (
-              <div key={group} className="rounded-lg border border-[#d0d7de] bg-[#f6f8fa] p-3">
-                <div className="mb-2 text-xs font-semibold uppercase text-[#656d76]">{group}</div>
+              <div key={group} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{group}</div>
                 <div className="space-y-1">
                   {perms.map((p) => {
                     const checked = permissions.includes(p)
@@ -223,7 +221,7 @@ function RoleEditor({
                             setPermissions((prev) => (next ? Array.from(new Set([...prev, p])) : prev.filter((x) => x !== p)))
                           }}
                         />
-                        <span className="font-mono text-xs">{p}</span>
+                        <span className="ltr font-mono text-xs text-slate-700">{p}</span>
                       </label>
                     )
                   })}
@@ -235,12 +233,12 @@ function RoleEditor({
 
         {error ? <div className="rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         {!readOnly ? (
-          <button className="h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
+          <Button className="w-full" disabled={pending} type="submit">
             {pending ? '...' : 'حفظ'}
-          </button>
+          </Button>
         ) : null}
       </form>
-    </div>
+    </Modal>
   )
 }
 

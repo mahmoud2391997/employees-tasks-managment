@@ -2,6 +2,14 @@
 
 import { useMemo, useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+
 type Department = { id: string; name: string }
 type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
 type Task = {
@@ -19,11 +27,11 @@ type Task = {
   creator?: Profile | null
 }
 
-const statusColumns: Array<{ id: Task['status']; label: string; bg: string }> = [
-  { id: 'TODO', label: 'قيد الانتظار', bg: 'bg-[#f6f8fa]' },
-  { id: 'IN_PROGRESS', label: 'قيد العمل', bg: 'bg-[#ddf4ff]' },
-  { id: 'REVIEW', label: 'للمراجعة', bg: 'bg-[#fff8c5]' },
-  { id: 'COMPLETED', label: 'مكتملة', bg: 'bg-[#dafbe1]' },
+const statusColumns: Array<{ id: Task['status']; label: string; surface: string }> = [
+  { id: 'TODO', label: 'قيد الانتظار', surface: 'bg-slate-50' },
+  { id: 'IN_PROGRESS', label: 'قيد العمل', surface: 'bg-blue-50/60' },
+  { id: 'REVIEW', label: 'للمراجعة', surface: 'bg-amber-50/60' },
+  { id: 'COMPLETED', label: 'مكتملة', surface: 'bg-emerald-50/60' },
 ]
 
 export function TasksContainer({
@@ -96,34 +104,36 @@ export function TasksContainer({
         />
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] bg-white p-4 shadow-sm">
+      <Card className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <select className="h-10 rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+          <Select className="w-auto" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
             <option value="">كل الأقسام</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>
             ))}
-          </select>
-          <select className="h-10 rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as any)}>
+          </Select>
+          <Select className="w-auto" value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as any)}>
             <option value="all">كل المهام</option>
             <option value="me">المسندة لي</option>
             <option value="by_me">التي أنشأتها</option>
-          </select>
+          </Select>
         </div>
         {canCreate ? (
-          <button className="h-10 rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white" type="button" onClick={() => { setEditing(null); setShowForm(true) }}>
+          <Button type="button" onClick={() => { setEditing(null); setShowForm(true) }}>
             + إضافة مهمة
-          </button>
+          </Button>
         ) : null}
       </div>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-4">
         {statusColumns.map((col) => (
           <div
             key={col.id}
-            className={`min-h-[28rem] rounded-lg border border-[#d0d7de] ${col.bg} p-3`}
+            className={`min-h-[28rem] rounded-2xl border border-slate-200 ${col.surface} p-3`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={async (e) => {
               e.preventDefault()
@@ -136,7 +146,7 @@ export function TasksContainer({
           >
             <div className="mb-3 flex items-center justify-between">
               <div className="text-sm font-semibold">{col.label}</div>
-              <div className="text-xs text-[#656d76]">({filtered.filter((t) => t.status === col.id).length})</div>
+              <div className="text-xs text-slate-500">({filtered.filter((t) => t.status === col.id).length})</div>
             </div>
 
             <div className="space-y-2">
@@ -147,34 +157,34 @@ export function TasksContainer({
                     key={t.id}
                     draggable={canEdit}
                     onDragStart={(e) => e.dataTransfer.setData('text/plain', t.id)}
-                    className="rounded-lg border border-[#d0d7de] bg-white p-3 shadow-sm"
+                    className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate font-semibold">{t.title}</div>
-                        {t.description ? <div className="mt-1 line-clamp-2 text-xs text-[#656d76]">{t.description}</div> : null}
+                        {t.description ? <div className="mt-1 line-clamp-2 text-xs text-slate-500">{t.description}</div> : null}
                       </div>
                       <div className="flex shrink-0 gap-1">
                         {canEdit ? (
-                          <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-1 text-xs font-semibold" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
+                          <Button size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
                             تعديل
-                          </button>
+                          </Button>
                         ) : null}
                         {canDelete ? (
-                          <button className="rounded-md border border-[#d0d7de] bg-[#ffebe9] px-2 py-1 text-xs font-semibold text-[#cf222e]" type="button" onClick={() => deleteTask(t.id)}>
+                          <Button size="sm" variant="danger" type="button" onClick={() => deleteTask(t.id)}>
                             حذف
-                          </button>
+                          </Button>
                         ) : null}
                       </div>
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-2 py-0.5 font-semibold">{t.priority}</span>
-                      {t.department?.name ? <span className="rounded-md border border-[#d0d7de] bg-white px-2 py-0.5">{t.department.name}</span> : null}
+                      <Badge variant="neutral">{t.priority}</Badge>
+                      {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
                       {t.assignee ? (
-                        <span className="rounded-md border border-[#0969da33] bg-[#ddf4ff] px-2 py-0.5 text-[#0969da]">
+                        <Badge variant="info">
                           {(t.assignee.firstName || t.assignee.email) + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
-                        </span>
+                        </Badge>
                       ) : null}
                     </div>
                   </div>
@@ -211,16 +221,8 @@ function TaskForm({
   const [error, setError] = useState('')
 
   return (
-    <div className="rounded-lg border border-[#d0d7de] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">{task ? 'تعديل مهمة' : 'مهمة جديدة'}</div>
-        <button className="rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 py-1.5 text-sm font-semibold" type="button" onClick={onClose}>
-          إغلاق
-        </button>
-      </div>
-
-      <form
-        className="mt-4 grid gap-3 md:grid-cols-2"
+    <Modal open title={task ? 'تعديل مهمة' : 'مهمة جديدة'} onClose={onClose}>
+      <form className="grid gap-3 md:grid-cols-2"
         onSubmit={async (e) => {
           e.preventDefault()
           setPending(true)
@@ -242,63 +244,63 @@ function TaskForm({
       >
         <label className="block text-sm font-medium md:col-span-2">
           العنوان
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label className="block text-sm font-medium md:col-span-2">
           الوصف
-          <textarea className="mt-2 min-h-24 w-full rounded-md border border-[#d0d7de] px-3 py-2 text-sm" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <Textarea className="mt-2" value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
           القسم
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          <Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           المسؤول
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
+          <Select className="mt-2" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
                 {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           الأولوية
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={priority} onChange={(e) => setPriority(e.target.value as any)}>
+          <Select className="mt-2" value={priority} onChange={(e) => setPriority(e.target.value as any)}>
             <option value="LOW">LOW</option>
             <option value="MEDIUM">MEDIUM</option>
             <option value="HIGH">HIGH</option>
             <option value="URGENT">URGENT</option>
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           الحالة
-          <select className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] bg-white px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+          <Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
             <option value="TODO">TODO</option>
             <option value="IN_PROGRESS">IN_PROGRESS</option>
             <option value="REVIEW">REVIEW</option>
             <option value="COMPLETED">COMPLETED</option>
-          </select>
+          </Select>
         </label>
         <label className="block text-sm font-medium">
           تاريخ الاستحقاق
-          <input className="mt-2 h-10 w-full rounded-md border border-[#d0d7de] px-3 text-sm" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <Input className="mt-2" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </label>
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
-        <button className="md:col-span-2 h-10 w-full rounded-md border border-[#1f2328] bg-[#1f2328] px-4 text-sm font-semibold text-white disabled:opacity-60" disabled={pending} type="submit">
+        <Button className="md:col-span-2 w-full" disabled={pending} type="submit">
           {pending ? '...' : 'حفظ'}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Modal>
   )
 }
 
