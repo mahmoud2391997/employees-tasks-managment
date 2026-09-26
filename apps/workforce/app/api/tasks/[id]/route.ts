@@ -23,11 +23,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
 
-  const { requirePermission } = await import('@/server/auth/require-permission')
-  const auth = await requirePermission(req, 'tasks.edit')
-  if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
-  const teamId = auth.user.profile!.teamId!
-  const actorId = auth.user.profile!.id
+  const { getSessionUser } = await import('@/server/auth/session')
+  const user = await getSessionUser(req)
+  if (!user?.profile?.teamId) {
+    return NextResponse.json({ success: false, message: user ? 'لا يوجد فريق مرتبط بالحساب' : 'غير مصرح' }, { status: user ? 400 : 401 })
+  }
+  const teamId = user.profile.teamId
+  const actorId = user.profile.id
 
   const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined
   if (dueDate && Number.isNaN(dueDate.valueOf())) {
@@ -39,6 +41,38 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     select: { id: true, title: true, status: true, createdById: true, assigneeId: true },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
+
+  const assigneeChanged = parsed.data.assigneeId !== undefined && parsed.data.assigneeId !== existing.assigneeId
+  const editsContent =
+    parsed.data.title !== undefined ||
+    parsed.data.description !== undefined ||
+    parsed.data.status !== undefined ||
+    parsed.data.dueDate !== undefined ||
+    parsed.data.priority !== undefined ||
+    parsed.data.departmentId !== undefined
+  if (editsContent && !user.permissions.includes('tasks.edit')) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
+  }
+  if (assigneeChanged && !user.permissions.includes('tasks.assign')) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية إسناد المهام' }, { status: 403 })
+  }
+  if (!editsContent && !assigneeChanged) {
+    return NextResponse.json({ success: false, message: 'لا يوجد تغيير' }, { status: 400 })
+  }
+  if (parsed.data.assigneeId) {
+    const assignee = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.assigneeId, teamId },
+      select: { id: true },
+    })
+    if (!assignee) return NextResponse.json({ success: false, message: 'المسؤول غير موجود' }, { status: 400 })
+  }
+  if (parsed.data.departmentId) {
+    const department = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
+  }
 
   const updated = await prisma.workforceTask.update({
     where: { id },

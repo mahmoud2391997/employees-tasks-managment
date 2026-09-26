@@ -6,6 +6,14 @@ import { prisma } from '@/server/db'
 export default async function SettingsPage() {
   const session = await getServerSession()
   if (!session) redirect('/auth/login')
+  if (!session.permissions.includes('settings.manage')) {
+    return (
+      <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-xl font-semibold">الإعدادات</h1>
+        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
+      </main>
+    )
+  }
 
   const teamId = session.profile?.teamId ?? null
   const team = teamId ? await prisma.workforceTeam.findUnique({ where: { id: teamId }, select: { id: true, name: true, createdAt: true } }) : null

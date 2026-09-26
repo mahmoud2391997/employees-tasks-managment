@@ -10,7 +10,6 @@ const createSchema = z.object({
   email: z.string().email(),
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().min(1).optional(),
-  role: z.string().trim().min(1).optional(),
   departmentId: z.string().trim().min(1).optional(),
   position: z.string().trim().min(1).optional(),
   joinDate: z.string().trim().min(1).optional(),
@@ -51,20 +50,38 @@ export async function POST(req: NextRequest) {
   const salary = parsed.data.salary === undefined ? undefined : String(parsed.data.salary)
 
   const email = parsed.data.email.toLowerCase().trim()
+  if (parsed.data.departmentId) {
+    const department = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
+  }
+  if (parsed.data.managerId) {
+    const manager = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.managerId, teamId },
+      select: { id: true },
+    })
+    if (!manager) return NextResponse.json({ success: false, message: 'المدير غير موجود' }, { status: 400 })
+  }
+
+  const existingProfile = await prisma.workforceProfile.findUnique({ where: { email } })
+  if (existingProfile && existingProfile.teamId && existingProfile.teamId !== teamId) {
+    return NextResponse.json({ success: false, message: 'هذا البريد مرتبط بشركة أخرى' }, { status: 409 })
+  }
   const profile =
-    (await prisma.workforceProfile.findUnique({ where: { email } })) ??
+    existingProfile ??
     (await prisma.workforceProfile.create({
       data: {
         email,
         firstName: parsed.data.firstName,
         lastName: parsed.data.lastName ?? null,
-        role: parsed.data.role ?? 'EMPLOYEE',
+        role: 'EMPLOYEE',
         teamId,
       },
     }))
 
-  // Ensure profile is linked to this team for filtering.
-  if (profile.teamId !== teamId) {
+  if (!existingProfile?.teamId) {
     await prisma.workforceProfile.update({ where: { id: profile.id }, data: { teamId } })
   }
 
