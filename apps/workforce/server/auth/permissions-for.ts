@@ -1,5 +1,7 @@
 import { prisma } from '@/server/db'
-import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+import { ALL_PERMISSIONS, DEFAULT_ROLES, type Permission } from '@/lib/permissions'
+
+const validPermissions = new Set<string>(ALL_PERMISSIONS)
 
 export async function permissionsFor(role: string, teamId: string | null): Promise<Permission[]> {
   if (DEFAULT_ROLES[role]) return DEFAULT_ROLES[role].permissions
@@ -10,6 +12,6 @@ export async function permissionsFor(role: string, teamId: string | null): Promi
   })
   const raw = (custom?.permissions ?? []) as unknown
   if (!Array.isArray(raw)) return []
-  return raw.filter((p): p is Permission => typeof p === 'string') as Permission[]
+  return raw.filter((p): p is Permission => typeof p === 'string' && validPermissions.has(p))
 }
 
