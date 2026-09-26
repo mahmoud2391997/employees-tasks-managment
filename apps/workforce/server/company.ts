@@ -14,8 +14,8 @@ type CompanyConfig = {
 }
 
 function companyConfig(): CompanyConfig | null {
-  const email = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || ''
-  const password = process.env.COMPANY_ADMIN_PASSWORD ?? ''
+  const email = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
+  const password = process.env.COMPANY_ADMIN_PASSWORD ?? 'change-me-please'
   if (!email || password.length < 8) return null
   return {
     name: process.env.COMPANY_NAME?.trim() || 'الشركة',
