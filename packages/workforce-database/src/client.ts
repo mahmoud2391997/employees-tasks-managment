@@ -6,6 +6,10 @@ const workforceDatabaseUrl = ensureWorkforceDatabaseUrlEnv()
 const require = createRequire(import.meta.url)
 const { PrismaClient } = require('./generated/client') as typeof import('./generated/client')
 
+const prismaOptions = workforceDatabaseUrl
+  ? { datasourceUrl: workforceDatabaseUrl }
+  : undefined
+
 declare global {
   // eslint-disable-next-line no-var
   var __workforcePrisma: PrismaClientType | undefined
@@ -13,15 +17,7 @@ declare global {
 
 export const prisma =
   global.__workforcePrisma ??
-  new PrismaClient(
-    workforceDatabaseUrl
-      ? {
-          datasources: {
-            db: { url: workforceDatabaseUrl },
-          },
-        }
-      : undefined,
-  )
+  new PrismaClient(prismaOptions)
 
 if (process.env.NODE_ENV !== 'production') global.__workforcePrisma = prisma
 
