@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
-import { ALL_PERMISSIONS } from '@/lib/permissions'
+import { type Permission } from '@/lib/permissions'
 
 export const runtime = 'nodejs'
 
@@ -28,8 +28,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
   if (RESERVED.has(existing.name)) return NextResponse.json({ success: false, message: 'لا يمكن تعديل هذا الدور' }, { status: 400 })
 
-  const allowed = new Set(ALL_PERMISSIONS as readonly string[])
-  const permissions = parsed.data.permissions ? parsed.data.permissions.filter((p) => allowed.has(p)) : undefined
+  const allowed = new Set(auth.user.permissions as readonly Permission[])
+  const permissions = parsed.data.permissions
+    ? parsed.data.permissions.filter((p): p is Permission => allowed.has(p as Permission))
+    : undefined
 
   const updated = await prisma.workforceCustomRole.update({
     where: { id },

@@ -6,6 +6,10 @@ import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
 const DEMO_EMAIL = 'demo@example.com'
 const DEMO_TEAM_NAME = 'Demo Team'
 
+if (process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('WORKFORCE_DEMO_MODE cannot be enabled in production.')
+}
+
 export type DemoSession = {
   userId: string
   email: string
