@@ -28,6 +28,24 @@ function isClosedOnboardingPage(pathname: string) {
   )
 }
 
+function resolveDbUrlFromEnv(): string | null {
+  const candidates = [
+    process.env.WORKFORCE_DATABASE_URL,
+    process.env.WORKFORCE_POSTGRES_PRISMA_URL,
+    process.env.WORKFORCE_POSTGRES_URL,
+    process.env.WORKFORCE_POSTGRES_URL_NON_POOLING,
+    process.env.POSTGRES_PRISMA_URL,
+    process.env.POSTGRES_URL,
+    process.env.POSTGRES_URL_NON_POOLING,
+    process.env.DATABASE_URL,
+  ]
+  for (const candidate of candidates) {
+    const value = candidate?.trim()
+    if (value) return value
+  }
+  return null
+}
+
 async function verifyTokenEdge(token: string) {
   const secret = process.env.WORKFORCE_JWT_SECRET?.trim()
   if (!secret) return null
@@ -45,7 +63,7 @@ async function verifyTokenEdge(token: string) {
 export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const pathname = request.nextUrl.pathname
-  const demo = process.env.WORKFORCE_DEMO_MODE === 'true'
+  const demo = process.env.WORKFORCE_DEMO_MODE === 'true' || !resolveDbUrlFromEnv()
   const payload = !demo && token ? await verifyTokenEdge(token) : null
 
   if (isClosedOnboardingPage(pathname)) {

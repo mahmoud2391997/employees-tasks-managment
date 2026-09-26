@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 
 import { type Permission } from '@/lib/permissions'
+import { DEFAULT_ROLES } from '@/lib/permissions'
 import { loadAccountAccess } from '@/server/auth/access'
 import { ensureCompany } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
@@ -27,7 +28,21 @@ export type ServerSession = {
 
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
-  if (!resolveWorkforceDatabaseUrl()) return null
+  if (!resolveWorkforceDatabaseUrl()) {
+    return {
+      userId: 'setup',
+      email: 'setup@local',
+      profile: {
+        id: 'setup-profile',
+        email: 'setup@local',
+        firstName: 'Setup',
+        lastName: null,
+        role: 'ADMIN',
+        teamId: null,
+      },
+      permissions: [...(DEFAULT_ROLES.ADMIN.permissions as Permission[])],
+    }
+  }
   await ensureCompany()
 
   const cookieStore = await cookies()
