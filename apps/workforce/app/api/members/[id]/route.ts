@@ -22,15 +22,20 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const parsed = patchSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
 
+  const requestedRole = parsed.data.role?.toUpperCase().replace(/\s+/g, '_')
+  if (requestedRole && !/^[A-Z][A-Z0-9_]*$/.test(requestedRole)) {
+    return NextResponse.json({ success: false, message: 'الدور غير صحيح' }, { status: 400 })
+  }
+
   const existing = await prisma.workforceTeamMember.findFirst({
     where: { id, teamId },
     select: { id: true, userId: true, role: true, isActive: true },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
 
-  if (parsed.data.role && !DEFAULT_ROLES[parsed.data.role]) {
+  if (requestedRole && !DEFAULT_ROLES[requestedRole]) {
     const customRole = await prisma.workforceCustomRole.findUnique({
-      where: { teamId_name: { teamId, name: parsed.data.role } },
+      where: { teamId_name: { teamId, name: requestedRole } },
       select: { id: true },
     })
     if (!customRole) return NextResponse.json({ success: false, message: 'الدور غير موجود' }, { status: 400 })
@@ -40,7 +45,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const m = await tx.workforceTeamMember.update({
       where: { id },
       data: {
-        role: parsed.data.role ?? undefined,
+        role: requestedRole ?? undefined,
         isActive: parsed.data.isActive ?? undefined,
       },
     })

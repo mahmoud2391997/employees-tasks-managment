@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
 
   const name = parsed.data.name.toUpperCase().replace(/\s+/g, '_')
+  if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+    return NextResponse.json({ success: false, message: 'اسم الدور غير صحيح' }, { status: 400 })
+  }
   if (RESERVED.has(name)) return NextResponse.json({ success: false, message: 'لا يمكن استخدام هذا الاسم' }, { status: 400 })
 
   const allowed = new Set(auth.user.permissions as readonly Permission[])
