@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/input'
 
 export function LoginForm({ companyName }: { companyName: string }) {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin@company.local')
+  const [password, setPassword] = useState('change-me-please')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
 
