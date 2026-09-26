@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url)
 const { PrismaClient } = require('./generated/client') as typeof import('./generated/client')
 
 const prismaOptions = workforceDatabaseUrl
-  ? { datasourceUrl: workforceDatabaseUrl }
+  ? { datasources: { db: { url: workforceDatabaseUrl } } }
   : undefined
 
 declare global {
