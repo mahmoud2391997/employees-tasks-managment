@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
         )
       }
     }
-    }
 
     const user = await prisma.workforceUser.findUnique({ where: { email } })
     if (!user) {
