@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
-import { useState } from 'react'
 
 const sections = [
   { label: 'Main', items: [
@@ -28,19 +27,22 @@ export function Sidebar({
   role,
   permissions,
   companyName,
+  collapsed,
+  onToggle,
 }: {
   name: string
   role?: string | null
   permissions: string[]
   companyName: string
+  collapsed: boolean
+  onToggle: () => void
 }) {
-  const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const visibleSections = sections
 
   return (
-    <aside className={`fixed inset-y-0 right-0 z-40 flex flex-col border-l border-slate-200 bg-white transition-all duration-200 ${collapsed ? 'w-[72px]' : 'w-64'}`}>
-      <div className="flex h-20 items-center justify-between border-b border-slate-100 px-4">
+    <aside className="fixed inset-y-0 right-0 z-40 flex w-[var(--sidebar-width)] flex-col overflow-hidden border-l border-slate-200 bg-white transition-[width] duration-200 ease-in-out">
+      <div className={`flex h-20 shrink-0 items-center border-b border-slate-100 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-4'}`}>
         {!collapsed && (
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0 text-right">
@@ -52,11 +54,11 @@ export function Sidebar({
             </div>
           </div>
         )}
-        {collapsed && <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><Menu size={21} /></div>}
         <button
           aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-          onClick={() => setCollapsed(!collapsed)}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+          aria-expanded={!collapsed}
+          onClick={onToggle}
+          className={`rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-700 ${collapsed ? 'flex h-10 w-10 items-center justify-center bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'p-2'}`}
         >
           <ChevronRight className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} size={18} />
         </button>
