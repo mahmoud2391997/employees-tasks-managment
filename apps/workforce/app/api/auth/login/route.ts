@@ -33,70 +33,83 @@ const bodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const json = await req.json().catch(() => null)
-  const parsed = bodySchema.safeParse(json)
-  if (!parsed.success) {
-    return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
-  }
-
-  const { prisma } = await import('@/server/db')
-  const { ensureCompany } = await import('@/server/company')
-  const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
-
-  await ensureCompany()
-
-  const email = parsed.data.email.toLowerCase().trim()
-  const ip = getClientIp(req)
-  const key = `${email}|${ip}`
-  const now = Date.now()
-  pruneExpiredAttempts(now)
-
-  const existingAttempt = failedLoginAttempts.get(key)
-  if (existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS) {
-    if (existingAttempt.count >= MAX_FAILED_ATTEMPTS) {
-      const retryAfterMs = Math.max(0, FAILED_WINDOW_MS - (now - existingAttempt.windowStartMs))
-      return NextResponse.json(
-        { success: false, message: 'محاولات كثيرة، حاول لاحقاً' },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
-        },
-      )
+  try {
+    const json = await req.json().catch(() => null)
+    const parsed = bodySchema.safeParse(json)
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
     }
-  }
 
-  const user = await prisma.workforceUser.findUnique({ where: { email } })
-  if (!user) {
-    const attempt =
-      existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
-        ? existingAttempt
-        : { count: 0, windowStartMs: now }
-    attempt.count += 1
-    failedLoginAttempts.set(key, attempt)
-    return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
-  }
+    const { prisma } = await import('@/server/db')
+    const { ensureCompany } = await import('@/server/company')
+    const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
 
-  const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
-  if (!ok) {
-    const attempt =
-      existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
-        ? existingAttempt
-        : { count: 0, windowStartMs: now }
-    attempt.count += 1
-    failedLoginAttempts.set(key, attempt)
-    return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
-  }
+    await ensureCompany()
 
-  const { loadAccountAccess } = await import('@/server/auth/access')
-  const access = await loadAccountAccess(user.id)
-  if (!access?.active) {
-    return NextResponse.json({ success: false, message: 'هذا الحساب غير مفعل في الشركة' }, { status: 403 })
-  }
+    const email = parsed.data.email.toLowerCase().trim()
+    const ip = getClientIp(req)
+    const key = `${email}|${ip}`
+    const now = Date.now()
+    pruneExpiredAttempts(now)
 
-  failedLoginAttempts.delete(key)
-  const token = await issueAccessToken({ sub: user.id, email: user.email })
-  const res = NextResponse.json({ success: true })
-  setAuthCookie(res, token)
-  return res
+    const existingAttempt = failedLoginAttempts.get(key)
+    if (existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS) {
+      if (existingAttempt.count >= MAX_FAILED_ATTEMPTS) {
+        const retryAfterMs = Math.max(0, FAILED_WINDOW_MS - (now - existingAttempt.windowStartMs))
+        return NextResponse.json(
+          { success: false, message: 'محاولات كثيرة، حاول لاحقاً' },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
+          },
+        )
+      }
+    }
+    }
+
+    const user = await prisma.workforceUser.findUnique({ where: { email } })
+    if (!user) {
+      const attempt =
+        existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
+          ? existingAttempt
+          : { count: 0, windowStartMs: now }
+      attempt.count += 1
+      failedLoginAttempts.set(key, attempt)
+      return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
+    }
+
+    const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
+    if (!ok) {
+      const attempt =
+        existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
+          ? existingAttempt
+          : { count: 0, windowStartMs: now }
+      attempt.count += 1
+      failedLoginAttempts.set(key, attempt)
+      return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
+    }
+
+    const { loadAccountAccess } = await import('@/server/auth/access')
+    const access = await loadAccountAccess(user.id)
+    if (!access?.active) {
+      return NextResponse.json({ success: false, message: 'هذا الحساب غير مفعل في الشركة' }, { status: 403 })
+    }
+
+    failedLoginAttempts.delete(key)
+    const token = await issueAccessToken({ sub: user.id, email: user.email })
+    const res = NextResponse.json({ success: true })
+    setAuthCookie(res, token)
+    return res
+  } catch (e) {
+    console.error('auth/login: unhandled error', e)
+    const msg = String((e as any)?.message ?? e ?? '')
+    if (msg.includes('WORKFORCE_JWT_SECRET')) {
+      return NextResponse.json({ success: false, message: 'إعدادات المصادقة غير مكتملة' }, { status: 500 })
+    }
+    if (msg.includes('WORKFORCE_DATABASE_URL') || msg.includes('DATABASE_URL') || msg.toLowerCase().includes('prisma')) {
+      return NextResponse.json({ success: false, message: 'إعدادات قاعدة البيانات غير مكتملة' }, { status: 500 })
+    }
+    return NextResponse.json({ success: false, message: 'خطأ داخلي، حاول لاحقاً' }, { status: 500 })
+  }
 }
 
