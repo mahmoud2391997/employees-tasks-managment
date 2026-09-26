@@ -6,6 +6,17 @@ import { requirePermission } from '@/server/auth/require-permission'
 
 export const runtime = 'nodejs'
 
+function parseTakeSkip(req: NextRequest) {
+  const sp = req.nextUrl.searchParams
+  let take = Number(sp.get('take') ?? '50')
+  let skip = Number(sp.get('skip') ?? '0')
+  if (!Number.isFinite(take) || take <= 0) take = 50
+  if (!Number.isFinite(skip) || skip < 0) skip = 0
+  take = Math.min(200, Math.max(1, Math.floor(take)))
+  skip = Math.max(0, Math.floor(skip))
+  return { take, skip }
+}
+
 const createSchema = z.object({
   email: z.string().email(),
   firstName: z.string().trim().min(1),
@@ -24,12 +35,20 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
 
-  const employees = await prisma.workforceEmployee.findMany({
-    where: { teamId },
-    include: { profile: true, department: true, manager: true },
-    orderBy: [{ createdAt: 'desc' }],
-  })
-  return NextResponse.json({ success: true, data: employees })
+  const { take, skip } = parseTakeSkip(req)
+  const where = { teamId }
+  const [total, employees] = await prisma.$transaction([
+    prisma.workforceEmployee.count({ where }),
+    prisma.workforceEmployee.findMany({
+      where,
+      include: { profile: true, department: true, manager: true },
+      orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
+    }),
+  ])
+
+  return NextResponse.json({ success: true, data: employees, total, hasMore: skip + employees.length < total })
 }
 
 export async function POST(req: NextRequest) {
@@ -46,6 +65,22 @@ export async function POST(req: NextRequest) {
   const joinDate = parsed.data.joinDate ? new Date(parsed.data.joinDate) : undefined
   if (joinDate && Number.isNaN(joinDate.valueOf())) {
     return NextResponse.json({ success: false, message: 'joinDate غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.departmentId) {
+    const dep = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.managerId) {
+    const mgr = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.managerId, teamId },
+      select: { id: true },
+    })
+    if (!mgr) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
   const salary = parsed.data.salary === undefined ? undefined : String(parsed.data.salary)

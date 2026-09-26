@@ -34,6 +34,22 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const existing = await prisma.workforceEmployee.findFirst({ where: { id, teamId } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
 
+  if (parsed.data.departmentId !== undefined && parsed.data.departmentId !== null) {
+    const dep = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.managerId !== undefined && parsed.data.managerId !== null) {
+    const mgr = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.managerId, teamId },
+      select: { id: true },
+    })
+    if (!mgr) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
   const salary =
     parsed.data.salary === undefined
       ? undefined

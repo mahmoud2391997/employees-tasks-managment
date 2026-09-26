@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
     if (existingMember?.isActive) {
       return NextResponse.json({ success: false, message: 'هذا المستخدم عضو بالفعل' }, { status: 409 })
     }
+    return NextResponse.json(
+      { success: false, code: 'EXISTING_USER_CAN_REACTIVATE', message: 'الحساب موجود بالفعل، يمكنك إعادة تفعيله مباشرة' },
+      { status: 409 },
+    )
   }
 
   const pending = await prisma.workforceInvitation.findFirst({
@@ -56,6 +60,7 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   const origin = originFor(req)
 
+  let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
     const token = await generateUniqueToken()
     try {
@@ -72,12 +77,14 @@ export async function POST(req: NextRequest) {
       })
     } catch (e: any) {
       // Retry on unique token constraint.
+      lastError = e
       const msg = String(e?.message ?? '')
       if (msg.includes('WorkforceInvitation_token_key') || msg.toLowerCase().includes('unique constraint')) continue
       throw e
     }
   }
 
+  console.error('members/invite: failed to create invitation after retries', lastError)
   return NextResponse.json({ success: false, message: 'تعذر إنشاء الدعوة، حاول مرة أخرى' }, { status: 500 })
 }
 
