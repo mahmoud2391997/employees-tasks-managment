@@ -5,7 +5,9 @@
   "packageManager": "pnpm@12.3.4",
   "scripts": {
     "dev": "next dev -p 3001",
+    "prebuild": "pnpm -C ../../packages/workforce-database generate",
     "build": "next build --webpack",
+    "prestart": "pnpm -C ../../packages/workforce-database generate",
     "start": "next start -p 3001"
   },
   "dependencies": {
