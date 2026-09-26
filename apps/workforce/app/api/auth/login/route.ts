@@ -29,6 +29,12 @@ export async function POST(req: NextRequest) {
   const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
   if (!ok) return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
 
+  const { loadAccountAccess } = await import('@/server/auth/access')
+  const access = await loadAccountAccess(user.id)
+  if (!access?.active) {
+    return NextResponse.json({ success: false, message: 'هذا الحساب غير مفعل في الشركة' }, { status: 403 })
+  }
+
   const token = await issueAccessToken({ sub: user.id, email: user.email })
   const res = NextResponse.json({ success: true })
   setAuthCookie(res, token)

@@ -45,6 +45,23 @@ export async function POST(req: NextRequest) {
   if (dueDate && Number.isNaN(dueDate.valueOf())) {
     return NextResponse.json({ success: false, message: 'dueDate غير صحيح' }, { status: 400 })
   }
+  if (parsed.data.assigneeId && !auth.user.permissions.includes('tasks.assign')) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية إسناد المهام' }, { status: 403 })
+  }
+  if (parsed.data.assigneeId) {
+    const assignee = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.assigneeId, teamId },
+      select: { id: true },
+    })
+    if (!assignee) return NextResponse.json({ success: false, message: 'المسؤول غير موجود' }, { status: 400 })
+  }
+  if (parsed.data.departmentId) {
+    const department = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
+  }
 
   const created = await prisma.workforceTask.create({
     data: {

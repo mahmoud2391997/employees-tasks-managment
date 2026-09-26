@@ -57,6 +57,7 @@ export function TasksContainer({
   const canCreate = permissions.includes('tasks.create')
   const canEdit = permissions.includes('tasks.edit')
   const canDelete = permissions.includes('tasks.delete')
+  const canAssign = permissions.includes('tasks.assign')
 
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
@@ -92,6 +93,7 @@ export function TasksContainer({
           task={editing}
           departments={departments}
           profiles={profiles}
+          canAssign={canAssign}
           onClose={() => {
             setShowForm(false)
             setEditing(null)
@@ -201,12 +203,14 @@ function TaskForm({
   task,
   departments,
   profiles,
+  canAssign,
   onClose,
   onSaved,
 }: {
   task: Task | null
   departments: Department[]
   profiles: Profile[]
+  canAssign: boolean
   onClose: () => void
   onSaved: () => void
 }) {
@@ -227,7 +231,15 @@ function TaskForm({
           e.preventDefault()
           setPending(true)
           setError('')
-          const body = { title, description: description || undefined, departmentId: departmentId || undefined, assigneeId: assigneeId || undefined, priority, status, dueDate: dueDate || undefined }
+          const body = {
+            title,
+            description: description || undefined,
+            departmentId: departmentId || undefined,
+            assigneeId: canAssign ? assigneeId || undefined : undefined,
+            priority,
+            status,
+            dueDate: dueDate || undefined,
+          }
           const res = await fetch(task ? `/api/tasks/${task.id}` : '/api/tasks', {
             method: task ? 'PATCH' : 'POST',
             headers: { 'content-type': 'application/json' },
@@ -263,7 +275,7 @@ function TaskForm({
         </label>
         <label className="block text-sm font-medium">
           المسؤول
-          <Select className="mt-2" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
+          <Select className="mt-2" value={assigneeId} disabled={!canAssign} onChange={(e) => setAssigneeId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>

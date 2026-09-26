@@ -1,10 +1,9 @@
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 
-import { prisma } from '@/server/db'
 import { type Permission } from '@/lib/permissions'
+import { loadAccountAccess } from '@/server/auth/access'
 import { ensureCompany } from '@/server/company'
-import { permissionsFor } from '@/server/auth/permissions-for'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
@@ -34,30 +33,13 @@ export const getServerSession = cache(async (): Promise<ServerSession | null> =>
   const payload = await verifyAccessToken(token)
   if (!payload) return null
 
-  const user = await prisma.workforceUser.findUnique({
-    where: { id: payload.sub },
-    select: {
-      id: true,
-      email: true,
-      profile: { select: { id: true, email: true, firstName: true, lastName: true, role: true, teamId: true } },
-    },
-  })
-  if (!user) return null
-  const perms = await permissionsFor(user.profile?.role ?? 'EMPLOYEE', user.profile?.teamId ?? null)
+  const access = await loadAccountAccess(payload.sub)
+  if (!access?.active) return null
   return {
-    userId: user.id,
-    email: user.email,
-    profile: user.profile
-      ? {
-          id: user.profile.id,
-          email: user.profile.email,
-          firstName: user.profile.firstName,
-          lastName: user.profile.lastName,
-          role: user.profile.role,
-          teamId: user.profile.teamId,
-        }
-      : null,
-    permissions: perms,
+    userId: access.userId,
+    email: access.email,
+    profile: access.profile,
+    permissions: access.permissions,
   }
 })
 

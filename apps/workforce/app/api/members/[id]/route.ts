@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES } from '@/lib/permissions'
+import { canGrantRole } from '@/server/auth/access'
 import { requirePermission } from '@/server/auth/require-permission'
 
 export const runtime = 'nodejs'
@@ -40,6 +41,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     })
     if (!customRole) return NextResponse.json({ success: false, message: 'الدور غير موجود' }, { status: 400 })
   }
+  if (requestedRole && !(await canGrantRole(auth.user.permissions, requestedRole, teamId))) {
+    return NextResponse.json({ success: false, message: 'لا يمكنك منح دور أعلى من صلاحياتك' }, { status: 403 })
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     const m = await tx.workforceTeamMember.update({
@@ -49,10 +53,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         isActive: parsed.data.isActive ?? undefined,
       },
     })
-    if (parsed.data.role) {
+    if (requestedRole) {
       const u = await tx.workforceUser.findUnique({ where: { id: existing.userId }, select: { profileId: true } })
       if (u?.profileId) {
-        await tx.workforceProfile.update({ where: { id: u.profileId }, data: { role: parsed.data.role } })
+        await tx.workforceProfile.update({ where: { id: u.profileId }, data: { role: requestedRole } })
       }
     }
     return m

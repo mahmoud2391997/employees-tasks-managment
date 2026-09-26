@@ -250,7 +250,6 @@ function EmployeeForm({
   const [email, setEmail] = useState(employee?.profile.email ?? '')
   const [firstName, setFirstName] = useState(employee?.profile.firstName ?? '')
   const [lastName, setLastName] = useState(employee?.profile.lastName ?? '')
-  const [role, setRole] = useState(employee?.profile.role ?? 'EMPLOYEE')
   const [departmentId, setDepartmentId] = useState(employee?.departmentId ?? '')
   const [position, setPosition] = useState(employee?.position ?? '')
   const [joinDate, setJoinDate] = useState(employee?.joinDate?.slice(0, 10) ?? '')
@@ -282,7 +281,6 @@ function EmployeeForm({
                 email,
                 firstName,
                 lastName: lastName || undefined,
-                role: role || undefined,
                 departmentId: departmentId || undefined,
                 position: position || undefined,
                 joinDate: joinDate || undefined,
@@ -318,11 +316,6 @@ function EmployeeForm({
             <label className="block text-sm font-medium">
               الاسم الأخير
               <Input className="mt-2" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </label>
-            <label className="block text-sm font-medium md:col-span-2">
-              الدور
-              <Input className="mt-2" value={role} onChange={(e) => setRole(e.target.value)} />
-              <div className="mt-1 text-xs text-[#656d76]">استخدم دوراً افتراضياً (ADMIN/MANAGER/EMPLOYEE) أو اسم دور مخصص.</div>
             </label>
           </>
         ) : null}

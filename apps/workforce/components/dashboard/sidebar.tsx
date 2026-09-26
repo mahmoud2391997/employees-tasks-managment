@@ -14,7 +14,7 @@ const sections = [
   { label: 'Team', items: [
     { href: '/members', label: 'الأعضاء', icon: UserPlus, permission: 'members.view' },
     { href: '/roles', label: 'الأدوار والصلاحيات', icon: ShieldCheck, permission: 'roles.manage' },
-    { href: '/settings', label: 'الإعدادات', icon: Settings, permission: null },
+    { href: '/settings', label: 'الإعدادات', icon: Settings, permission: 'settings.manage' },
   ]},
   { label: 'Account', items: [
     { href: '/profile', label: 'الملف الشخصي', icon: User, permission: null },
