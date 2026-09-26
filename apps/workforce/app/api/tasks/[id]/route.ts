@@ -59,19 +59,21 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!editsContent && !assigneeChanged) {
     return NextResponse.json({ success: false, message: 'لا يوجد تغيير' }, { status: 400 })
   }
-  if (parsed.data.assigneeId) {
+
+  if (parsed.data.departmentId !== undefined && parsed.data.departmentId !== null) {
+    const dep = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.assigneeId !== undefined && parsed.data.assigneeId !== null) {
     const assignee = await prisma.workforceProfile.findFirst({
       where: { id: parsed.data.assigneeId, teamId },
       select: { id: true },
     })
-    if (!assignee) return NextResponse.json({ success: false, message: 'المسؤول غير موجود' }, { status: 400 })
-  }
-  if (parsed.data.departmentId) {
-    const department = await prisma.workforceDepartment.findFirst({
-      where: { id: parsed.data.departmentId, teamId },
-      select: { id: true },
-    })
-    if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
+    if (!assignee) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
   const updated = await prisma.workforceTask.update({

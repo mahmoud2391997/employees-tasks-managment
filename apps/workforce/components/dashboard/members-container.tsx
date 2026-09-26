@@ -215,6 +215,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
   const [role, setRole] = useState(roleOptions[0]?.value ?? 'EMPLOYEE')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const [mode, setMode] = useState<'invite' | 'reactivate'>('invite')
 
   return (
     <Card className="p-5">
@@ -225,20 +226,38 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
           e.preventDefault()
           setPending(true)
           setError('')
-          const res = await fetch('/api/members/invite', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, role }) })
-          const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string; data?: { inviteUrl?: string } } | null
+          const endpoint = mode === 'reactivate' ? '/api/members/reactivate' : '/api/members/invite'
+          const body = mode === 'reactivate' ? { email } : { email, role }
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+          const json = (await res.json().catch(() => null)) as
+            | { success?: boolean; message?: string; code?: string; data?: { inviteUrl?: string } }
+            | null
           setPending(false)
           if (!res.ok || !json?.success) {
             setError(json?.message || 'تعذر إرسال الدعوة')
+            if (mode === 'invite' && json?.code === 'EXISTING_USER_CAN_REACTIVATE') setMode('reactivate')
             return
           }
           setEmail('')
+          setMode('invite')
           onInvited(json?.data?.inviteUrl ?? '')
         }}
       >
         <label className="block text-sm font-medium md:col-span-2">
           البريد الإلكتروني
-          <Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input
+            className="ltr mt-2"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setMode('invite')
+            }}
+            required
+          />
         </label>
         <label className="block text-sm font-medium">
           الدور
@@ -252,7 +271,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
         </label>
         {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-3 w-full" disabled={pending} type="submit">
-          {pending ? '...' : 'إرسال الدعوة'}
+          {pending ? '...' : mode === 'reactivate' ? 'إعادة التفعيل' : 'إرسال الدعوة'}
         </Button>
       </form>
     </Card>

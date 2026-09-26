@@ -6,6 +6,17 @@ import { requirePermission } from '@/server/auth/require-permission'
 
 export const runtime = 'nodejs'
 
+function parseTakeSkip(req: NextRequest) {
+  const sp = req.nextUrl.searchParams
+  let take = Number(sp.get('take') ?? '50')
+  let skip = Number(sp.get('skip') ?? '0')
+  if (!Number.isFinite(take) || take <= 0) take = 50
+  if (!Number.isFinite(skip) || skip < 0) skip = 0
+  take = Math.min(200, Math.max(1, Math.floor(take)))
+  skip = Math.max(0, Math.floor(skip))
+  return { take, skip }
+}
+
 const createSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1).optional(),
@@ -21,12 +32,19 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
 
-  const tasks = await prisma.workforceTask.findMany({
-    where: { teamId },
-    include: { department: true, assignee: true, creator: true },
-    orderBy: [{ createdAt: 'desc' }],
-  })
-  return NextResponse.json({ success: true, data: tasks })
+  const { take, skip } = parseTakeSkip(req)
+  const where = { teamId }
+  const [total, tasks] = await prisma.$transaction([
+    prisma.workforceTask.count({ where }),
+    prisma.workforceTask.findMany({
+      where,
+      include: { department: true, assignee: true, creator: true },
+      orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
+    }),
+  ])
+  return NextResponse.json({ success: true, data: tasks, total, hasMore: skip + tasks.length < total })
 }
 
 export async function POST(req: NextRequest) {
@@ -61,6 +79,22 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     })
     if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
+  }
+
+  if (parsed.data.departmentId) {
+    const dep = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.assigneeId) {
+    const assignee = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.assigneeId, teamId },
+      select: { id: true },
+    })
+    if (!assignee) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
   const created = await prisma.workforceTask.create({
