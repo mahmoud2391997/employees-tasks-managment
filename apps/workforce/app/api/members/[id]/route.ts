@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/server/db'
+import { DEFAULT_ROLES } from '@/lib/permissions'
 import { requirePermission } from '@/server/auth/require-permission'
 
 export const runtime = 'nodejs'
@@ -26,6 +27,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     select: { id: true, userId: true, role: true, isActive: true },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
+
+  if (parsed.data.role && !DEFAULT_ROLES[parsed.data.role]) {
+    const customRole = await prisma.workforceCustomRole.findUnique({
+      where: { teamId_name: { teamId, name: parsed.data.role } },
+      select: { id: true },
+    })
+    if (!customRole) return NextResponse.json({ success: false, message: 'الدور غير موجود' }, { status: 400 })
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     const m = await tx.workforceTeamMember.update({

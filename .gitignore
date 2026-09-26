@@ -27,7 +27,7 @@ packages/database/generated
 .env
 
 # Prisma query engine binaries (generated locally; do not commit)
-packages/workforce-database/src/generated/client/*.node
+packages/workforce-database/src/generated/
 packages/workforce-database/src/generated/client/libquery_engine*
 packages/workforce-database/src/generated/client/query_engine*
 

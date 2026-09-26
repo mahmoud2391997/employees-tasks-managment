@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
-import { ALL_PERMISSIONS } from '@/lib/permissions'
+import { type Permission } from '@/lib/permissions'
 
 export const runtime = 'nodejs'
 
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
   const name = parsed.data.name.toUpperCase().replace(/\s+/g, '_')
   if (RESERVED.has(name)) return NextResponse.json({ success: false, message: 'لا يمكن استخدام هذا الاسم' }, { status: 400 })
 
-  const allowed = new Set(ALL_PERMISSIONS as readonly string[])
-  const permissions = (parsed.data.permissions ?? []).filter((p) => allowed.has(p))
+  const allowed = new Set(auth.user.permissions as readonly Permission[])
+  const permissions = (parsed.data.permissions ?? []).filter((p): p is Permission => allowed.has(p as Permission))
 
   try {
     const created = await prisma.workforceCustomRole.create({
