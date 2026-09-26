@@ -175,7 +175,7 @@ export function DepartmentsContainer({
             <tr>
               <TH className="min-w-64">الاسم</TH>
               <TH className="min-w-64">المدير</TH>
-              <TH className="min-w-40 text-left">إجراءات</TH>
+              <TH className="min-w-40">إجراءات</TH>
             </tr>
           </THead>
           <tbody>
@@ -183,8 +183,8 @@ export function DepartmentsContainer({
               <tr key={d.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD className="font-semibold">{d.name}</TD>
                 <TD>{d.manager ? (d.manager.firstName || d.manager.email) : '—'}</TD>
-                <TD className="text-left">
-                  <div className="flex justify-start gap-2">
+                <TD>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     {canEdit ? (
                       <Button
                         size="sm"

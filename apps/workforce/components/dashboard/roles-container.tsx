@@ -100,7 +100,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
               <TH className="min-w-48">الاسم</TH>
               <TH className="min-w-64">الوصف</TH>
               <TH className="min-w-28">الصلاحيات</TH>
-              <TH className="min-w-44 text-left">إجراءات</TH>
+              <TH className="min-w-44">إجراءات</TH>
             </tr>
           </THead>
           <tbody>
@@ -109,8 +109,8 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                 <TD className="ltr font-mono text-xs">{r.name}</TD>
                 <TD>{r.label}</TD>
                 <TD className="text-slate-600">{(r.permissions ?? []).length}</TD>
-                <TD className="text-left">
-                  <div className="flex justify-start gap-2">
+                <TD>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(r)}>
                       {RESERVED.has(r.name) ? 'عرض' : 'تعديل'}
                     </Button>

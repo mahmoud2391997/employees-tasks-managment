@@ -100,7 +100,7 @@ export function MembersContainer({
               <TH className="min-w-72">العضو</TH>
               <TH className="min-w-56">الدور</TH>
               <TH className="min-w-32">الحالة</TH>
-              <TH className="min-w-40 text-left">إجراءات</TH>
+              <TH className="min-w-40">إجراءات</TH>
             </tr>
           </THead>
           <tbody>
@@ -117,8 +117,9 @@ export function MembersContainer({
                   </TD>
                   <TD>
                     {canAssign ? (
+                      <div className="flex justify-center">
                       <Select
-                        className="h-9 w-auto min-w-44"
+                        className="h-9 w-44!"
                         value={m.role}
                         onChange={async (e) => {
                           await fetch(`/api/members/${m.id}`, {
@@ -136,12 +137,13 @@ export function MembersContainer({
                         ))}
                         {!roleOptions.some((o) => o.value === m.role) ? <option value={m.role}>{m.role}</option> : null}
                       </Select>
+                      </div>
                     ) : (
                       <span className="ltr font-mono text-xs">{m.role}</span>
                     )}
                   </TD>
                   <TD>{m.isActive ? <Badge variant="success">نشط</Badge> : <Badge variant="neutral">غير نشط</Badge>}</TD>
-                  <TD className="text-left">
+                  <TD>
                     {canRemove ? (
                       <Button
                         size="sm"
