@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs'
 
+import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
+
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES } from '@/lib/permissions'
 
@@ -127,6 +129,7 @@ let companyInFlight: Promise<void> | null = null
 
 /** Creates the single company and its admin when env is configured. Further teams are not created. */
 export function ensureCompany(): Promise<void> {
+  if (!resolveWorkforceDatabaseUrl()) return Promise.resolve()
   if (companyReady) return Promise.resolve()
   if (!companyInFlight) {
     companyInFlight = provisionCompany()

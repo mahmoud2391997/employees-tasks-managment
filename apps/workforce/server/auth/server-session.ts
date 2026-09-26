@@ -1,6 +1,8 @@
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 
+import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
+
 import { type Permission } from '@/lib/permissions'
 import { loadAccountAccess } from '@/server/auth/access'
 import { ensureCompany } from '@/server/company'
@@ -25,6 +27,7 @@ export type ServerSession = {
 
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
+  if (!resolveWorkforceDatabaseUrl()) return null
   await ensureCompany()
 
   const cookieStore = await cookies()
@@ -33,13 +36,18 @@ export const getServerSession = cache(async (): Promise<ServerSession | null> =>
   const payload = await verifyAccessToken(token)
   if (!payload) return null
 
-  const access = await loadAccountAccess(payload.sub)
-  if (!access?.active) return null
-  return {
-    userId: access.userId,
-    email: access.email,
-    profile: access.profile,
-    permissions: access.permissions,
+  try {
+    const access = await loadAccountAccess(payload.sub)
+    if (!access?.active) return null
+    return {
+      userId: access.userId,
+      email: access.email,
+      profile: access.profile,
+      permissions: access.permissions,
+    }
+  } catch (e) {
+    console.error('auth/server-session: failed to load session', e)
+    return null
   }
 })
 
