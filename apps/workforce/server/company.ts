@@ -7,6 +7,7 @@ import { DEFAULT_ROLES } from '@/lib/permissions'
 
 const DEMO_TEAM_NAME = 'Demo Team'
 export const FALLBACK_ADMIN_ID = 'database-unavailable-admin'
+export const FALLBACK_COMPANY_ID = 'company-default'
 
 type CompanyConfig = {
   name: string

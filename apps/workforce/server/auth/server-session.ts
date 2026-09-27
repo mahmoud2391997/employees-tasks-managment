@@ -6,7 +6,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 import { type Permission } from '@/lib/permissions'
 import { DEFAULT_ROLES } from '@/lib/permissions'
 import { loadAccountAccess } from '@/server/auth/access'
-import { ensureCompany, FALLBACK_ADMIN_ID } from '@/server/company'
+import { ensureCompany, FALLBACK_ADMIN_ID, FALLBACK_COMPANY_ID } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
@@ -42,7 +42,7 @@ export const getServerSession = cache(async (): Promise<ServerSession | null> =>
           firstName: 'مدير',
           lastName: 'الشركة',
           role: 'ADMIN',
-          teamId: null,
+          teamId: FALLBACK_COMPANY_ID,
         },
         permissions: [...(DEFAULT_ROLES.ADMIN.permissions as Permission[])],
       }
