@@ -6,7 +6,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 import { type Permission } from '@/lib/permissions'
 import { DEFAULT_ROLES } from '@/lib/permissions'
 import { loadAccountAccess } from '@/server/auth/access'
-import { ensureCompany } from '@/server/company'
+import { ensureCompany, FALLBACK_ADMIN_ID } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { verifyAccessToken } from '@/server/auth/jwt'
 
@@ -29,6 +29,24 @@ export type ServerSession = {
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
   if (isDemoModeEnabled()) return await getOrCreateDemoSession()
   if (!resolveWorkforceDatabaseUrl()) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get(COOKIE_NAME)?.value
+    const payload = token ? await verifyAccessToken(token) : null
+    if (payload?.sub === FALLBACK_ADMIN_ID) {
+      return {
+        userId: FALLBACK_ADMIN_ID,
+        email: payload.email,
+        profile: {
+          id: 'database-unavailable-admin-profile',
+          email: payload.email,
+          firstName: 'مدير',
+          lastName: 'الشركة',
+          role: 'ADMIN',
+          teamId: null,
+        },
+        permissions: [...(DEFAULT_ROLES.ADMIN.permissions as Permission[])],
+      }
+    }
     return {
       userId: 'setup',
       email: 'setup@local',
