@@ -20,20 +20,20 @@ type Member = {
   createdAt: string
   user: {
     id: string
-    email: string
-    profile: { id: string; email: string; firstName: string | null; lastName: string | null; role: string; teamId: string | null } | null
+    email: string | null
+    profile: { id: string; email: string | null; firstName: string | null; lastName: string | null; role: string; teamId: string | null } | null
   }
 }
 
 type Invitation = {
   id: string
-  email: string
+  email: string | null
   role: string
   token: string
   expiresAt: string | null
   acceptedAt: string | null
   createdAt: string
-  invitedBy: { id: string; email: string; firstName: string | null; lastName: string | null }
+  invitedBy: { id: string; email: string | null; firstName: string | null; lastName: string | null }
 }
 
 export function MembersContainer({
@@ -146,13 +146,13 @@ export function MembersContainer({
             {members.map((m) => {
               const profile = m.user.profile
               const display = profile
-                ? (profile.firstName || profile.email) + (profile.lastName ? ` ${profile.lastName}` : '')
-                : m.user.email
+                ? (profile.firstName || profile.email || 'مستخدم') + (profile.lastName ? ` ${profile.lastName}` : '')
+                : m.user.email || 'مستخدم'
               return (
                 <tr key={m.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                   <TD>
                     <div className="font-semibold">{display}</div>
-                    <div className="ltr text-xs text-[#656d76]">{m.user.email}</div>
+                    {m.user.email ? <div className="ltr text-xs text-[#656d76]">{m.user.email}</div> : null}
                   </TD>
                   <TD>
                     {canAssign ? (
@@ -229,39 +229,41 @@ export function MembersContainer({
         </Card>
       ) : null}
 
-      <Card>
-        <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">الدعوات المعلقة</div>
-        <div className="p-5">
-          {invitations.length === 0 ? <div className="text-sm text-slate-500">لا توجد دعوات معلقة</div> : null}
-          <div className="space-y-2">
-            {invitations.map((inv) => (
-              <div key={inv.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <div className="ltr font-semibold">{inv.email}</div>
-                    <div className="text-xs text-[#656d76]">
-                      الدور: <span className="ltr font-mono">{inv.role}</span>
-                      {inv.expiresAt ? ` · ينتهي: ${inv.expiresAt.slice(0, 10)}` : ''}
+      {canInvite ? (
+        <Card>
+          <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">الدعوات المعلقة</div>
+          <div className="p-5">
+            {invitations.length === 0 ? <div className="text-sm text-slate-500">لا توجد دعوات معلقة</div> : null}
+            <div className="space-y-2">
+              {invitations.map((inv) => (
+                <div key={inv.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="ltr font-semibold">{inv.email ?? '—'}</div>
+                      <div className="text-xs text-[#656d76]">
+                        الدور: <span className="ltr font-mono">{inv.role}</span>
+                        {inv.expiresAt ? ` · ينتهي: ${inv.expiresAt.slice(0, 10)}` : ''}
+                      </div>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/invite/${inv.token}`
+                        setInviteUrl(url)
+                        navigator.clipboard?.writeText(url).catch(() => {})
+                      }}
+                    >
+                      نسخ رابط الدعوة
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    type="button"
-                    onClick={() => {
-                      const url = `${window.location.origin}/invite/${inv.token}`
-                      setInviteUrl(url)
-                      navigator.clipboard?.writeText(url).catch(() => {})
-                    }}
-                  >
-                    نسخ رابط الدعوة
-                  </Button>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      ) : null}
     </div>
   )
 }

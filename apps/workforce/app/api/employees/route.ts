@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
+import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 
 export const runtime = 'nodejs'
 
@@ -47,7 +48,15 @@ export async function GET(req: NextRequest) {
     }),
   ])
 
-  return NextResponse.json({ success: true, data: employees, total, hasMore: skip + employees.length < total })
+  const canViewEmails = canViewAllEmails({ permissions: auth.user.permissions, role: auth.user.profile?.role })
+  const viewerEmail = auth.user.email
+  const data = employees.map((e) => ({
+    ...e,
+    profile: { ...e.profile, email: redactEmailForViewer(e.profile.email, viewerEmail, canViewEmails) },
+    manager: e.manager ? { ...e.manager, email: redactEmailForViewer(e.manager.email, viewerEmail, canViewEmails) } : null,
+  }))
+
+  return NextResponse.json({ success: true, data, total, hasMore: skip + employees.length < total })
 }
 
 export async function POST(req: NextRequest) {

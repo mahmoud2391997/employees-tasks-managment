@@ -12,7 +12,7 @@ import { Select } from '@/components/ui/select'
 import { Table, TableWrapper, TD, TH, THead } from '@/components/ui/table'
 
 type Department = { id: string; name: string }
-type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
+type Profile = { id: string; firstName: string | null; lastName: string | null; email: string | null }
 type Employee = {
   id: string
   profileId: string
@@ -22,9 +22,9 @@ type Employee = {
   salary: string | null
   status: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED'
   managerId: string | null
-  profile: { id: string; email: string; firstName: string | null; lastName: string | null; role: string; teamId: string | null }
+  profile: { id: string; email: string | null; firstName: string | null; lastName: string | null; role: string; teamId: string | null }
   department?: Department | null
-  manager?: Profile | null
+  manager?: (Omit<Profile, 'email'> & { email: string | null }) | null
 }
 
 export function EmployeesContainer({
@@ -62,7 +62,7 @@ export function EmployeesContainer({
     if (!query) return employees
     return employees.filter((e) => {
       const name = `${e.profile.firstName ?? ''} ${e.profile.lastName ?? ''}`.trim().toLowerCase()
-      const email = e.profile.email.toLowerCase()
+      const email = (e.profile.email ?? '').toLowerCase()
       const position = (e.position ?? '').toLowerCase()
       const dept = (e.department?.name ?? '').toLowerCase()
       return name.includes(query) || email.includes(query) || position.includes(query) || dept.includes(query)
@@ -173,9 +173,9 @@ export function EmployeesContainer({
               <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD>
                   <div className="font-semibold">
-                    {(e.profile.firstName || e.profile.email) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
+                    {(e.profile.firstName || e.profile.email || 'مستخدم') + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
                   </div>
-                  <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div>
+                  {e.profile.email ? <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div> : null}
                 </TD>
                 <TD>{e.department?.name ?? '—'}</TD>
                 <TD>{e.position ?? '—'}</TD>
@@ -376,7 +376,7 @@ function EmployeeForm({
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
-                {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
+                {(p.firstName || p.email || 'مستخدم') + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>

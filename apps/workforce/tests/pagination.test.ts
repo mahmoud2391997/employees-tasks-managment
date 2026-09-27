@@ -50,7 +50,11 @@ describe('Pagination boundaries', () => {
       }),
     }))
 
-    const lastPageRows = new Array(5).fill(null).map((_, i) => ({ id: `e${i}` }))
+    const lastPageRows = new Array(5).fill(null).map((_, i) => ({
+      id: `e${i}`,
+      profile: { id: `p${i}`, email: `u${i}@ex.com`, firstName: null, lastName: null, role: 'EMPLOYEE', teamId: 't1' },
+      manager: null,
+    }))
 
     vi.doMock('@/server/db', () => ({
       prisma: {

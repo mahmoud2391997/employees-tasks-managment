@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { getServerSession } from '@/server/auth/server-session'
 import { prisma } from '@/server/db'
+import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession()
@@ -39,15 +40,19 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
     orderBy: [{ createdAt: 'desc' }],
   })
 
+  const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
+  const viewerEmail = session.email
+  const safeEmployeeEmail = redactEmailForViewer(employee.profile.email, viewerEmail, canViewEmails)
+
   const displayName =
-    (employee.profile.firstName || employee.profile.email) + (employee.profile.lastName ? ` ${employee.profile.lastName}` : '')
+    (employee.profile.firstName || safeEmployeeEmail || 'مستخدم') + (employee.profile.lastName ? ` ${employee.profile.lastName}` : '')
 
   return (
     <main className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold">{displayName}</h1>
-          <p className="ltr mt-1 text-sm text-slate-500">{employee.profile.email}</p>
+          {safeEmployeeEmail ? <p className="ltr mt-1 text-sm text-slate-500">{safeEmployeeEmail}</p> : null}
         </div>
         <Link className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100" href="/employees">
           رجوع →
@@ -80,7 +85,13 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
                 {t.department?.name ? <span>القسم: {t.department.name}</span> : null}
-                {t.creator ? <span>· أنشأها: {(t.creator.firstName || t.creator.email) + (t.creator.lastName ? ` ${t.creator.lastName}` : '')}</span> : null}
+                {t.creator ? (
+                  <span>
+                    · أنشأها:{' '}
+                    {(t.creator.firstName || redactEmailForViewer(t.creator.email, viewerEmail, canViewEmails) || 'مستخدم') +
+                      (t.creator.lastName ? ` ${t.creator.lastName}` : '')}
+                  </span>
+                ) : null}
                 {t.dueDate ? <span>· الاستحقاق: <span className="ltr">{t.dueDate.toISOString().slice(0, 10)}</span></span> : null}
               </div>
             </div>

@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
 type Department = { id: string; name: string }
-type Profile = { id: string; firstName: string | null; lastName: string | null; email: string }
+type Profile = { id: string; firstName: string | null; lastName: string | null; email: string | null }
 type Task = {
   id: string
   title: string
@@ -217,7 +217,7 @@ export function TasksContainer({
                       {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
                       {t.assignee ? (
                         <Badge variant="info">
-                          {(t.assignee.firstName || t.assignee.email) + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
+                          {(t.assignee.firstName || t.assignee.email || 'مستخدم') + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
                         </Badge>
                       ) : null}
                     </div>
@@ -326,7 +326,7 @@ function TaskForm({
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
-                {(p.firstName || p.email) + (p.lastName ? ` ${p.lastName}` : '')}
+                {(p.firstName || p.email || 'مستخدم') + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>
