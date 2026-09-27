@@ -145,87 +145,68 @@ async function buildDemoSessionOnce(): Promise<DemoSession> {
       data: [
         { teamId: created.team.id, name: 'Engineering' },
         { teamId: created.team.id, name: 'HR' },
+        { teamId: created.team.id, name: 'Operations' },
       ],
     })
   }
 
+  const depts = await prisma.workforceDepartment.findMany({
+    where: { teamId: created.team.id },
+    select: { id: true, name: true },
+    orderBy: [{ createdAt: 'asc' }],
+  })
+  const engineeringId = depts.find((d) => d.name.toLowerCase().includes('engineer'))?.id ?? depts[0]?.id ?? null
+  const hrId = depts.find((d) => d.name.toLowerCase() === 'hr')?.id ?? depts[1]?.id ?? null
+  const operationsId = depts.find((d) => d.name.toLowerCase() === 'operations')?.id ?? depts[2]?.id ?? null
+
+  const alex = await prisma.workforceProfile.upsert({
+    where: { email: 'alex@demo.local' },
+    update: { teamId: created.team.id, role: 'EMPLOYEE', firstName: 'Alex', lastName: 'Johnson' },
+    create: { email: 'alex@demo.local', teamId: created.team.id, role: 'EMPLOYEE', firstName: 'Alex', lastName: 'Johnson' },
+    select: { id: true },
+  })
+  const sara = await prisma.workforceProfile.upsert({
+    where: { email: 'sara@demo.local' },
+    update: { teamId: created.team.id, role: 'MANAGER', firstName: 'Sara', lastName: 'Lee' },
+    create: { email: 'sara@demo.local', teamId: created.team.id, role: 'MANAGER', firstName: 'Sara', lastName: 'Lee' },
+    select: { id: true },
+  })
   const existingEmployees = await prisma.workforceEmployee.count({ where: { teamId: created.team.id } })
   if (existingEmployees === 0) {
-    const depts = await prisma.workforceDepartment.findMany({
-      where: { teamId: created.team.id },
-      select: { id: true, name: true },
-      orderBy: [{ createdAt: 'asc' }],
-    })
-    const engineeringId = depts.find((d) => d.name.toLowerCase().includes('engineer'))?.id ?? depts[0]?.id ?? null
-    const hrId = depts.find((d) => d.name.toLowerCase() === 'hr')?.id ?? depts[1]?.id ?? null
-
-    const alex = await prisma.workforceProfile.upsert({
-      where: { email: 'alex@demo.local' },
-      update: { teamId: created.team.id, role: 'EMPLOYEE', firstName: 'Alex', lastName: 'Johnson' },
-      create: { email: 'alex@demo.local', teamId: created.team.id, role: 'EMPLOYEE', firstName: 'Alex', lastName: 'Johnson' },
-      select: { id: true },
-    })
-    const sara = await prisma.workforceProfile.upsert({
-      where: { email: 'sara@demo.local' },
-      update: { teamId: created.team.id, role: 'MANAGER', firstName: 'Sara', lastName: 'Lee' },
-      create: { email: 'sara@demo.local', teamId: created.team.id, role: 'MANAGER', firstName: 'Sara', lastName: 'Lee' },
-      select: { id: true },
-    })
-
     await prisma.workforceEmployee.createMany({
       data: [
-        {
-          teamId: created.team.id,
-          profileId: alex.id,
-          departmentId: engineeringId,
-          position: 'Frontend Engineer',
-          status: 'ACTIVE',
-        },
-        {
-          teamId: created.team.id,
-          profileId: sara.id,
-          departmentId: hrId,
-          position: 'Team Manager',
-          status: 'ACTIVE',
-        },
+        { teamId: created.team.id, profileId: alex.id, departmentId: engineeringId, position: 'Frontend Engineer', status: 'ACTIVE', managerId: sara.id },
+        { teamId: created.team.id, profileId: sara.id, departmentId: hrId, position: 'Team Manager', status: 'ACTIVE' },
       ],
     })
+  }
 
-    const demoCreatorId = created.profile.id
+  const demoCreatorId = created.profile.id
+  const existingTasks = await prisma.workforceTask.count({ where: { teamId: created.team.id } })
+  if (existingTasks === 0) {
     await prisma.workforceTask.createMany({
       data: [
-        {
-          teamId: created.team.id,
-          title: 'Design system polish',
-          description: 'Improve spacing, typography, and component consistency.',
-          priority: 'HIGH',
-          status: 'IN_PROGRESS',
-          departmentId: engineeringId,
-          assigneeId: alex.id,
-          createdById: demoCreatorId,
-          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        },
-        {
-          teamId: created.team.id,
-          title: 'Review onboarding flow',
-          description: 'Validate employee creation and invitation flow end-to-end.',
-          priority: 'MEDIUM',
-          status: 'REVIEW',
-          departmentId: hrId,
-          assigneeId: sara.id,
-          createdById: demoCreatorId,
-          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        },
-        {
-          teamId: created.team.id,
-          title: 'Set up Kanban board',
-          description: 'Drag & drop tasks between columns.',
-          priority: 'URGENT',
-          status: 'TODO',
-          departmentId: engineeringId,
-          assigneeId: alex.id,
-          createdById: demoCreatorId,
-        },
+        { teamId: created.team.id, title: 'Design system polish', description: 'Improve spacing, typography, and component consistency.', priority: 'HIGH', status: 'IN_PROGRESS', departmentId: engineeringId, assigneeId: alex.id, createdById: demoCreatorId, dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
+        { teamId: created.team.id, title: 'Review onboarding flow', description: 'Validate employee creation and invitation flow end-to-end.', priority: 'MEDIUM', status: 'REVIEW', departmentId: hrId, assigneeId: sara.id, createdById: demoCreatorId, dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
+        { teamId: created.team.id, title: 'Prepare operations report', description: 'Collect weekly metrics and share the team report.', priority: 'LOW', status: 'COMPLETED', departmentId: operationsId, assigneeId: sara.id, createdById: demoCreatorId },
+        { teamId: created.team.id, title: 'Set up Kanban board', description: 'Drag and drop tasks between columns.', priority: 'URGENT', status: 'TODO', departmentId: engineeringId, assigneeId: alex.id, createdById: demoCreatorId },
+      ],
+    })
+  }
+
+  const existingInvitations = await prisma.workforceInvitation.count({ where: { teamId: created.team.id } })
+  if (existingInvitations === 0) {
+    await prisma.workforceInvitation.create({
+      data: { teamId: created.team.id, email: 'new.hire@demo.local', role: 'EMPLOYEE', token: `demo-invite-${created.team.id}`, expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), invitedById: demoCreatorId },
+    })
+  }
+
+  const existingNotifications = await prisma.workforceNotification.count({ where: { teamId: created.team.id } })
+  if (existingNotifications === 0) {
+    await prisma.workforceNotification.createMany({
+      data: [
+        { userId: demoCreatorId, teamId: created.team.id, type: 'TASK_ASSIGNED', title: 'New task assigned', message: 'Design system polish is ready for Alex.' },
+        { userId: demoCreatorId, teamId: created.team.id, type: 'INVITATION_SENT', title: 'Invitation sent', message: 'An invitation is pending for new.hire@demo.local.' },
       ],
     })
   }
