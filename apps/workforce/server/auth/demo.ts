@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
 
-const DEMO_EMAIL = 'demo@example.com'
-const DEMO_TEAM_NAME = 'Demo Team'
+const DEMO_EMAIL = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'demo@example.com'
+const DEMO_TEAM_NAME = process.env.COMPANY_NAME?.trim() || 'Demo Team'
 
 function looksLikeLocalHost(hostname: string) {
   const h = hostname.toLowerCase()

@@ -4,6 +4,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES } from '@/lib/permissions'
+import { getOrCreateDemoSession } from '@/server/auth/demo'
 
 const DEMO_TEAM_NAME = 'Demo Team'
 export const FALLBACK_ADMIN_ID = 'database-unavailable-admin'
@@ -41,7 +42,7 @@ async function provisionCompanyOnce(config: CompanyConfig) {
   })
   const passwordHash = existingUser ? null : await bcrypt.hash(config.password, 12)
 
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     let user = await tx.workforceUser.findUnique({
       where: { email: config.email },
       select: { id: true, email: true, profileId: true },
@@ -106,6 +107,8 @@ async function provisionCompanyOnce(config: CompanyConfig) {
       })),
       skipDuplicates: true,
     })
+
+    return { teamId: team.id, profileId: profile.id }
   })
 }
 
@@ -117,6 +120,7 @@ async function provisionCompany() {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await provisionCompanyOnce(config)
+      await getOrCreateDemoSession()
       return
     } catch (error) {
       lastError = error
