@@ -57,6 +57,7 @@ export function MembersContainer({
   const [loadingMore, setLoadingMore] = useState(false)
   const [invitations, setInvitations] = useState<Invitation[]>(initialInvitations)
   const [inviteUrl, setInviteUrl] = useState<string>('')
+  const [emailNotice, setEmailNotice] = useState<string>('')
 
   const canInvite = permissions.includes('members.invite')
   const canRemove = permissions.includes('members.remove')
@@ -117,8 +118,9 @@ export function MembersContainer({
       {canInvite ? (
         <InviteCard
           roleOptions={roleOptions}
-          onInvited={async (url) => {
-            setInviteUrl(url)
+          onInvited={async (result) => {
+            setInviteUrl(result.url)
+            setEmailNotice(result.emailSent ? 'تم إرسال الدعوة إلى البريد الإلكتروني.' : 'لم يُرسل البريد. انسخ الرابط وأرسله يدوياً.')
             await refresh()
           }}
         />
@@ -127,6 +129,7 @@ export function MembersContainer({
       {inviteUrl ? (
         <Card className="border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
           <div className="font-semibold">رابط الدعوة</div>
+          {emailNotice ? <div className="mt-1">{emailNotice}</div> : null}
           <div className="ltr mt-1 break-all font-mono text-xs">{inviteUrl}</div>
         </Card>
       ) : null}
@@ -268,7 +271,13 @@ export function MembersContainer({
   )
 }
 
-function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: string; label: string }>; onInvited: (url: string) => void }) {
+function InviteCard({
+  roleOptions,
+  onInvited,
+}: {
+  roleOptions: Array<{ value: string; label: string }>
+  onInvited: (result: { url: string; emailSent: boolean }) => void
+}) {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState(roleOptions[0]?.value ?? 'EMPLOYEE')
   const [pending, setPending] = useState(false)
@@ -292,7 +301,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
             body: JSON.stringify(body),
           })
           const json = (await res.json().catch(() => null)) as
-            | { success?: boolean; message?: string; code?: string; data?: { inviteUrl?: string } }
+            | { success?: boolean; message?: string; code?: string; data?: { inviteUrl?: string; emailSent?: boolean } }
             | null
           setPending(false)
           if (!res.ok || !json?.success) {
@@ -302,7 +311,7 @@ function InviteCard({ roleOptions, onInvited }: { roleOptions: Array<{ value: st
           }
           setEmail('')
           setMode('invite')
-          onInvited(json?.data?.inviteUrl ?? '')
+          onInvited({ url: json?.data?.inviteUrl ?? '', emailSent: Boolean(json?.data?.emailSent) })
         }}
       >
         <label className="block text-sm font-medium md:col-span-2">

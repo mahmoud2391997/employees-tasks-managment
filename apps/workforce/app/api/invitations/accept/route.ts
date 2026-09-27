@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/server/db'
 import { issueAccessToken, setAuthCookie } from '@/server/auth/jwt'
 import { DEFAULT_ROLES } from '@/lib/permissions'
+import { recordNotification } from '@/server/notify'
 
 export const runtime = 'nodejs'
 
@@ -75,19 +76,21 @@ export async function POST(req: NextRequest) {
 
     await tx.workforceInvitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } })
 
-    await tx.workforceNotification.create({
-      data: {
-        userId: invitation.invitedById,
-        teamId: invitation.teamId,
-        type: 'invitation_accepted',
-        title: 'Invitation accepted',
-        message: `${email} joined the team.`,
-        data: { email },
-      },
-    })
-
     return user
   })
+
+  try {
+    await recordNotification({
+      userId: invitation.invitedById,
+      teamId: invitation.teamId,
+      type: 'invitation_accepted',
+      title: 'تم قبول الدعوة',
+      message: `انضم ${email} إلى الفريق`,
+      data: { email },
+    })
+  } catch (error) {
+    console.error('invitations/accept: failed to record acceptance notification', error)
+  }
 
   const accessToken = await issueAccessToken({ sub: created.id, email: created.email })
   const res = NextResponse.json({ success: true, data: { teamId: invitation.teamId } })

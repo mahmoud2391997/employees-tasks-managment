@@ -4,6 +4,7 @@ import crypto from 'crypto'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
+import { MailDeliveryError, MailNotConfiguredError, readSmtpConfig, requireSiteUrl, sendInvitationEmail } from '@/server/mail'
 
 export const runtime = 'nodejs'
 
@@ -11,12 +12,6 @@ const bodySchema = z.object({
   email: z.string().email(),
   role: z.string().trim().min(1).optional(),
 })
-
-function originFor(req: NextRequest) {
-  const configured = process.env.SITE_URL?.trim()
-  if (configured) return configured.replace(/\/+$/g, '')
-  return req.nextUrl.origin
-}
 
 async function generateUniqueToken() {
   // Extremely low collision probability, but we still guard by retrying on unique constraint.
@@ -57,8 +52,22 @@ export async function POST(req: NextRequest) {
   })
   if (pending) return NextResponse.json({ success: false, message: 'تم إرسال دعوة مسبقاً لهذا البريد' }, { status: 409 })
 
+  if (process.env.NODE_ENV === 'production' && !readSmtpConfig()) {
+    return NextResponse.json({ success: false, message: 'إعدادات البريد غير مكتملة' }, { status: 503 })
+  }
+
+  let origin: string
+  try {
+    origin = requireSiteUrl(req.nextUrl.origin)
+  } catch (error) {
+    if (error instanceof MailNotConfiguredError) {
+      return NextResponse.json({ success: false, message: 'إعدادات الموقع غير مكتملة' }, { status: 503 })
+    }
+    throw error
+  }
+
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const origin = originFor(req)
+  const companyName = process.env.COMPANY_NAME?.trim() || 'الشركة'
 
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -68,13 +77,33 @@ export async function POST(req: NextRequest) {
         data: { teamId, email, role, token, expiresAt, invitedById },
         include: { invitedBy: { select: { id: true, email: true, firstName: true, lastName: true } } },
       })
-      return NextResponse.json({
-        success: true,
-        data: {
-          invitation: created,
-          inviteUrl: `${origin}/invite/${created.token}`,
-        },
-      })
+      const inviteUrl = `${origin}/invite/${created.token}`
+      try {
+        const delivery = await sendInvitationEmail({
+          to: email,
+          companyName,
+          role,
+          inviteUrl,
+          expiresAt,
+        })
+        return NextResponse.json({
+          success: true,
+          data: {
+            invitation: created,
+            inviteUrl,
+            emailSent: delivery.sent,
+          },
+        })
+      } catch (error) {
+        if (error instanceof MailNotConfiguredError || error instanceof MailDeliveryError) {
+          await prisma.workforceInvitation.delete({ where: { id: created.id } }).catch((deleteError) => {
+            console.error('members/invite: failed to roll back invitation after email failure', deleteError)
+          })
+          const message = error instanceof MailNotConfiguredError ? 'إعدادات البريد غير مكتملة' : 'تعذر إرسال رسالة الدعوة'
+          return NextResponse.json({ success: false, message }, { status: 503 })
+        }
+        throw error
+      }
     } catch (e: any) {
       // Retry on unique token constraint.
       lastError = e

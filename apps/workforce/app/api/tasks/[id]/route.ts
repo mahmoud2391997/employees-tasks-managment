@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/server/db'
+import { recordNotification, taskStatusLabel } from '@/server/notify'
 
 export const runtime = 'nodejs'
 
@@ -89,22 +90,33 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     include: { department: true, assignee: true, creator: true },
   })
 
+  const newAssigneeId = parsed.data.assigneeId === undefined ? existing.assigneeId : parsed.data.assigneeId
+  if (newAssigneeId && assigneeChanged && newAssigneeId !== actorId) {
+    await recordNotification({
+      userId: newAssigneeId,
+      teamId,
+      type: 'task_assigned',
+      title: 'تم إسناد مهمة',
+      message: `تم إسناد المهمة "${updated.title}" إليك`,
+      data: { taskId: id, assignedBy: actorId },
+    })
+  }
+
+  const statusChanged = Boolean(parsed.data.status && existing.status !== parsed.data.status)
   const recipients = new Set<string>()
   if (existing.createdById && existing.createdById !== actorId) recipients.add(existing.createdById)
   if (existing.assigneeId && existing.assigneeId !== actorId) recipients.add(existing.assigneeId)
   for (const userId of recipients) {
-    const statusChanged = parsed.data.status && existing.status !== parsed.data.status
-    await prisma.workforceNotification.create({
-      data: {
-        userId,
-        teamId,
-        type: statusChanged ? 'task_status_changed' : 'task_updated',
-        title: statusChanged ? 'Task Status Updated' : 'Task Updated',
-        message: statusChanged
-          ? `Task "${existing.title}" moved to ${parsed.data.status}`
-          : `Task "${existing.title}" was updated`,
-        data: { taskId: id, changedBy: actorId, newStatus: parsed.data.status ?? null },
-      },
+    if (assigneeChanged && userId === newAssigneeId) continue
+    await recordNotification({
+      userId,
+      teamId,
+      type: statusChanged ? 'task_status_changed' : 'task_updated',
+      title: statusChanged ? 'تم تحديث حالة مهمة' : 'تم تحديث مهمة',
+      message: statusChanged
+        ? `أصبحت المهمة "${updated.title}" في الحالة ${taskStatusLabel(parsed.data.status)}`
+        : `تم تحديث المهمة "${updated.title}"`,
+      data: { taskId: id, changedBy: actorId, newStatus: parsed.data.status ?? null },
     })
   }
 
@@ -131,15 +143,13 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   if (existing.createdById && existing.createdById !== actorId) recipients.add(existing.createdById)
   if (existing.assigneeId && existing.assigneeId !== actorId) recipients.add(existing.assigneeId)
   for (const userId of recipients) {
-    await prisma.workforceNotification.create({
-      data: {
-        userId,
-        teamId,
-        type: 'task_deleted',
-        title: 'Task Deleted',
-        message: `Task "${existing.title}" was deleted`,
-        data: { taskId: id, deletedBy: actorId },
-      },
+    await recordNotification({
+      userId,
+      teamId,
+      type: 'task_deleted',
+      title: 'تم حذف مهمة',
+      message: `تم حذف المهمة "${existing.title}"`,
+      data: { taskId: id, deletedBy: actorId },
     })
   }
 

@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
+import { recordNotification } from '@/server/notify'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 import { virtualTasksApi } from '@/server/virtual-data'
 
@@ -142,15 +143,13 @@ export async function POST(req: NextRequest) {
   })
 
   if (created.assigneeId && created.assigneeId !== creatorId) {
-    await prisma.workforceNotification.create({
-      data: {
-        userId: created.assigneeId,
-        teamId,
-        type: 'task_assigned',
-        title: 'Task Assigned',
-        message: `A new task was assigned to you: ${created.title}`,
-        data: { taskId: created.id, assignedBy: creatorId },
-      },
+    await recordNotification({
+      userId: created.assigneeId,
+      teamId,
+      type: 'task_assigned',
+      title: 'تم إسناد مهمة',
+      message: `تم إسناد المهمة "${created.title}" إليك`,
+      data: { taskId: created.id, assignedBy: creatorId },
     })
   }
 
