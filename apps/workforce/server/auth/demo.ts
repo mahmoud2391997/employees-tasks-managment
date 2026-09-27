@@ -6,8 +6,39 @@ import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
 const DEMO_EMAIL = 'demo@example.com'
 const DEMO_TEAM_NAME = 'Demo Team'
 
-if (process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV === 'production') {
-  throw new Error('WORKFORCE_DEMO_MODE cannot be enabled in production.')
+function looksLikeLocalHost(hostname: string) {
+  const h = hostname.toLowerCase()
+  if (h === 'localhost' || h === '127.0.0.1') return true
+  if (h.endsWith('.local')) return true
+  if (/^127\.\d+\.\d+\.\d+$/.test(h)) return true
+  if (/^10\.\d+\.\d+\.\d+$/.test(h)) return true
+  if (/^192\.168\.\d+\.\d+$/.test(h)) return true
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(h)) return true
+  return false
+}
+
+function isProductionLookingDatabaseUrl(raw: string) {
+  const value = raw.trim()
+  if (!value) return false
+  try {
+    const u = new URL(value)
+    return !looksLikeLocalHost(u.hostname)
+  } catch {
+    return true
+  }
+}
+
+if (process.env.WORKFORCE_DEMO_MODE === 'true') {
+  const nodeEnv = process.env.NODE_ENV ?? ''
+  const dbUrl = process.env.WORKFORCE_DATABASE_URL ?? ''
+  const prodLookingDb = isProductionLookingDatabaseUrl(dbUrl)
+  if (nodeEnv === 'production' || prodLookingDb) {
+    const msg =
+      'Unsafe config: WORKFORCE_DEMO_MODE=true with NODE_ENV=production or a production-looking WORKFORCE_DATABASE_URL.'
+    // eslint-disable-next-line no-console
+    console.error(msg, { nodeEnv, dbHost: (() => { try { return new URL(dbUrl).hostname } catch { return null } })() })
+    if (nodeEnv === 'production') throw new Error(`${msg} Refusing to start.`)
+  }
 }
 
 export type DemoSession = {
