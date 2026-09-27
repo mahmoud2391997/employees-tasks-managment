@@ -23,7 +23,11 @@ export default async function MembersPage() {
     )
   }
 
-  const [members, invitations, roles] = await Promise.all([
+  const take = 50
+  const skip = 0
+
+  const [totalMembers, members, invitations, roles] = await Promise.all([
+    prisma.workforceTeamMember.count({ where: { teamId } }),
     prisma.workforceTeamMember.findMany({
       where: { teamId },
       include: {
@@ -36,6 +40,8 @@ export default async function MembersPage() {
         },
       },
       orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
     }),
     prisma.workforceInvitation.findMany({
       where: { teamId, acceptedAt: null },
@@ -53,6 +59,8 @@ export default async function MembersPage() {
       </div>
       <MembersContainer
         initialMembers={members as any}
+        initialTotal={totalMembers}
+        initialHasMore={skip + members.length < totalMembers}
         initialInvitations={invitations as any}
         roles={roles as any}
         permissions={session.permissions as any}

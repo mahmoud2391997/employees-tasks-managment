@@ -16,15 +16,55 @@ type Notification = {
   data: any
 }
 
-export function NotificationsContainer({ initial }: { initial: Notification[] }) {
+export function NotificationsContainer({
+  initial,
+  initialTotal,
+  initialHasMore,
+}: {
+  initial: Notification[]
+  initialTotal: number
+  initialHasMore: boolean
+}) {
   const [rows, setRows] = useState<Notification[]>(initial)
+  const [total, setTotal] = useState<number>(initialTotal)
+  const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const apiTake = 50
+
+  async function refresh() {
+    const res = await fetch(`/api/notifications?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Notification[]; total?: number; hasMore?: boolean }
+      | null
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setRows(next)
+      setTotal(Number(json.total ?? next.length))
+      setHasMore(Boolean(json.hasMore))
+    }
+  }
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const res = await fetch(`/api/notifications?take=${apiTake}&skip=${rows.length}`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Notification[]; total?: number; hasMore?: boolean }
+      | null
+    setLoadingMore(false)
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setRows((prev) => [...prev, ...next])
+      setTotal(Number(json.total ?? total))
+      setHasMore(Boolean(json.hasMore))
+    }
+  }
 
   async function markRead(id: string) {
     setRows((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
     await fetch('/api/notifications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })
-    const res = await fetch('/api/notifications', { cache: 'no-store' })
-    const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Notification[] } | null
-    if (res.ok && json?.success) setRows(json.data ?? [])
+    await refresh()
   }
 
   const unread = rows.filter((r) => !r.read).length
@@ -61,6 +101,23 @@ export function NotificationsContainer({ initial }: { initial: Notification[] })
         ))}
         {rows.length === 0 ? <Card className="p-6 text-sm text-slate-500">لا توجد إشعارات</Card> : null}
       </div>
+
+      {rows.length > 0 ? (
+        <Card className="p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+            <div>
+              تم تحميل {rows.length} من {total}
+            </div>
+            {hasMore ? (
+              <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? '...' : 'تحميل المزيد'}
+              </Button>
+            ) : (
+              <Badge variant="neutral">آخر صفحة</Badge>
+            )}
+          </div>
+        </Card>
+      ) : null}
     </div>
   )
 }

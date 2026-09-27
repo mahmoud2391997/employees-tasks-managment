@@ -23,11 +23,17 @@ export default async function EmployeesPage() {
     )
   }
 
-  const [employees, departments, profiles] = await Promise.all([
+  const take = 50
+  const skip = 0
+
+  const [totalEmployees, employees, departments, profiles] = await Promise.all([
+    prisma.workforceEmployee.count({ where: { teamId } }),
     prisma.workforceEmployee.findMany({
       where: { teamId },
       include: { profile: true, department: true, manager: true },
       orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
     }),
     prisma.workforceDepartment.findMany({ where: { teamId }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
     prisma.workforceProfile.findMany({ where: { teamId }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
@@ -41,6 +47,8 @@ export default async function EmployeesPage() {
       </div>
       <EmployeesContainer
         initialEmployees={employees as any}
+        initialTotal={totalEmployees}
+        initialHasMore={skip + employees.length < totalEmployees}
         departments={departments as any}
         profiles={profiles as any}
         permissions={session.permissions as any}

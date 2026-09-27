@@ -38,16 +38,23 @@ type Invitation = {
 
 export function MembersContainer({
   initialMembers,
+  initialTotal,
+  initialHasMore,
   initialInvitations,
   roles,
   permissions,
 }: {
   initialMembers: Member[]
+  initialTotal: number
+  initialHasMore: boolean
   initialInvitations: Invitation[]
   roles: RoleOption[]
   permissions: string[]
 }) {
   const [members, setMembers] = useState<Member[]>(initialMembers)
+  const [total, setTotal] = useState<number>(initialTotal)
+  const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [invitations, setInvitations] = useState<Invitation[]>(initialInvitations)
   const [inviteUrl, setInviteUrl] = useState<string>('')
 
@@ -62,14 +69,46 @@ export function MembersContainer({
     return Array.from(uniq.values())
   }, [roles])
 
+  const apiTake = 50
+
   async function refresh() {
-    const res = await fetch('/api/members', { cache: 'no-store' })
+    const res = await fetch(`/api/members?take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
-      | { success?: boolean; data?: { members?: Member[]; invitations?: Invitation[]; roles?: RoleOption[] } }
+      | {
+          success?: boolean
+          data?: { members?: Member[]; invitations?: Invitation[]; roles?: RoleOption[] }
+          total?: number
+          hasMore?: boolean
+        }
       | null
     if (res.ok && json?.success) {
-      setMembers(json.data?.members ?? [])
+      const nextMembers = json.data?.members ?? []
+      setMembers(nextMembers)
       setInvitations(json.data?.invitations ?? [])
+      setTotal(Number(json.total ?? nextMembers.length))
+      setHasMore(Boolean(json.hasMore))
+    }
+  }
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const res = await fetch(`/api/members?take=${apiTake}&skip=${members.length}`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | {
+          success?: boolean
+          data?: { members?: Member[]; invitations?: Invitation[]; roles?: RoleOption[] }
+          total?: number
+          hasMore?: boolean
+        }
+      | null
+    setLoadingMore(false)
+    if (res.ok && json?.success) {
+      const next = json.data?.members ?? []
+      setMembers((prev) => [...prev, ...next])
+      setInvitations(json.data?.invitations ?? invitations)
+      setTotal(Number(json.total ?? total))
+      setHasMore(Boolean(json.hasMore))
     }
   }
 
@@ -172,6 +211,23 @@ export function MembersContainer({
         </Table>
         </div>
       </TableWrapper>
+
+      {members.length > 0 ? (
+        <Card className="p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+            <div>
+              تم تحميل {members.length} من {total}
+            </div>
+            {hasMore ? (
+              <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? '...' : 'تحميل المزيد'}
+              </Button>
+            ) : (
+              <Badge variant="neutral">آخر صفحة</Badge>
+            )}
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">الدعوات المعلقة</div>

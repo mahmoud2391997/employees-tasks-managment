@@ -29,16 +29,23 @@ type Employee = {
 
 export function EmployeesContainer({
   initialEmployees,
+  initialTotal,
+  initialHasMore,
   departments,
   profiles,
   permissions,
 }: {
   initialEmployees: Employee[]
+  initialTotal: number
+  initialHasMore: boolean
   departments: Department[]
   profiles: Profile[]
   permissions: string[]
 }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
+  const [total, setTotal] = useState<number>(initialTotal)
+  const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
   const pageSize = 10
@@ -66,10 +73,36 @@ export function EmployeesContainer({
   const currentPage = Math.min(page, totalPages)
   const pageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
+  const apiTake = 50
+
   async function refresh() {
-    const res = await fetch('/api/employees', { cache: 'no-store' })
-    const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Employee[] } | null
-    if (res.ok && json?.success) setEmployees(json.data ?? [])
+    const res = await fetch(`/api/employees?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
+      | null
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setEmployees(next)
+      setTotal(Number(json.total ?? next.length))
+      setHasMore(Boolean(json.hasMore))
+      setPage(1)
+    }
+  }
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const res = await fetch(`/api/employees?take=${apiTake}&skip=${employees.length}`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
+      | null
+    setLoadingMore(false)
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setEmployees((prev) => [...prev, ...next])
+      setTotal(Number(json.total ?? total))
+      setHasMore(Boolean(json.hasMore))
+    }
   }
 
   async function deleteEmployee(id: string) {
@@ -200,7 +233,8 @@ export function EmployeesContainer({
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="text-slate-500">
-            عرض {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} من {filtered.length}
+            عرض {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} من {q.trim() ? filtered.length : total}
+            {!q.trim() ? <span className="mr-2 text-xs"> (تم تحميل {employees.length})</span> : null}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>
@@ -224,6 +258,11 @@ export function EmployeesContainer({
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
               الأخيرة
             </Button>
+            {hasMore ? (
+              <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? '...' : 'تحميل المزيد'}
+              </Button>
+            ) : null}
           </div>
           </div>
         </Card>
