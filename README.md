@@ -21,6 +21,7 @@ pnpm dev
 - `COMPANY_NAME`
 - `COMPANY_ADMIN_EMAIL`
 - `COMPANY_ADMIN_PASSWORD` (at least 8 characters; used only when the admin account is first created)
-- Optional `SITE_URL` (used to generate invite links)
-- Optional `WORKFORCE_DEMO_MODE=true` to skip login for a local preview. Leave it unset or `false` for company use.
+- `SITE_URL` (public https origin; required in production so invite and notification links are correct)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` (required in production; invitations and in-app notifications are emailed through this SMTP server)
+- Optional `WORKFORCE_DEMO_MODE=true` to skip login for a local preview. Leave it unset or `false` for company use. Do not enable it in production.
 
