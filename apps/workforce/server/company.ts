@@ -8,6 +8,7 @@ import { getOrCreateDemoSession } from '@/server/auth/demo'
 
 const DEMO_TEAM_NAME = 'Demo Team'
 export const FALLBACK_ADMIN_ID = 'database-unavailable-admin'
+export const FALLBACK_ADMIN_PROFILE_ID = 'database-unavailable-admin-profile'
 export const FALLBACK_COMPANY_ID = 'company-default'
 
 type CompanyConfig = {

@@ -1,7 +1,10 @@
 import { getServerSession } from '@/server/auth/server-session'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { EmployeesContainer } from '@/components/dashboard/employees-container'
+import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
+import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function EmployeesPage() {
   const session = await getServerSession()
@@ -13,9 +16,14 @@ export default async function EmployeesPage() {
       </main>
     )
   }
-  const teamId = session?.profile?.teamId ?? null
+  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+    return <VirtualLoginNotice title="الموظفون" />
+  }
 
-  if (!teamId) {
+  const teamId = session?.profile?.teamId ?? null
+  const sampleData = servesLocalVirtualData(session.userId)
+
+  if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الموظفون</h1>
@@ -27,18 +35,21 @@ export default async function EmployeesPage() {
   const take = 50
   const skip = 0
 
-  const [totalEmployees, employees, departments, profiles] = await Promise.all([
-    prisma.workforceEmployee.count({ where: { teamId } }),
-    prisma.workforceEmployee.findMany({
-      where: { teamId },
-      include: { profile: true, department: true, manager: true },
-      orderBy: [{ createdAt: 'desc' }],
-      take,
-      skip,
-    }),
-    prisma.workforceDepartment.findMany({ where: { teamId }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
-    prisma.workforceProfile.findMany({ where: { teamId }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
-  ])
+  const virtual = sampleData ? getVirtualCompany() : null
+  const [totalEmployees, employees, departments, profiles] = virtual
+    ? [virtual.employees.length, virtual.employees.slice(skip, skip + take), virtual.departments.map((d) => ({ id: d.id, name: d.name })), virtual.profiles]
+    : await Promise.all([
+        prisma.workforceEmployee.count({ where: { teamId: teamId! } }),
+        prisma.workforceEmployee.findMany({
+          where: { teamId: teamId! },
+          include: { profile: true, department: true, manager: true },
+          orderBy: [{ createdAt: 'desc' }],
+          take,
+          skip,
+        }),
+        prisma.workforceDepartment.findMany({ where: { teamId: teamId! }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
+        prisma.workforceProfile.findMany({ where: { teamId: teamId! }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
+      ])
 
   const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
   const viewerEmail = session.email
@@ -54,6 +65,7 @@ export default async function EmployeesPage() {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الموظفون</h1>
         <p className="mt-2 text-sm text-slate-500">سجل الموظفين داخل الفريق مع تطبيق الصلاحيات.</p>
+        {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
       </div>
       <EmployeesContainer
         initialEmployees={safeEmployees as any}

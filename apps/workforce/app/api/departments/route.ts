@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
+import { virtualDepartmentsApi } from '@/server/virtual-data'
 
 export const runtime = 'nodejs'
 
@@ -15,6 +16,9 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'departments.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
+  const virtual = virtualDepartmentsApi(auth.user.id)
+  if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
+
   const teamId = auth.user.profile!.teamId!
 
   const departments = await prisma.workforceDepartment.findMany({

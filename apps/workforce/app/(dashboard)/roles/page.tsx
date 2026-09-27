@@ -1,6 +1,9 @@
 import { getServerSession } from '@/server/auth/server-session'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { RolesContainer } from '@/components/dashboard/roles-container'
+import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
+import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function RolesPage() {
   const session = await getServerSession()
@@ -12,9 +15,14 @@ export default async function RolesPage() {
       </main>
     )
   }
-  const teamId = session?.profile?.teamId ?? null
+  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+    return <VirtualLoginNotice title="الأدوار" />
+  }
 
-  if (!teamId) {
+  const teamId = session?.profile?.teamId ?? null
+  const sampleData = servesLocalVirtualData(session.userId)
+
+  if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأدوار</h1>
@@ -23,16 +31,19 @@ export default async function RolesPage() {
     )
   }
 
-  const roles = await prisma.workforceCustomRole.findMany({
-    where: { teamId },
-    orderBy: [{ createdAt: 'asc' }],
-  })
+  const roles = sampleData
+    ? getVirtualCompany().roles
+    : await prisma.workforceCustomRole.findMany({
+        where: { teamId: teamId! },
+        orderBy: [{ createdAt: 'asc' }],
+      })
 
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الأدوار</h1>
         <p className="mt-2 text-sm text-slate-500">إدارة الأدوار والصلاحيات.</p>
+        {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
       </div>
       <RolesContainer initialRoles={roles as any} />
     </main>

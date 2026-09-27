@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
+import { virtualMembersApi } from '@/server/virtual-data'
 
 export const runtime = 'nodejs'
 
@@ -20,10 +21,12 @@ function parseTakeSkip(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'members.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
-  const teamId = auth.user.profile!.teamId!
   const canInvite = auth.user.permissions.includes('members.invite')
-
   const { take, skip } = parseTakeSkip(req)
+  const virtual = virtualMembersApi(auth.user.id, take, skip, canInvite)
+  if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
+
+  const teamId = auth.user.profile!.teamId!
   const [totalMembers, members, invitations, roles] = await Promise.all([
     prisma.workforceTeamMember.count({ where: { teamId } }),
     prisma.workforceTeamMember.findMany({
