@@ -3,6 +3,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 import { prisma } from '@/server/db'
 import { type Permission } from '@/lib/permissions'
 import { permissionsFor } from '@/server/auth/permissions-for'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 
 type ProfileRecord = {
   id: string
@@ -31,6 +32,25 @@ export type AccountAccess = {
 }
 
 export async function loadAccountAccess(userId: string): Promise<AccountAccess | null> {
+  if (userId === FALLBACK_ADMIN_ID) {
+    const email = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
+    return {
+      userId,
+      email,
+      active: true,
+      role: 'ADMIN',
+      teamId: null,
+      permissions: await permissionsFor('ADMIN', null),
+      profile: {
+        id: 'database-unavailable-admin-profile',
+        email,
+        firstName: process.env.COMPANY_ADMIN_FIRST_NAME?.trim() || 'مدير',
+        lastName: process.env.COMPANY_ADMIN_LAST_NAME?.trim() || 'الشركة',
+        role: 'ADMIN',
+        teamId: null,
+      },
+    }
+  }
   if (!resolveWorkforceDatabaseUrl()) return null
   try {
     const user = await prisma.workforceUser.findUnique({

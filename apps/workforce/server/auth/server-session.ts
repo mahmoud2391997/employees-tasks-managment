@@ -43,7 +43,11 @@ export const getServerSession = cache(async (): Promise<ServerSession | null> =>
       permissions: [...(DEFAULT_ROLES.ADMIN.permissions as Permission[])],
     }
   }
-  await ensureCompany()
+  try {
+    await ensureCompany()
+  } catch (error) {
+    console.error('auth/server-session: database unavailable; continuing for fallback admin session', error)
+  }
 
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
