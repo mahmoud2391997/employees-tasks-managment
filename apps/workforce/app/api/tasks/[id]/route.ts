@@ -59,7 +59,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!editsContent && !assigneeChanged) {
     return NextResponse.json({ success: false, message: 'لا يوجد تغيير' }, { status: 400 })
   }
-
   if (parsed.data.departmentId !== undefined && parsed.data.departmentId !== null) {
     const dep = await prisma.workforceDepartment.findFirst({
       where: { id: parsed.data.departmentId, teamId },

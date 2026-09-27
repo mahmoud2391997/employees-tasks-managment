@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ success: true, data: created })
   } catch (e) {
-    console.error('roles/create: failed to create custom role', e)
+    console.error('roles/create: failed to create custom role', { teamId, name, label: parsed.data.label }, e)
     return NextResponse.json({ success: false, message: 'تعذر إنشاء الدور (قد يكون الاسم مستخدم)' }, { status: 409 })
   }
 }

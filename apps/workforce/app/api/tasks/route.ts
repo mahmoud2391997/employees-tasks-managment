@@ -97,6 +97,22 @@ export async function POST(req: NextRequest) {
     if (!assignee) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
+  if (parsed.data.departmentId) {
+    const dep = await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId },
+      select: { id: true },
+    })
+    if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
+  if (parsed.data.assigneeId) {
+    const assignee = await prisma.workforceProfile.findFirst({
+      where: { id: parsed.data.assigneeId, teamId },
+      select: { id: true },
+    })
+    if (!assignee) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
   const created = await prisma.workforceTask.create({
     data: {
       title: parsed.data.title,

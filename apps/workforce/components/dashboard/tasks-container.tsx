@@ -36,18 +36,25 @@ const statusColumns: Array<{ id: Task['status']; label: string; surface: string 
 
 export function TasksContainer({
   initialTasks,
+  initialTotal,
+  initialHasMore,
   departments,
   profiles,
   currentProfileId,
   permissions,
 }: {
   initialTasks: Task[]
+  initialTotal: number
+  initialHasMore: boolean
   departments: Department[]
   profiles: Profile[]
   currentProfileId: string
   permissions: string[]
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [total, setTotal] = useState<number>(initialTotal)
+  const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [filterDept, setFilterDept] = useState('')
   const [filterAssignee, setFilterAssignee] = useState<'all' | 'me' | 'by_me'>('all')
 
@@ -68,10 +75,35 @@ export function TasksContainer({
     })
   }, [tasks, filterDept, filterAssignee, currentProfileId])
 
+  const apiTake = 50
+
   async function refresh() {
-    const res = await fetch('/api/tasks', { cache: 'no-store' })
-    const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Task[] } | null
-    if (res.ok && json?.success) setTasks(json.data ?? [])
+    const res = await fetch(`/api/tasks?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
+      | null
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setTasks(next)
+      setTotal(Number(json.total ?? next.length))
+      setHasMore(Boolean(json.hasMore))
+    }
+  }
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const res = await fetch(`/api/tasks?take=${apiTake}&skip=${tasks.length}`, { cache: 'no-store' })
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
+      | null
+    setLoadingMore(false)
+    if (res.ok && json?.success) {
+      const next = json.data ?? []
+      setTasks((prev) => [...prev, ...next])
+      setTotal(Number(json.total ?? total))
+      setHasMore(Boolean(json.hasMore))
+    }
   }
 
   async function updateTask(id: string, patch: Partial<Task>) {
@@ -195,6 +227,21 @@ export function TasksContainer({
           </div>
         ))}
       </div>
+
+      <Card className="p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+          <div>
+            تم تحميل {tasks.length} من {total}
+          </div>
+          {hasMore ? (
+            <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
+              {loadingMore ? '...' : 'تحميل المزيد'}
+            </Button>
+          ) : (
+            <Badge variant="neutral">آخر صفحة</Badge>
+          )}
+        </div>
+      </Card>
     </div>
   )
 }

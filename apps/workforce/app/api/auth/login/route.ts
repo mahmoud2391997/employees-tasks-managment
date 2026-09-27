@@ -11,6 +11,10 @@ type FailedAttempt = {
 
 const MAX_FAILED_ATTEMPTS = 5
 const FAILED_WINDOW_MS = 15 * 60 * 1000
+// NOTE: This limiter is intentionally in-memory only.
+// - It resets on redeploy / cold start.
+// - It does not work correctly with multiple server instances (each instance has its own counter).
+// If/when this project has shared infra (Redis/Upstash/etc), move this to a shared store.
 const failedLoginAttempts = new Map<string, FailedAttempt>()
 
 function getClientIp(req: NextRequest) {

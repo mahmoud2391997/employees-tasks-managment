@@ -7,7 +7,7 @@ Internal system for one company: employees, departments, tasks, members, roles, 
 ```bash
 pnpm install
 cp apps/workforce/.env.example apps/workforce/.env
-pnpm db:push
+pnpm db:migrate
 pnpm dev
 ```
 

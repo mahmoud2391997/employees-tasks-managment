@@ -15,10 +15,17 @@ export default async function NotificationsPage() {
     )
   }
 
-  const rows = await prisma.workforceNotification.findMany({
-    where: { userId: profileId },
-    orderBy: [{ createdAt: 'desc' }],
-  })
+  const take = 50
+  const skip = 0
+  const [total, rows] = await Promise.all([
+    prisma.workforceNotification.count({ where: { userId: profileId } }),
+    prisma.workforceNotification.findMany({
+      where: { userId: profileId },
+      orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
+    }),
+  ])
 
   return (
     <main className="space-y-4">
@@ -26,7 +33,7 @@ export default async function NotificationsPage() {
         <h1 className="text-xl font-semibold">الإشعارات</h1>
         <p className="mt-2 text-sm text-slate-500">آخر التنبيهات.</p>
       </div>
-      <NotificationsContainer initial={rows as any} />
+      <NotificationsContainer initial={rows as any} initialTotal={total} initialHasMore={skip + rows.length < total} />
     </main>
   )
 }

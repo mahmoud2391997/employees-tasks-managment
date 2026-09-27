@@ -84,7 +84,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  console.error('members/invite: failed to create invitation after retries', lastError)
+  console.error(
+    'members/invite: failed to create invitation after retries',
+    { teamId, invitedById, email },
+    lastError,
+  )
   return NextResponse.json({ success: false, message: 'تعذر إنشاء الدعوة، حاول مرة أخرى' }, { status: 500 })
 }
 

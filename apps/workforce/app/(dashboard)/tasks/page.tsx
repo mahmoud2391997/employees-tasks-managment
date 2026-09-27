@@ -23,11 +23,17 @@ export default async function TasksPage() {
     )
   }
 
-  const [tasks, departments, profiles] = await Promise.all([
+  const take = 50
+  const skip = 0
+
+  const [totalTasks, tasks, departments, profiles] = await Promise.all([
+    prisma.workforceTask.count({ where: { teamId } }),
     prisma.workforceTask.findMany({
       where: { teamId },
       include: { department: true, assignee: true, creator: true },
       orderBy: [{ createdAt: 'desc' }],
+      take,
+      skip,
     }),
     prisma.workforceDepartment.findMany({ where: { teamId }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
     prisma.workforceProfile.findMany({ where: { teamId }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
@@ -41,6 +47,8 @@ export default async function TasksPage() {
       </div>
       <TasksContainer
         initialTasks={tasks as any}
+        initialTotal={totalTasks}
+        initialHasMore={skip + tasks.length < totalTasks}
         departments={departments as any}
         profiles={profiles as any}
         currentProfileId={session.profile?.id ?? ''}
