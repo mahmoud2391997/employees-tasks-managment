@@ -1,6 +1,7 @@
 import { getServerSession } from '@/server/auth/server-session'
 import { prisma } from '@/server/db'
 import { MembersContainer } from '@/components/dashboard/members-container'
+import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 
 export default async function MembersPage() {
   const session = await getServerSession()
@@ -51,6 +52,29 @@ export default async function MembersPage() {
     prisma.workforceCustomRole.findMany({ where: { teamId }, select: { name: true, label: true }, orderBy: [{ createdAt: 'asc' }] }),
   ])
 
+  const canInvite = session.permissions.includes('members.invite' as any)
+  const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
+  const viewerEmail = session.email
+
+  const safeMembers = members.map((m) => ({
+    ...m,
+    user: {
+      ...m.user,
+      email: redactEmailForViewer(m.user.email, viewerEmail, canViewEmails),
+      profile: m.user.profile
+        ? { ...m.user.profile, email: redactEmailForViewer(m.user.profile.email, viewerEmail, canViewEmails) }
+        : null,
+    },
+  }))
+
+  const safeInvitations = canInvite
+    ? invitations.map((inv) => ({
+        ...inv,
+        email: redactEmailForViewer(inv.email, viewerEmail, canViewEmails),
+        invitedBy: { ...inv.invitedBy, email: redactEmailForViewer(inv.invitedBy.email, viewerEmail, canViewEmails) },
+      }))
+    : []
+
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -58,10 +82,10 @@ export default async function MembersPage() {
         <p className="mt-2 text-sm text-slate-500">إدارة أعضاء الفريق والدعوات.</p>
       </div>
       <MembersContainer
-        initialMembers={members as any}
+        initialMembers={safeMembers as any}
         initialTotal={totalMembers}
         initialHasMore={skip + members.length < totalMembers}
-        initialInvitations={invitations as any}
+        initialInvitations={safeInvitations as any}
         roles={roles as any}
         permissions={session.permissions as any}
       />

@@ -1,6 +1,7 @@
 import { getServerSession } from '@/server/auth/server-session'
 import { prisma } from '@/server/db'
 import { EmployeesContainer } from '@/components/dashboard/employees-container'
+import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 
 export default async function EmployeesPage() {
   const session = await getServerSession()
@@ -39,6 +40,15 @@ export default async function EmployeesPage() {
     prisma.workforceProfile.findMany({ where: { teamId }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
   ])
 
+  const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
+  const viewerEmail = session.email
+  const safeEmployees = employees.map((e) => ({
+    ...e,
+    profile: { ...e.profile, email: redactEmailForViewer(e.profile.email, viewerEmail, canViewEmails) },
+    manager: e.manager ? { ...e.manager, email: redactEmailForViewer(e.manager.email, viewerEmail, canViewEmails) } : null,
+  }))
+  const safeProfiles = profiles.map((p) => ({ ...p, email: redactEmailForViewer(p.email, viewerEmail, canViewEmails) }))
+
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -46,11 +56,11 @@ export default async function EmployeesPage() {
         <p className="mt-2 text-sm text-slate-500">سجل الموظفين داخل الفريق مع تطبيق الصلاحيات.</p>
       </div>
       <EmployeesContainer
-        initialEmployees={employees as any}
+        initialEmployees={safeEmployees as any}
         initialTotal={totalEmployees}
         initialHasMore={skip + employees.length < totalEmployees}
         departments={departments as any}
-        profiles={profiles as any}
+        profiles={safeProfiles as any}
         permissions={session.permissions as any}
       />
     </main>

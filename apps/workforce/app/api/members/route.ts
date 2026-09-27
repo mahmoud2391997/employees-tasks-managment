@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
+import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 
 export const runtime = 'nodejs'
 
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'members.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
+  const canInvite = auth.user.permissions.includes('members.invite')
 
   const { take, skip } = parseTakeSkip(req)
   const [totalMembers, members, invitations, roles] = await Promise.all([
@@ -47,9 +49,30 @@ export async function GET(req: NextRequest) {
     prisma.workforceCustomRole.findMany({ where: { teamId }, select: { name: true, label: true }, orderBy: [{ createdAt: 'asc' }] }),
   ])
 
+  const canViewEmails = canViewAllEmails({ permissions: auth.user.permissions, role: auth.user.profile?.role })
+  const viewerEmail = auth.user.email
+  const safeMembers = members.map((m) => ({
+    ...m,
+    user: {
+      ...m.user,
+      email: redactEmailForViewer(m.user.email, viewerEmail, canViewEmails),
+      profile: m.user.profile
+        ? { ...m.user.profile, email: redactEmailForViewer(m.user.profile.email, viewerEmail, canViewEmails) }
+        : null,
+    },
+  }))
+
+  const safeInvitations = canInvite
+    ? invitations.map((inv) => ({
+        ...inv,
+        email: redactEmailForViewer(inv.email, viewerEmail, canViewEmails),
+        invitedBy: { ...inv.invitedBy, email: redactEmailForViewer(inv.invitedBy.email, viewerEmail, canViewEmails) },
+      }))
+    : []
+
   return NextResponse.json({
     success: true,
-    data: { members, invitations, roles },
+    data: { members: safeMembers, invitations: safeInvitations, roles },
     total: totalMembers,
     hasMore: skip + members.length < totalMembers,
   })
