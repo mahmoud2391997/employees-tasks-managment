@@ -1,4 +1,5 @@
 import { getServerSession } from '@/server/auth/server-session'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { TaskStatusChart } from '@/components/dashboard/task-status-chart'
 
@@ -13,6 +14,17 @@ export default async function DashboardPage() {
     )
   }
   const teamId = session?.profile?.teamId ?? null
+
+  if (session.userId === FALLBACK_ADMIN_ID) {
+    return (
+      <main className="space-y-4">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <h1 className="text-xl font-semibold">لوحة التحكم</h1>
+          <p className="mt-2 text-sm text-amber-800">تم تسجيل الدخول بوضع الطوارئ لأن قاعدة البيانات غير متاحة حالياً.</p>
+        </div>
+      </main>
+    )
+  }
 
   if (!teamId) {
     return (
