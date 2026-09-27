@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { jwtVerify } from 'jose/jwt/verify'
 
 const COOKIE_NAME = 'wf_auth'
 
@@ -28,15 +27,46 @@ function isClosedOnboardingPage(pathname: string) {
   )
 }
 
+function base64UrlToUint8Array(input: string) {
+  const base64 = input.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = base64 + '==='.slice((base64.length + 3) % 4)
+  const binary = atob(padded)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes
+}
+
 async function verifyTokenEdge(token: string) {
   const secret = process.env.WORKFORCE_JWT_SECRET?.trim()
   if (!secret) return null
   try {
-    const key = new TextEncoder().encode(secret)
-    const verified = await jwtVerify(token, key, { algorithms: ['HS256'] })
-    const sub = String(verified.payload.sub ?? '')
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+
+    const [headerB64, payloadB64, sigB64] = parts
+    const header = JSON.parse(new TextDecoder().decode(base64UrlToUint8Array(headerB64)))
+    if (header?.alg !== 'HS256' || header?.typ !== 'JWT') return null
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    )
+
+    const ok = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      base64UrlToUint8Array(sigB64),
+      new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+    )
+    if (!ok) return null
+
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlToUint8Array(payloadB64)))
+    const sub = String(payload?.sub ?? '')
     if (!sub) return null
-    return { sub, email: String(verified.payload.email ?? '') }
+    return { sub, email: String(payload?.email ?? '') }
   } catch {
     return null
   }
