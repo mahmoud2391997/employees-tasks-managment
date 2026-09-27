@@ -2,6 +2,8 @@ import { getServerSession } from '@/server/auth/server-session'
 import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { TaskStatusChart } from '@/components/dashboard/task-status-chart'
+import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
+import { servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE, virtualDashboardStats } from '@/server/virtual-data'
 
 export default async function DashboardPage() {
   const session = await getServerSession()
@@ -15,18 +17,11 @@ export default async function DashboardPage() {
   }
   const teamId = session?.profile?.teamId ?? null
 
-  if (session.userId === FALLBACK_ADMIN_ID) {
-    return (
-      <main className="space-y-4">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-          <h1 className="text-xl font-semibold">لوحة التحكم</h1>
-          <p className="mt-2 text-sm text-amber-800">تم تسجيل الدخول بوضع الطوارئ لأن قاعدة البيانات غير متاحة حالياً.</p>
-        </div>
-      </main>
-    )
+  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+    return <VirtualLoginNotice title="لوحة التحكم" />
   }
 
-  if (!teamId) {
+  if (!teamId && session.userId !== FALLBACK_ADMIN_ID) {
     return (
       <main className="space-y-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -37,29 +32,39 @@ export default async function DashboardPage() {
     )
   }
 
-  const [employees, departments, tasks, completed] = await Promise.all([
-    prisma.workforceEmployee.count({ where: { teamId } }),
-    prisma.workforceDepartment.count({ where: { teamId } }),
-    prisma.workforceTask.count({ where: { teamId } }),
-    prisma.workforceTask.count({ where: { teamId, status: 'COMPLETED' } }),
-  ])
+  const sampleData = servesLocalVirtualData(session.userId)
+  const virtualStats = sampleData ? virtualDashboardStats() : null
 
-  const grouped = await prisma.workforceTask.groupBy({
-    by: ['status'],
-    where: { teamId },
-    _count: { status: true },
-  })
+  const [employees, departments, tasks, completed] = virtualStats
+    ? [virtualStats.employees, virtualStats.departments, virtualStats.tasks, virtualStats.completed]
+    : await Promise.all([
+        prisma.workforceEmployee.count({ where: { teamId: teamId! } }),
+        prisma.workforceDepartment.count({ where: { teamId: teamId! } }),
+        prisma.workforceTask.count({ where: { teamId: teamId! } }),
+        prisma.workforceTask.count({ where: { teamId: teamId!, status: 'COMPLETED' } }),
+      ])
 
-  const statusRows = ['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED'].map((status) => ({
-    status,
-    count: grouped.find((g) => g.status === status)?._count.status ?? 0,
-  }))
+  const statusRows = virtualStats
+    ? virtualStats.statusRows
+    : await prisma.workforceTask
+        .groupBy({
+          by: ['status'],
+          where: { teamId: teamId! },
+          _count: { status: true },
+        })
+        .then((grouped) =>
+          ['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED'].map((status) => ({
+            status,
+            count: grouped.find((g) => g.status === status)?._count.status ?? 0,
+          })),
+        )
 
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">لوحة التحكم</h1>
         <p className="mt-2 text-sm text-slate-500">إحصائيات عامة عن الفريق والمهام.</p>
+        {sampleData ? <p className="mt-2 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">

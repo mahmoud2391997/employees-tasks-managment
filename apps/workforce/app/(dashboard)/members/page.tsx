@@ -1,7 +1,10 @@
 import { getServerSession } from '@/server/auth/server-session'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { MembersContainer } from '@/components/dashboard/members-container'
+import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
+import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function MembersPage() {
   const session = await getServerSession()
@@ -13,9 +16,14 @@ export default async function MembersPage() {
       </main>
     )
   }
-  const teamId = session?.profile?.teamId ?? null
+  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+    return <VirtualLoginNotice title="الأعضاء" />
+  }
 
-  if (!teamId) {
+  const teamId = session?.profile?.teamId ?? null
+  const sampleData = servesLocalVirtualData(session.userId)
+
+  if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold">الأعضاء</h1>
@@ -27,30 +35,38 @@ export default async function MembersPage() {
   const take = 50
   const skip = 0
 
-  const [totalMembers, members, invitations, roles] = await Promise.all([
-    prisma.workforceTeamMember.count({ where: { teamId } }),
-    prisma.workforceTeamMember.findMany({
-      where: { teamId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            profile: { select: { id: true, email: true, firstName: true, lastName: true, role: true, teamId: true } },
+  const virtual = sampleData ? getVirtualCompany() : null
+  const [totalMembers, members, invitations, roles] = virtual
+    ? [
+        virtual.members.length,
+        virtual.members.slice(skip, skip + take),
+        virtual.invitations,
+        virtual.roles.map((role) => ({ name: role.name, label: role.label })),
+      ]
+    : await Promise.all([
+        prisma.workforceTeamMember.count({ where: { teamId: teamId! } }),
+        prisma.workforceTeamMember.findMany({
+          where: { teamId: teamId! },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                profile: { select: { id: true, email: true, firstName: true, lastName: true, role: true, teamId: true } },
+              },
+            },
           },
-        },
-      },
-      orderBy: [{ createdAt: 'desc' }],
-      take,
-      skip,
-    }),
-    prisma.workforceInvitation.findMany({
-      where: { teamId, acceptedAt: null },
-      include: { invitedBy: { select: { id: true, email: true, firstName: true, lastName: true } } },
-      orderBy: [{ createdAt: 'desc' }],
-    }),
-    prisma.workforceCustomRole.findMany({ where: { teamId }, select: { name: true, label: true }, orderBy: [{ createdAt: 'asc' }] }),
-  ])
+          orderBy: [{ createdAt: 'desc' }],
+          take,
+          skip,
+        }),
+        prisma.workforceInvitation.findMany({
+          where: { teamId: teamId!, acceptedAt: null },
+          include: { invitedBy: { select: { id: true, email: true, firstName: true, lastName: true } } },
+          orderBy: [{ createdAt: 'desc' }],
+        }),
+        prisma.workforceCustomRole.findMany({ where: { teamId: teamId! }, select: { name: true, label: true }, orderBy: [{ createdAt: 'asc' }] }),
+      ])
 
   const canInvite = session.permissions.includes('members.invite' as any)
   const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
@@ -80,6 +96,7 @@ export default async function MembersPage() {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold">الأعضاء</h1>
         <p className="mt-2 text-sm text-slate-500">إدارة أعضاء الفريق والدعوات.</p>
+        {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
       </div>
       <MembersContainer
         initialMembers={safeMembers as any}

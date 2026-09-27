@@ -3,7 +3,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 import { prisma } from '@/server/db'
 import { type Permission } from '@/lib/permissions'
 import { permissionsFor } from '@/server/auth/permissions-for'
-import { FALLBACK_ADMIN_ID, FALLBACK_COMPANY_ID } from '@/server/company'
+import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } from '@/server/company'
 
 type ProfileRecord = {
   id: string
@@ -42,7 +42,7 @@ export async function loadAccountAccess(userId: string): Promise<AccountAccess |
       teamId: FALLBACK_COMPANY_ID,
       permissions: await permissionsFor('ADMIN', FALLBACK_COMPANY_ID),
       profile: {
-        id: 'database-unavailable-admin-profile',
+        id: FALLBACK_ADMIN_PROFILE_ID,
         email,
         firstName: process.env.COMPANY_ADMIN_FIRST_NAME?.trim() || 'مدير',
         lastName: process.env.COMPANY_ADMIN_LAST_NAME?.trim() || 'الشركة',

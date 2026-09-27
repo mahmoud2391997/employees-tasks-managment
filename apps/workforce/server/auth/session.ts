@@ -4,6 +4,7 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 
 import { type Permission } from '@/lib/permissions'
 import { loadAccountAccess } from '@/server/auth/access'
+import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { getAccessTokenFromRequest, verifyAccessToken } from '@/server/auth/jwt'
 
@@ -26,11 +27,21 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
     const demo = await getOrCreateDemoSession()
     return { id: demo.userId, email: demo.email, profile: demo.profile, permissions: demo.permissions }
   }
-  if (!resolveWorkforceDatabaseUrl()) return null
 
   const token = getAccessTokenFromRequest(req)
-  if (!token) return null
-  const payload = await verifyAccessToken(token)
+  const payload = token ? await verifyAccessToken(token) : null
+  if (payload?.sub === FALLBACK_ADMIN_ID) {
+    const access = await loadAccountAccess(FALLBACK_ADMIN_ID)
+    if (!access?.active) return null
+    return {
+      id: access.userId,
+      email: access.email,
+      profile: access.profile,
+      permissions: access.permissions,
+    }
+  }
+
+  if (!resolveWorkforceDatabaseUrl()) return null
   if (!payload?.sub) return null
 
   try {
