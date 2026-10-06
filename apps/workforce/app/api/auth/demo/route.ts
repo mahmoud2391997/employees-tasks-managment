@@ -3,7 +3,7 @@ import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
 import { issueAccessToken, setAuthCookie } from '@/server/auth/jwt'
 export const runtime = 'nodejs'
 export async function POST() {
-  if (!isDemoModeEnabled() || process.env.NODE_ENV === 'production') {
+  if (!isDemoModeEnabled()) {
     return NextResponse.json({ success: false, message: 'Demo is unavailable' }, { status: 403 })
   }
   try {

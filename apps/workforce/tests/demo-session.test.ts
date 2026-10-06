@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/server/auth/demo', () => ({
-  isDemoModeEnabled: () => process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production',
+  isDemoModeEnabled: () => process.env.WORKFORCE_DEMO_MODE === 'true',
   getOrCreateDemoSession: async () => ({ userId: 'demo-user', email: 'demo@example.com', profile: { id: 'p1', teamId: 't1', role: 'ADMIN' }, permissions: ['dashboard.view'] }),
 }))
 vi.mock('@/server/db', () => ({ prisma: {} }))
@@ -26,11 +26,12 @@ describe('explicit demo session', () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')
     expect(await getSessionUser(request)).toBeNull()
   })
-  it('refuses demo when disabled or in production', async () => {
+  it('hides demo when false and starts it in production when true', async () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')
     expect((await POST()).status).toBe(403)
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
     vi.stubEnv('NODE_ENV', 'production')
-    expect((await POST()).status).toBe(403)
+    vi.stubEnv('WORKFORCE_JWT_SECRET', 'a-local-test-secret-with-at-least-32-characters')
+    expect((await POST()).status).toBe(200)
   })
 })

@@ -1,45 +1,11 @@
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'node:crypto'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES, type Permission } from '@/lib/permissions'
 
-const DEMO_EMAIL = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'demo@example.com'
-const DEMO_TEAM_NAME = process.env.COMPANY_NAME?.trim() || 'Demo Team'
-
-function looksLikeLocalHost(hostname: string) {
-  const h = hostname.toLowerCase()
-  if (h === 'localhost' || h === '127.0.0.1') return true
-  if (h.endsWith('.local')) return true
-  if (/^127\.\d+\.\d+\.\d+$/.test(h)) return true
-  if (/^10\.\d+\.\d+\.\d+$/.test(h)) return true
-  if (/^192\.168\.\d+\.\d+$/.test(h)) return true
-  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(h)) return true
-  return false
-}
-
-function isProductionLookingDatabaseUrl(raw: string) {
-  const value = raw.trim()
-  if (!value) return false
-  try {
-    const u = new URL(value)
-    return !looksLikeLocalHost(u.hostname)
-  } catch {
-    return true
-  }
-}
-
-if (process.env.WORKFORCE_DEMO_MODE === 'true') {
-  const nodeEnv = process.env.NODE_ENV ?? ''
-  const dbUrl = process.env.WORKFORCE_DATABASE_URL ?? ''
-  const prodLookingDb = isProductionLookingDatabaseUrl(dbUrl)
-  if (nodeEnv === 'production' || prodLookingDb) {
-    const msg =
-      'Unsafe config: WORKFORCE_DEMO_MODE=true with NODE_ENV=production or a production-looking WORKFORCE_DATABASE_URL.'
-    // eslint-disable-next-line no-console
-    console.error(msg, { nodeEnv, dbHost: (() => { try { return new URL(dbUrl).hostname } catch { return null } })() })
-    if (nodeEnv === 'production') throw new Error(`${msg} Refusing to start.`)
-  }
-}
+const DEMO_EMAIL = 'demo@workforce.invalid'
+const DEMO_TEAM_NAME = 'Workforce Demo'
 
 export type DemoSession = {
   userId: string
@@ -56,7 +22,7 @@ export type DemoSession = {
 }
 
 export function isDemoModeEnabled() {
-  return process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production'
+  return process.env.WORKFORCE_DEMO_MODE === 'true'
 }
 
 async function ensureDefaultRoles(teamId: string) {
@@ -82,7 +48,7 @@ async function buildDemoSessionOnce(): Promise<DemoSession> {
     where: { email: DEMO_EMAIL },
     select: { id: true },
   })
-  const passwordHash = alreadyExists ? null : await bcrypt.hash('demo-password', 10)
+  const passwordHash = alreadyExists ? null : await bcrypt.hash(randomBytes(32).toString('hex'), 12)
 
   const created = await prisma.$transaction(async (tx) => {
     const existingUser = await tx.workforceUser.findUnique({
@@ -94,7 +60,7 @@ async function buildDemoSessionOnce(): Promise<DemoSession> {
       (await tx.workforceUser.create({
         data: {
           email: DEMO_EMAIL,
-          passwordHash: passwordHash ?? (await bcrypt.hash('demo-password', 10)),
+          passwordHash: passwordHash ?? (await bcrypt.hash(randomBytes(32).toString('hex'), 12)),
         },
         select: userSelect,
       }))

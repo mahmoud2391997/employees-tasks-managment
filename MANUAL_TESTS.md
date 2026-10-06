@@ -34,4 +34,4 @@ Steps:
 - With WORKFORCE_DEMO_MODE=true locally, open login and click Try demo; confirm the demo banner and sample records.
 - Exit demo and confirm protected pages redirect to login.
 - Switch between English and Arabic on login and dashboard; refresh and navigate to confirm the preference persists and the sidebar changes sides.
-- Confirm the demo endpoint is unavailable when demo mode is disabled and in production.
+- Confirm the demo endpoint is unavailable when demo mode is disabled and available in production when true.

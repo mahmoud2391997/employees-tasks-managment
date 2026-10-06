@@ -60,6 +60,7 @@ async function provisionCompanyOnce(config: CompanyConfig) {
     }
 
     let team = await tx.workforceTeam.findFirst({
+      where: { ownerId: user.id },
       orderBy: [{ createdAt: 'asc' }],
       select: { id: true, name: true },
     })
