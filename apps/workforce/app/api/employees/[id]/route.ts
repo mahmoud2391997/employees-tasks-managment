@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
+import { salarySchema } from '@/lib/salary-schema'
 
 import { prisma } from '@/server/db'
 
@@ -9,7 +10,7 @@ const updateSchema = z.object({
   departmentId: z.string().trim().min(1).nullable().optional(),
   position: z.string().trim().min(1).nullable().optional(),
   joinDate: z.string().trim().min(1).nullable().optional(),
-  salary: z.union([z.number(), z.string().trim().min(1)]).nullable().optional(),
+  salary: salarySchema.nullable().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'TERMINATED']).optional(),
   managerId: z.string().trim().min(1).nullable().optional(),
 })

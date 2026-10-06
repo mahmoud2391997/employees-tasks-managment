@@ -1,5 +1,7 @@
 'use client'
 
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import { useState } from 'react'
@@ -22,10 +24,12 @@ export function NotificationsContainer({
   initial,
   initialTotal,
   initialHasMore,
+  readOnly = false,
 }: {
   initial: Notification[]
   initialTotal: number
   initialHasMore: boolean
+  readOnly?: boolean
 }) {
   const tr = useTranslations()
 
@@ -37,7 +41,7 @@ export function NotificationsContainer({
   const apiTake = 50
 
   async function refresh() {
-    const res = await fetch(`/api/notifications?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/notifications?take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Notification[]; total?: number; hasMore?: boolean }
       | null
@@ -52,7 +56,7 @@ export function NotificationsContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await fetch(`/api/notifications?take=${apiTake}&skip=${rows.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/notifications?take=${apiTake}&skip=${rows.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Notification[]; total?: number; hasMore?: boolean }
       | null
@@ -66,9 +70,13 @@ export function NotificationsContainer({
   }
 
   async function markRead(id: string) {
+    const res = await apiFetch('/api/notifications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })
+    if (!res.ok) {
+      const json = await res.json().catch(() => null)
+      window.alert(tr(json?.message || 'تعذر الحفظ'))
+      return
+    }
     setRows((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
-    await fetch('/api/notifications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })
-    await refresh()
   }
 
   const unread = rows.filter((r) => !r.read).length
@@ -94,7 +102,7 @@ export function NotificationsContainer({
                 </div>
               </div>
               {!n.read ? (
-                <Button size="sm" variant="secondary" type="button" onClick={() => markRead(n.id)}>
+                <Button disabled={readOnly} size="sm" variant="secondary" type="button" onClick={() => markRead(n.id)}>
                   {tr("تحديد كمقروء")}</Button>
               ) : (
                 <Badge variant="neutral">{tr("مقروء")}</Badge>

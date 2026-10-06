@@ -1,5 +1,7 @@
 'use client'
 
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import { useMemo, useState } from 'react'
@@ -83,7 +85,7 @@ export function TasksContainer({
   const apiTake = 50
 
   async function refresh() {
-    const res = await fetch(`/api/tasks?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/tasks?take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
       | null
@@ -98,7 +100,7 @@ export function TasksContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await fetch(`/api/tasks?take=${apiTake}&skip=${tasks.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/tasks?take=${apiTake}&skip=${tasks.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
       | null
@@ -114,7 +116,7 @@ export function TasksContainer({
   async function mutateTask(id: string, method: 'PATCH' | 'DELETE', patch?: Partial<Task>) {
     setError(null)
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
+      const res = await apiFetch(`/api/tasks/${id}`, {
         method,
         headers: { 'content-type': 'application/json' },
         body: patch ? JSON.stringify(patch) : undefined,
@@ -305,14 +307,14 @@ function TaskForm({
           setError('')
           const body = {
             title,
-            description: description || undefined,
-            departmentId: departmentId || undefined,
-            assigneeId: canAssign ? assigneeId || undefined : undefined,
+            description: description || (task ? null : undefined),
+            departmentId: departmentId || (task ? null : undefined),
+            assigneeId: canAssign ? assigneeId || (task ? null : undefined) : undefined,
             priority,
             status,
-            dueDate: dueDate || undefined,
+            dueDate: dueDate || (task ? null : undefined),
           }
-          const res = await fetch(task ? `/api/tasks/${task.id}` : '/api/tasks', {
+          const res = await apiFetch(task ? `/api/tasks/${task.id}` : '/api/tasks', {
             method: task ? 'PATCH' : 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),

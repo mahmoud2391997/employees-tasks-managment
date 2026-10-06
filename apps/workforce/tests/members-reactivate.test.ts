@@ -1,3 +1,4 @@
+import { ALL_PERMISSIONS } from '@/lib/permissions'
 import { describe, expect, it, vi } from 'vitest'
 
 function makeReq(body: any) {
@@ -23,7 +24,7 @@ describe('POST /api/members/reactivate', () => {
         ok: true,
         status: 200,
         message: 'ok',
-        user: { profile: { id: 'p-admin', teamId: 't1' }, permissions: ['members.invite'] },
+        user: { profile: { id: 'p-admin', teamId: 't1' }, permissions: [...ALL_PERMISSIONS] },
       }),
     }))
 

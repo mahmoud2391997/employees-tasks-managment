@@ -401,5 +401,5 @@ export function virtualNotificationMarkRead(userId: string, profileId: string, i
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
   const row = getVirtualCompany().notifications.find((item) => item.id === id && item.userId === profileId)
   if (!row) return { status: 404, body: { success: false as const, message: 'غير موجود' } }
-  return { status: 200, body: { success: true as const, data: { ...row, read: true } } }
+  return { status: 403, body: { success: false as const, message: VIRTUAL_READONLY_MESSAGE } }
 }

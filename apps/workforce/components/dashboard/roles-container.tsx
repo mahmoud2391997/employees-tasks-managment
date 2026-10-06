@@ -1,5 +1,7 @@
 'use client'
 
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import { useMemo, useState } from 'react'
@@ -43,7 +45,7 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
   const grouped = useMemo(() => groupPermissions(ALL_PERMISSIONS), [])
 
   async function refresh() {
-    const res = await fetch('/api/roles', { cache: 'no-store' })
+    const res = await apiFetch('/api/roles', { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Role[] } | null
     if (res.ok && json?.success) setRoles(json.data ?? [])
   }
@@ -57,7 +59,7 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
           initial={{ name: '', label: '', permissions: [] }}
           onClose={() => setCreating(false)}
           onSave={async (draft) => {
-            const res = await fetch('/api/roles', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(draft) })
+            const res = await apiFetch('/api/roles', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(draft) })
             const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
             if (!res.ok || !json?.success) throw new Error(tr(json?.message || "تعذر الحفظ"))
             setCreating(false)
@@ -74,7 +76,7 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
           initial={{ name: editing.name, label: editing.label, permissions: editing.permissions ?? [] }}
           onClose={() => setEditing(null)}
           onSave={async (draft) => {
-            const res = await fetch(`/api/roles/${editing.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label: draft.label, permissions: draft.permissions }) })
+            const res = await apiFetch(`/api/roles/${editing.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label: draft.label, permissions: draft.permissions }) })
             const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
             if (!res.ok || !json?.success) throw new Error(tr(json?.message || "تعذر الحفظ"))
             setEditing(null)
@@ -123,7 +125,12 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
                         variant="danger"
                         type="button"
                         onClick={async () => {
-                          await fetch(`/api/roles/${r.id}`, { method: 'DELETE' })
+                          const res = await apiFetch(`/api/roles/${r.id}`, { method: 'DELETE' })
+                          if (!res.ok) {
+                            const json = await res.json().catch(() => null)
+                            window.alert(tr(json?.message || 'تعذر الحذف'))
+                            return
+                          }
                           await refresh()
                         }}
                       >

@@ -1,6 +1,8 @@
 'use client'
 
 import { Search, Users, Plus } from 'lucide-react'
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import Link from 'next/link'
@@ -81,7 +83,7 @@ export function EmployeesContainer({
   const apiTake = 50
 
   async function refresh() {
-    const res = await fetch(`/api/employees?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/employees?take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
       | null
@@ -97,7 +99,7 @@ export function EmployeesContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await fetch(`/api/employees?take=${apiTake}&skip=${employees.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/employees?take=${apiTake}&skip=${employees.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
       | null
@@ -112,7 +114,12 @@ export function EmployeesContainer({
 
   async function deleteEmployee(id: string) {
     if (!canDelete) return
-    await fetch(`/api/employees/${id}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/employees/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => null)
+      window.alert(tr(json?.message || 'تعذر الحذف'))
+      return
+    }
     await refresh()
   }
 
@@ -336,7 +343,7 @@ function EmployeeForm({
                 managerId: managerId || undefined,
               }
 
-          const res = await fetch(isEdit ? `/api/employees/${employee!.id}` : '/api/employees', {
+          const res = await apiFetch(isEdit ? `/api/employees/${employee!.id}` : '/api/employees', {
             method: isEdit ? 'PATCH' : 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),

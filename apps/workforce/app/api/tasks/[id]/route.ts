@@ -2,15 +2,17 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/server/db'
+import { FALLBACK_ADMIN_ID } from '@/lib/sample-identity'
+import { VIRTUAL_READONLY_MESSAGE } from '@/server/virtual-data'
 import { recordNotification, taskStatusLabel } from '@/server/notify'
 
 export const runtime = 'nodejs'
 
 const updateSchema = z.object({
   title: z.string().trim().min(1).optional(),
-  description: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1).nullable().optional(),
   status: z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED']).optional(),
-  dueDate: z.string().trim().min(1).optional(),
+  dueDate: z.string().trim().min(1).nullable().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   departmentId: z.string().trim().min(1).nullable().optional(),
   assigneeId: z.string().trim().min(1).nullable().optional(),
@@ -29,10 +31,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!user?.profile?.teamId) {
     return NextResponse.json({ success: false, message: user ? 'لا يوجد فريق مرتبط بالحساب' : 'غير مصرح' }, { status: user ? 400 : 401 })
   }
+  if (user.id === FALLBACK_ADMIN_ID) return NextResponse.json({ success: false, message: VIRTUAL_READONLY_MESSAGE }, { status: 403 })
   const teamId = user.profile.teamId
   const actorId = user.profile.id
 
-  const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined
+  const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : parsed.data.dueDate === null ? null : undefined
   if (dueDate && Number.isNaN(dueDate.valueOf())) {
     return NextResponse.json({ success: false, message: 'dueDate غير صحيح' }, { status: 400 })
   }
@@ -82,7 +85,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       title: parsed.data.title,
       description: parsed.data.description,
       status: parsed.data.status,
-      dueDate: dueDate ?? undefined,
+      dueDate,
       priority: parsed.data.priority,
       departmentId: parsed.data.departmentId === undefined ? undefined : parsed.data.departmentId,
       assigneeId: parsed.data.assigneeId === undefined ? undefined : parsed.data.assigneeId,
@@ -99,7 +102,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       title: 'تم إسناد مهمة',
       message: `تم إسناد المهمة "${updated.title}" إليك`,
       data: { taskId: id, assignedBy: actorId },
-    })
+    }).catch((error) => console.error('tasks: notification failed after save', error))
   }
 
   const statusChanged = Boolean(parsed.data.status && existing.status !== parsed.data.status)
@@ -117,7 +120,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         ? `أصبحت المهمة "${updated.title}" في الحالة ${taskStatusLabel(parsed.data.status)}`
         : `تم تحديث المهمة "${updated.title}"`,
       data: { taskId: id, changedBy: actorId, newStatus: parsed.data.status ?? null },
-    })
+    }).catch((error) => console.error('tasks: notification failed after save', error))
   }
 
   return NextResponse.json({ success: true, data: updated })
@@ -150,7 +153,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
       title: 'تم حذف مهمة',
       message: `تم حذف المهمة "${existing.title}"`,
       data: { taskId: id, deletedBy: actorId },
-    })
+    }).catch((error) => console.error('tasks: notification failed after save', error))
   }
 
   return NextResponse.json({ success: true })

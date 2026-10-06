@@ -69,7 +69,7 @@ export function TaskStatusChart({
             <div key={tr(row.status)} className="flex items-center justify-between gap-3 text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm" style={{ background: colors[row.status] ?? '#6b7280' }} />
-                <span className="font-mono text-xs">{tr(row.status)}</span>
+                <span className="text-xs">{tr(row.status)}</span>
               </div>
               <div className="font-semibold">{row.count}</div>
             </div>

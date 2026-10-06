@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/server/db'
+import { canGrantRole } from '@/server/auth/access'
 import { requirePermission } from '@/server/auth/require-permission'
 
 export const runtime = 'nodejs'
@@ -27,11 +28,19 @@ export async function POST(req: NextRequest) {
     select: {
       id: true,
       profileId: true,
-      profile: { select: { id: true, role: true } },
+      profile: { select: { id: true, role: true, teamId: true } },
       memberships: { where: { teamId }, select: { id: true, role: true, isActive: true } },
     },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
+
+  if (existing.profile?.teamId && existing.profile.teamId !== teamId) {
+    return NextResponse.json({ success: false, message: 'هذا البريد مرتبط بشركة أخرى' }, { status: 409 })
+  }
+  const role = existing.memberships[0]?.role ?? existing.profile?.role ?? 'EMPLOYEE'
+  if (!(await canGrantRole(auth.user.permissions, role, teamId))) {
+    return NextResponse.json({ success: false, message: 'لا يمكنك منح دور أعلى من صلاحياتك' }, { status: 403 })
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     let profileId = existing.profileId

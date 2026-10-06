@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
+import { salarySchema } from '@/lib/salary-schema'
 
 import { prisma } from '@/server/db'
 import { requirePermission } from '@/server/auth/require-permission'
@@ -26,7 +27,7 @@ const createSchema = z.object({
   departmentId: z.string().trim().min(1).optional(),
   position: z.string().trim().min(1).optional(),
   joinDate: z.string().trim().min(1).optional(),
-  salary: z.union([z.number(), z.string().trim().min(1)]).optional(),
+  salary: salarySchema.optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'TERMINATED']).optional(),
   managerId: z.string().trim().min(1).optional(),
 })
@@ -97,54 +98,57 @@ export async function POST(req: NextRequest) {
   const salary = parsed.data.salary === undefined ? undefined : String(parsed.data.salary)
 
   const email = parsed.data.email.toLowerCase().trim()
-  if (parsed.data.departmentId) {
-    const department = await prisma.workforceDepartment.findFirst({
-      where: { id: parsed.data.departmentId, teamId },
-      select: { id: true },
-    })
-    if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
-  }
-  if (parsed.data.managerId) {
-    const manager = await prisma.workforceProfile.findFirst({
-      where: { id: parsed.data.managerId, teamId },
-      select: { id: true },
-    })
-    if (!manager) return NextResponse.json({ success: false, message: 'المدير غير موجود' }, { status: 400 })
-  }
+  let created
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      const existingProfile = await tx.workforceProfile.findUnique({ where: { email } })
+      if (existingProfile && existingProfile.teamId && existingProfile.teamId !== teamId) {
+        throw new Error('PROFILE_COMPANY_CONFLICT')
+      }
+      if (existingProfile) {
+        const employee = await tx.workforceEmployee.findFirst({ where: { teamId, profileId: existingProfile.id }, select: { id: true } })
+        if (employee) throw new Error('EMPLOYEE_EXISTS')
+      }
+      const profile =
+        existingProfile ??
+        (await tx.workforceProfile.create({
+          data: {
+            email,
+            firstName: parsed.data.firstName,
+            lastName: parsed.data.lastName ?? null,
+            role: 'EMPLOYEE',
+            teamId,
+          },
+        }))
 
-  const existingProfile = await prisma.workforceProfile.findUnique({ where: { email } })
-  if (existingProfile && existingProfile.teamId && existingProfile.teamId !== teamId) {
-    return NextResponse.json({ success: false, message: 'هذا البريد مرتبط بشركة أخرى' }, { status: 409 })
-  }
-  const profile =
-    existingProfile ??
-    (await prisma.workforceProfile.create({
-      data: {
-        email,
-        firstName: parsed.data.firstName,
-        lastName: parsed.data.lastName ?? null,
-        role: 'EMPLOYEE',
-        teamId,
-      },
-    }))
+      if (existingProfile && !existingProfile.teamId) {
+        await tx.workforceProfile.update({ where: { id: profile.id }, data: { teamId } })
+      }
 
-  if (!existingProfile?.teamId) {
-    await prisma.workforceProfile.update({ where: { id: profile.id }, data: { teamId } })
-  }
+      const created = await tx.workforceEmployee.create({
+        data: {
+          teamId,
+          profileId: profile.id,
+          departmentId: parsed.data.departmentId,
+          position: parsed.data.position,
+          joinDate,
+          salary,
+          status: parsed.data.status ?? 'ACTIVE',
+          managerId: parsed.data.managerId,
+        },
+        include: { profile: true, department: true, manager: true },
+      })
 
-  const created = await prisma.workforceEmployee.create({
-    data: {
-      teamId,
-      profileId: profile.id,
-      departmentId: parsed.data.departmentId,
-      position: parsed.data.position,
-      joinDate,
-      salary,
-      status: parsed.data.status ?? 'ACTIVE',
-      managerId: parsed.data.managerId,
-    },
-    include: { profile: true, department: true, manager: true },
-  })
+      return created
+    }, { isolationLevel: 'Serializable' })
+  } catch (error) {
+    const code = (error as { code?: string })?.code
+    const message = error instanceof Error ? error.message : ''
+    if (code === 'P2034' || code === 'P2002' || message === 'PROFILE_COMPANY_CONFLICT' || message === 'EMPLOYEE_EXISTS') {
+      return NextResponse.json({ success: false, message: 'هذا البريد مرتبط بموظف أو شركة أخرى' }, { status: 409 })
+    }
+    throw error
+  }
 
   return NextResponse.json({ success: true, data: created })
 }

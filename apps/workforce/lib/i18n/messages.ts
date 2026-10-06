@@ -1,4 +1,5 @@
 export const english: Record<string, string> = {
+  'تعذر الاتصال بالخادم': 'Unable to connect to the server',
   'بيانات تجريبية للقراءة فقط.': 'Read-only sample data.',
   'عرض تجريبي للقراءة فقط': 'Read-only demo',
   'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط': 'This demo contains read-only sample data.',

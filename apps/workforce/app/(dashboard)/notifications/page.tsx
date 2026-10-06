@@ -50,7 +50,7 @@ export default async function NotificationsPage() {
         <p className="mt-2 text-sm text-slate-500">{tr("آخر التنبيهات.")}</p>
         {sampleData ? <p className="mt-1 text-sm text-amber-700">{tr(VIRTUAL_SAMPLE_NOTE)}</p> : null}
       </div>
-      <NotificationsContainer initial={rows as any} initialTotal={total} initialHasMore={skip + rows.length < total} />
+      <NotificationsContainer readOnly={Boolean(sampleData)} initial={rows as any} initialTotal={total} initialHasMore={skip + rows.length < total} />
     </main>
   )
 }

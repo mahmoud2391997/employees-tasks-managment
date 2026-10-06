@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
 
+  if (parsed.data.managerId) {
+    const manager = await prisma.workforceProfile.findFirst({ where: { id: parsed.data.managerId, teamId }, select: { id: true } })
+    if (!manager) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
+  }
+
   const created = await prisma.workforceDepartment.create({
     data: { teamId, name: parsed.data.name, icon: parsed.data.icon, managerId: parsed.data.managerId },
     include: { manager: true },

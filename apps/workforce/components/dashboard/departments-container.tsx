@@ -1,5 +1,7 @@
 'use client'
 
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import { useState } from 'react'
@@ -41,7 +43,7 @@ export function DepartmentsContainer({
   const canDelete = permissions.includes('departments.delete')
 
   async function refresh() {
-    const res = await fetch('/api/departments', { cache: 'no-store' })
+    const res = await apiFetch('/api/departments', { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Department[] } | null
     if (res.ok && json?.success) setRows(json.data ?? [])
   }
@@ -59,7 +61,7 @@ export function DepartmentsContainer({
           onSubmit={async (e) => {
             e.preventDefault()
             if (!editing) return
-            const res = await fetch(`/api/departments/${editing.id}`, {
+            const res = await apiFetch(`/api/departments/${editing.id}`, {
               method: 'PATCH',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ name: editName.trim() || undefined, managerId: editManagerId || null }),
@@ -108,7 +110,12 @@ export function DepartmentsContainer({
             type="button"
             onClick={async () => {
               if (!confirmDelete) return
-              await fetch(`/api/departments/${confirmDelete.id}`, { method: 'DELETE' })
+              const res = await apiFetch(`/api/departments/${confirmDelete.id}`, { method: 'DELETE' })
+              if (!res.ok) {
+                const json = await res.json().catch(() => null)
+                window.alert(tr(json?.message || 'تعذر الحذف'))
+                return
+              }
               setConfirmDelete(null)
               await refresh()
             }}
@@ -126,7 +133,7 @@ export function DepartmentsContainer({
               e.preventDefault()
               setPending(true)
               setError('')
-              const res = await fetch('/api/departments', {
+              const res = await apiFetch('/api/departments', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ name, managerId: managerId || undefined }),

@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       title: 'تم إسناد مهمة',
       message: `تم إسناد المهمة "${created.title}" إليك`,
       data: { taskId: created.id, assignedBy: creatorId },
-    })
+    }).catch((error) => console.error('tasks: notification failed after save', error))
   }
 
   return NextResponse.json({ success: true, data: created })

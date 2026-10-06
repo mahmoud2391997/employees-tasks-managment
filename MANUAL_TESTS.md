@@ -23,7 +23,7 @@ Steps:
 ## Development readiness checks
 
 - On a clean local database, sign in with generated admin credentials; confirm no demo employees/tasks appear in normal mode.
-- Create an employee, invite that same email, and accept the invite. This is a known profile-reuse issue to resolve before release (see DEVELOPMENT_REVIEW.md).
+- Create an employee, invite that same email, and accept the invite. Confirm the existing profile is reused and the employee record remains linked.
 - Verify task edits/deletes rejected by the API display an error and preserve the visible task.
 - Verify an expired auth cookie redirects to login.
 - Stop PostgreSQL and confirm admin login does not issue a fallback auth cookie.
@@ -35,5 +35,7 @@ Steps:
 - Exit demo and confirm protected pages redirect to login.
 - Switch between English and Arabic on login and dashboard; refresh and navigate to confirm the preference persists and the sidebar changes sides.
 - Confirm the demo endpoint is unavailable when demo mode is disabled and available in production when true.
+
+- Run `pnpm verify:local` with local PostgreSQL and SMTP disabled to check disposable real-data workflows.
 
 - Public demo is read-only and works without database or JWT configuration; verify every demo page and confirm writes return 403.

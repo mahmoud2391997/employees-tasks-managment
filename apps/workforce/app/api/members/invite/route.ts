@@ -3,6 +3,8 @@ import { z } from 'zod'
 import crypto from 'crypto'
 
 import { prisma } from '@/server/db'
+import { canGrantRole } from '@/server/auth/access'
+import { DEFAULT_ROLES } from '@/lib/permissions'
 import { requirePermission } from '@/server/auth/require-permission'
 import { MailDeliveryError, MailNotConfiguredError, readSmtpConfig, requireSiteUrl, sendInvitationEmail } from '@/server/mail'
 
@@ -29,7 +31,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
 
   const email = parsed.data.email.toLowerCase().trim()
-  const role = parsed.data.role?.trim() || 'EMPLOYEE'
+  const role = (parsed.data.role?.trim() || 'EMPLOYEE').toUpperCase().replace(/\s+/g, '_')
+  const customRole = DEFAULT_ROLES[role] ? true : await prisma.workforceCustomRole.findUnique({ where: { teamId_name: { teamId, name: role } }, select: { id: true } })
+  if (!customRole) return NextResponse.json({ success: false, message: 'الدور غير موجود' }, { status: 400 })
+  if (!(await canGrantRole(auth.user.permissions, role, teamId))) return NextResponse.json({ success: false, message: 'لا يمكنك منح دور أعلى من صلاحياتك' }, { status: 403 })
 
   const existingUser = await prisma.workforceUser.findUnique({ where: { email }, select: { id: true } })
   if (existingUser) {

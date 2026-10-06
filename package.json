@@ -14,7 +14,8 @@
     "db:down": "docker compose stop postgres",
     "typecheck": "pnpm -C packages/workforce-database generate && pnpm -C packages/workforce-database exec tsc --noEmit && pnpm -C apps/workforce exec tsc --noEmit",
     "check": "pnpm typecheck && pnpm test",
-    "dev:setup": "node scripts/setup-dev.mjs"
+    "dev:setup": "node scripts/setup-dev.mjs",
+    "verify:local": "node scripts/verify-local.mjs"
   },
   "devDependencies": {
     "vite-tsconfig-paths": "^5.1.0",

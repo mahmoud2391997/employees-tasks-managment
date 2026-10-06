@@ -1,5 +1,7 @@
 'use client'
 
+import { apiFetch } from '@/lib/api-fetch'
+
 import { useTranslations } from '@/lib/i18n/provider'
 
 import { useMemo, useState } from 'react'
@@ -77,7 +79,7 @@ export function MembersContainer({
   const apiTake = 50
 
   async function refresh() {
-    const res = await fetch(`/api/members?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/members?take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | {
           success?: boolean
@@ -98,7 +100,7 @@ export function MembersContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await fetch(`/api/members?take=${apiTake}&skip=${members.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/members?take=${apiTake}&skip=${members.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | {
           success?: boolean
@@ -168,11 +170,16 @@ export function MembersContainer({
                         className="h-9 w-44!"
                         value={m.role}
                         onChange={async (e) => {
-                          await fetch(`/api/members/${m.id}`, {
+                          const res = await apiFetch(`/api/members/${m.id}`, {
                             method: 'PATCH',
                             headers: { 'content-type': 'application/json' },
                             body: JSON.stringify({ role: e.target.value }),
                           })
+                          if (!res.ok) {
+                            const json = await res.json().catch(() => null)
+                            window.alert(tr(json?.message || 'تعذر الحفظ'))
+                            return
+                          }
                           await refresh()
                         }}
                       >
@@ -195,7 +202,12 @@ export function MembersContainer({
                         variant="danger"
                         type="button"
                         onClick={async () => {
-                          await fetch(`/api/members/${m.id}`, { method: 'DELETE' })
+                          const res = await apiFetch(`/api/members/${m.id}`, { method: 'DELETE' })
+                          if (!res.ok) {
+                            const json = await res.json().catch(() => null)
+                            window.alert(tr(json?.message || 'تعذر الحفظ'))
+                            return
+                          }
                           await refresh()
                         }}
                       >
@@ -296,7 +308,7 @@ function InviteCard({
           setError('')
           const endpoint = mode === 'reactivate' ? '/api/members/reactivate' : '/api/members/invite'
           const body = mode === 'reactivate' ? { email } : { email, role }
-          const res = await fetch(endpoint, {
+          const res = await apiFetch(endpoint, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),

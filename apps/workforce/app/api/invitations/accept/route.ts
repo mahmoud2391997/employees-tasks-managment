@@ -40,44 +40,66 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 12)
 
-  const created = await prisma.$transaction(async (tx) => {
-    const user = await tx.workforceUser.create({
-      data: { email, passwordHash },
-      select: { id: true, email: true },
+  let created
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      // Claim once inside the transaction; failed account creation rolls this back.
+      const claimed = await tx.workforceInvitation.updateMany({
+        where: { id: invitation.id, acceptedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }] },
+        data: { acceptedAt: new Date() },
+      })
+      if (claimed.count !== 1) throw new Error('INVITATION_UNAVAILABLE')
+      const existingProfile = await tx.workforceProfile.findUnique({ where: { email } })
+      if (existingProfile?.teamId && existingProfile.teamId !== invitation.teamId) throw new Error('PROFILE_COMPANY_CONFLICT')
+      const user = await tx.workforceUser.create({
+        data: { email, passwordHash },
+        select: { id: true, email: true },
+      })
+
+      const profile = existingProfile
+        ? await tx.workforceProfile.update({
+            where: { id: existingProfile.id },
+            data: { teamId: invitation.teamId, role: invitation.role, firstName: parsed.data.firstName, lastName: parsed.data.lastName ?? existingProfile.lastName },
+            select: { id: true },
+          })
+        : await tx.workforceProfile.create({
+            data: {
+              email,
+              firstName: parsed.data.firstName,
+              lastName: parsed.data.lastName ?? null,
+              role: invitation.role,
+              teamId: invitation.teamId,
+            },
+            select: { id: true },
+          })
+
+      await tx.workforceUser.update({ where: { id: user.id }, data: { profileId: profile.id } })
+
+      await tx.workforceTeamMember.create({
+        data: { userId: user.id, teamId: invitation.teamId, role: invitation.role, isActive: true },
+      })
+
+      // Ensure defaults exist (in case team was created before seeding behavior existed).
+      await tx.workforceCustomRole.createMany({
+        data: Object.entries(DEFAULT_ROLES).map(([name, def]) => ({
+          teamId: invitation.teamId,
+          name,
+          label: def.label,
+          permissions: def.permissions as unknown as any,
+        })),
+        skipDuplicates: true,
+      })
+
+      return user
     })
-
-    const profile = await tx.workforceProfile.create({
-      data: {
-        email,
-        firstName: parsed.data.firstName,
-        lastName: parsed.data.lastName ?? null,
-        role: invitation.role,
-        teamId: invitation.teamId,
-      },
-      select: { id: true },
-    })
-
-    await tx.workforceUser.update({ where: { id: user.id }, data: { profileId: profile.id } })
-
-    await tx.workforceTeamMember.create({
-      data: { userId: user.id, teamId: invitation.teamId, role: invitation.role, isActive: true },
-    })
-
-    // Ensure defaults exist (in case team was created before seeding behavior existed).
-    await tx.workforceCustomRole.createMany({
-      data: Object.entries(DEFAULT_ROLES).map(([name, def]) => ({
-        teamId: invitation.teamId,
-        name,
-        label: def.label,
-        permissions: def.permissions as unknown as any,
-      })),
-      skipDuplicates: true,
-    })
-
-    await tx.workforceInvitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } })
-
-    return user
-  })
+  } catch (error) {
+    const code = (error as { code?: string })?.code
+    const message = error instanceof Error ? error.message : ''
+    if (code === 'P2002' || message === 'INVITATION_UNAVAILABLE' || message === 'PROFILE_COMPANY_CONFLICT') {
+      return NextResponse.json({ success: false, message: 'تعذر قبول الدعوة بسبب تعارض في الحساب أو الدعوة' }, { status: 409 })
+    }
+    throw error
+  }
 
   try {
     await recordNotification({
