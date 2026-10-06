@@ -1,16 +1,15 @@
+import { DEMO_PREVIEW_TOKEN } from '@/lib/demo-config'
 import { NextResponse } from 'next/server'
-import { getOrCreateDemoSession, isDemoModeEnabled } from '@/server/auth/demo'
-import { issueAccessToken, setAuthCookie } from '@/server/auth/jwt'
+import { isDemoModeEnabled } from '@/lib/demo-config'
+import { setAuthCookie } from '@/server/auth/jwt'
 export const runtime = 'nodejs'
 export async function POST() {
   if (!isDemoModeEnabled()) {
     return NextResponse.json({ success: false, message: 'Demo is unavailable' }, { status: 403 })
   }
   try {
-    const demo = await getOrCreateDemoSession()
-    const token = await issueAccessToken({ sub: demo.userId, email: demo.email, mode: 'demo' })
     const response = NextResponse.json({ success: true })
-    setAuthCookie(response, token)
+    setAuthCookie(response, DEMO_PREVIEW_TOKEN)
     return response
   } catch (error) {
     console.error('auth/demo: unable to start demo', error)

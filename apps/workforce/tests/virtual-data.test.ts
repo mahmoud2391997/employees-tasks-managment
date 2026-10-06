@@ -3,17 +3,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID } from '@/server/company'
 import {
   getVirtualCompany,
-  servesLocalVirtualData,
+  servesVirtualDemoData,
   virtualDashboardStats,
   virtualEmployeesApi,
   virtualNotificationsApi,
   virtualTasksApi,
 } from '@/server/virtual-data'
 
-describe('local virtual login dummy data', () => {
-  it('loads the sample company for the virtual admin outside production', () => {
-    expect(servesLocalVirtualData(FALLBACK_ADMIN_ID)).toBe(process.env.NODE_ENV !== 'production')
-    expect(servesLocalVirtualData('someone-else')).toBe(false)
+describe('public sample data', () => {
+  it('loads only the public sample company', () => {
+    expect(servesVirtualDemoData(FALLBACK_ADMIN_ID)).toBe(true)
+    expect(servesVirtualDemoData('someone-else')).toBe(false)
 
     const stats = virtualDashboardStats()
     expect(stats.employees).toBe(2)
@@ -35,7 +35,7 @@ describe('local virtual login dummy data', () => {
     expect(company.roles.map((role) => role.name)).toEqual(['ADMIN', 'MANAGER', 'EMPLOYEE'])
   })
 
-  it('serves paged API payloads for the virtual admin and refuses them in production', () => {
+  it('serves paged samples in production and blocks them when disabled', () => {
     const employees = virtualEmployeesApi(FALLBACK_ADMIN_ID, 1, 0)
     expect(employees?.status).toBe(200)
     expect(employees && 'data' in employees.body ? employees.body.data : []).toHaveLength(1)
@@ -53,7 +53,10 @@ describe('local virtual login dummy data', () => {
 
     vi.stubEnv('NODE_ENV', 'production')
     try {
-      expect(servesLocalVirtualData(FALLBACK_ADMIN_ID)).toBe(false)
+      expect(servesVirtualDemoData(FALLBACK_ADMIN_ID)).toBe(true)
+      expect(virtualTasksApi(FALLBACK_ADMIN_ID, 50, 0)?.status).toBe(200)
+      vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')
+      expect(servesVirtualDemoData(FALLBACK_ADMIN_ID)).toBe(false)
       expect(virtualTasksApi(FALLBACK_ADMIN_ID, 50, 0)?.status).toBe(503)
     } finally {
       vi.unstubAllEnvs()

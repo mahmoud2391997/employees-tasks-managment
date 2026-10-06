@@ -6,9 +6,7 @@ import { prisma } from '@/server/db'
 import { DEFAULT_ROLES } from '@/lib/permissions'
 
 const DEMO_TEAM_NAME = 'Demo Team'
-export const FALLBACK_ADMIN_ID = 'database-unavailable-admin'
-export const FALLBACK_ADMIN_PROFILE_ID = 'database-unavailable-admin-profile'
-export const FALLBACK_COMPANY_ID = 'company-default'
+export { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } from '@/lib/sample-identity'
 
 type CompanyConfig = {
   name: string

@@ -13,14 +13,14 @@ export function Button({
   size?: 'sm' | 'md'
 }) {
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed'
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed'
   const sizes = size === 'sm' ? 'h-9 px-3 text-sm' : 'h-10 px-4 text-sm'
   const variants =
     variant === 'primary'
-      ? 'border border-slate-900 bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-900'
+      ? 'border border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:border-blue-700 hover:bg-blue-700 active:scale-[0.98]'
       : variant === 'danger'
         ? 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 active:bg-rose-50'
-        : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 active:bg-slate-50'
+        : 'border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100'
   return <button className={clsx(base, sizes, variants, className)} {...props} />
 }
 

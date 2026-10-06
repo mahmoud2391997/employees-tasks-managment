@@ -27,7 +27,7 @@ Steps:
 - Verify task edits/deletes rejected by the API display an error and preserve the visible task.
 - Verify an expired auth cookie redirects to login.
 - Stop PostgreSQL and confirm admin login does not issue a fallback auth cookie.
-- Test keyboard focus, Escape, and focus return in modals; focus trapping remains on the backlog.
+- Test keyboard focus, Escape, and focus return in modals; modals now use native dialog focus trapping and return focus to the opener.
 
 ## Demo and language checks
 
@@ -35,3 +35,5 @@ Steps:
 - Exit demo and confirm protected pages redirect to login.
 - Switch between English and Arabic on login and dashboard; refresh and navigate to confirm the preference persists and the sidebar changes sides.
 - Confirm the demo endpoint is unavailable when demo mode is disabled and available in production when true.
+
+- Public demo is read-only and works without database or JWT configuration; verify every demo page and confirm writes return 403.

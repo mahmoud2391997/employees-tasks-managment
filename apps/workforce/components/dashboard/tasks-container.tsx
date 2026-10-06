@@ -188,7 +188,7 @@ export function TasksContainer({
       </div>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statusColumns.map((col) => (
           <div
             key={col.id}
@@ -218,12 +218,12 @@ export function TasksContainer({
                     onDragStart={(e) => e.dataTransfer.setData('text/plain', t.id)}
                     className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col gap-3">
                       <div className="min-w-0">
-                        <div className="truncate font-semibold">{t.title}</div>
+                        <div className="break-words text-sm font-semibold leading-6 text-slate-800">{t.title}</div>
                         {t.description ? <div className="mt-1 line-clamp-2 text-xs text-slate-500">{t.description}</div> : null}
                       </div>
-                      <div className="flex shrink-0 gap-1">
+                      <div className="flex shrink-0 gap-1 border-t border-slate-100 pt-3">
                         {canEdit ? (
                           <Button size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
                             {tr("تعديل")}</Button>
@@ -235,7 +235,7 @@ export function TasksContainer({
                       </div>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
                       <Badge variant="neutral">{tr(t.priority)}</Badge>
                       {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
                       {t.assignee ? (
@@ -254,7 +254,7 @@ export function TasksContainer({
       <Card className="p-3">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
           <div>
-            {tr("تم تحميل")}{tasks.length} {tr("من")}{total}
+            {tr("تم تحميل")}{' '}{tasks.length} {tr("من")}{' '}{total}
           </div>
           {hasMore ? (
             <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>

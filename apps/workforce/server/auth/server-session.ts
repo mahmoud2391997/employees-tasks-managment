@@ -1,3 +1,4 @@
+import { DEMO_PREVIEW_TOKEN } from '@/lib/demo-config'
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 
@@ -27,16 +28,20 @@ export type ServerSession = {
 }
 
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
-  if (!resolveWorkforceDatabaseUrl()) return null
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) return null
+  if (token === DEMO_PREVIEW_TOKEN) {
+    if (!isDemoModeEnabled()) return null
+    return { ...await getOrCreateDemoSession(), demo: true }
+  }
   const payload = await verifyAccessToken(token)
   if (!payload) return null
   if (payload.mode === 'demo') {
     if (!isDemoModeEnabled()) return null
     return { ...await getOrCreateDemoSession(), demo: true }
   }
+  if (!resolveWorkforceDatabaseUrl()) return null
   try {
     await ensureCompany()
   } catch (error) {

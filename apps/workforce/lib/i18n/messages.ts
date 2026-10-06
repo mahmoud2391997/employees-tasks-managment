@@ -1,4 +1,9 @@
 export const english: Record<string, string> = {
+  'بيانات تجريبية للقراءة فقط.': 'Read-only sample data.',
+  'عرض تجريبي للقراءة فقط': 'Read-only demo',
+  'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط': 'This demo contains read-only sample data.',
+
+  'القائمة': 'Navigation', 'فتح القائمة': 'Open navigation', 'دليل الفريق': 'Team directory', 'جميع الموظفين': 'All employees', 'نتائج البحث': 'Search results', 'اعثر على أعضاء فريقك وأدر بياناتهم في مكان واحد.': 'Find your people and manage their details in one place.', 'لا توجد نتائج مطابقة. جرب البحث باسم آخر.': 'No matching results. Try another name.',
   'لوحة التحكم': 'Dashboard', 'ليس لديك صلاحية.': 'You do not have permission.',
   'هذا الحساب غير مرتبط بالشركة. اطلب من المسؤول إضافتك.': 'This account is not linked to the company. Ask your administrator to add you.',
   'إحصائيات عامة عن الفريق والمهام.': 'An overview of your team and tasks.',

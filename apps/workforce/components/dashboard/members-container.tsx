@@ -221,7 +221,7 @@ export function MembersContainer({
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
             <div>
-              {tr("تم تحميل")}{members.length} {tr("من")}{total}
+              {tr("تم تحميل")}{' '}{members.length} {tr("من")}{' '}{total}
             </div>
             {hasMore ? (
               <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>

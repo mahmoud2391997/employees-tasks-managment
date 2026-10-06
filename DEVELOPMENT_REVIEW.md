@@ -57,6 +57,8 @@ Start Docker, run `pnpm db:up`, `pnpm db:deploy`, then `pnpm dev`. Sign in with 
 
 ## Follow-up implementation
 
-Login now offers an explicit Try demo action instead of bypassing authentication globally. Demo sessions are signed, identified in the dashboard, and cleared by Exit demo. Arabic and English UI translations share a cookie-based preference with RTL/LTR layouts. Date rendering now accepts both initial server Date values and API date strings. Local PostgreSQL migrations and login/dashboard/API smoke checks have succeeded; browser checks cover demo entry, exit, language switching and the members page. Existing user-entered content and stored notification messages retain their original language.
+Login now offers an explicit Try demo action instead of bypassing authentication globally. Demo previews are identified in the dashboard and cleared by Exit demo. Arabic and English UI translations share a cookie-based preference with RTL/LTR layouts. UI now includes a navy sidebar, responsive drawer, top bar, aligned tables, employee avatars and native dialogs. Date rendering now accepts both initial server Date values and API date strings. Local PostgreSQL migrations and login/dashboard/API smoke checks have succeeded; browser checks cover demo entry, exit, language switching and the members page. Existing user-entered content and stored notification messages retain their original language.
 
 Production demo availability follows WORKFORCE_DEMO_MODE. Demo records use a dedicated account and team; company bootstrap selects its configured owner’s team to avoid adopting the demo workspace.
+
+The public demo now serves read-only in-memory records and requires neither PostgreSQL nor a JWT secret. Its cookie selects public samples only. Company authentication still requires configured credentials and database access.

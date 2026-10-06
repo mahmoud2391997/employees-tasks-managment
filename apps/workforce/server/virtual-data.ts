@@ -1,9 +1,10 @@
+import { isDemoModeEnabled } from '@/lib/demo-config'
 import { DEFAULT_ROLES } from '@/lib/permissions'
-import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } from '@/server/company'
+import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } from '@/lib/sample-identity'
 
 export const VIRTUAL_DB_UNAVAILABLE_MESSAGE = 'قاعدة البيانات غير متاحة حالياً'
 export const VIRTUAL_READONLY_MESSAGE = 'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط'
-export const VIRTUAL_SAMPLE_NOTE = 'بيانات تجريبية لوضع الدخول الافتراضي (بدون قاعدة بيانات).'
+export const VIRTUAL_SAMPLE_NOTE = 'بيانات تجريبية للقراءة فقط.'
 
 const BASE_MS = Date.parse('2026-09-20T12:00:00.000Z')
 
@@ -12,27 +13,27 @@ function iso(offsetDays: number) {
 }
 
 function adminEmail() {
-  return process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
+  return 'demo@workforce.invalid'
 }
 
 function companyName() {
-  return process.env.COMPANY_NAME?.trim() || 'الشركة'
+  return 'Workforce Demo'
 }
 
 export function isVirtualAdmin(userId: string | null | undefined) {
   return userId === FALLBACK_ADMIN_ID
 }
 
-/** Sample data is for local runs. A production outage keeps the emergency screen. */
-export function servesLocalVirtualData(userId: string | null | undefined) {
-  return isVirtualAdmin(userId) && process.env.NODE_ENV !== 'production'
+/** Only the public sample identity can receive virtual records. */
+export function servesVirtualDemoData(userId: string | null | undefined) {
+  return isVirtualAdmin(userId) && isDemoModeEnabled()
 }
 
 type Gate = { kind: 'skip' } | { kind: 'unavailable' } | { kind: 'dummy' }
 
 export function virtualReadGate(userId: string | null | undefined): Gate {
   if (!isVirtualAdmin(userId)) return { kind: 'skip' }
-  if (process.env.NODE_ENV === 'production') return { kind: 'unavailable' }
+  if (!isDemoModeEnabled()) return { kind: 'unavailable' }
   return { kind: 'dummy' }
 }
 
@@ -63,8 +64,8 @@ export function getVirtualCompany() {
   const admin: Profile = {
     id: FALLBACK_ADMIN_PROFILE_ID,
     email,
-    firstName: process.env.COMPANY_ADMIN_FIRST_NAME?.trim() || 'مدير',
-    lastName: process.env.COMPANY_ADMIN_LAST_NAME?.trim() || 'الشركة',
+    firstName: 'Demo',
+    lastName: 'User',
     role: 'ADMIN',
     teamId: FALLBACK_COMPANY_ID,
     createdAt: iso(0),

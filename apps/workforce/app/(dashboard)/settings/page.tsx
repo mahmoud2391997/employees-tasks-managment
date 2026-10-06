@@ -6,7 +6,7 @@ import { getServerSession } from '@/server/auth/server-session'
 import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
-import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function SettingsPage() {
   const tr = await getTranslations()
@@ -16,17 +16,17 @@ export default async function SettingsPage() {
   if (!session.permissions.includes('settings.manage')) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الإعدادات")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الإعدادات")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
       </main>
     )
   }
 
-  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+  if (session.userId === FALLBACK_ADMIN_ID && !servesVirtualDemoData(session.userId)) {
     return <VirtualLoginNotice title={tr("الإعدادات")} />
   }
 
-  const sampleData = servesLocalVirtualData(session.userId)
+  const sampleData = servesVirtualDemoData(session.userId)
   const teamId = session.profile?.teamId ?? null
   const team = sampleData
     ? getVirtualCompany().team
@@ -36,10 +36,10 @@ export default async function SettingsPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الإعدادات")}</h1>
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الإعدادات")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("إعدادات الشركة.")}</p>
-        {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
+        {sampleData ? <p className="mt-1 text-sm text-amber-700">{tr(VIRTUAL_SAMPLE_NOTE)}</p> : null}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

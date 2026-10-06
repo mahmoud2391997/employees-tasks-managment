@@ -12,8 +12,8 @@ export default async function ProfilePage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الملف الشخصي")}</h1>
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الملف الشخصي")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("بيانات حسابك.")}</p>
       </div>
 

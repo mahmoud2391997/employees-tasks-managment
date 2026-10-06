@@ -33,7 +33,7 @@ function groupPermissions(perms: readonly string[]) {
   return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
 }
 
-export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
+export function RolesContainer({ initialRoles, readOnly = false }: { initialRoles: Role[]; readOnly?: boolean }) {
   const tr = useTranslations()
 
   const [roles, setRoles] = useState<Role[]>(initialRoles)
@@ -80,7 +80,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
             setEditing(null)
             await refresh()
           }}
-          readOnly={RESERVED.has(editing.name)}
+          readOnly={readOnly || RESERVED.has(editing.name)}
         />
       ) : null}
 
@@ -90,7 +90,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
             <div className="text-sm font-semibold text-slate-900">{tr("الأدوار")}</div>
             <div className="text-xs text-slate-500">{roles.length} {tr("دور")}</div>
           </div>
-          <Button type="button" onClick={() => setCreating(true)}>
+          <Button disabled={readOnly} type="button" onClick={() => setCreating(true)}>
             {tr("+ دور جديد")}</Button>
         </div>
       </Card>
@@ -115,9 +115,9 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                 <TD>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(r)}>
-                      {RESERVED.has(r.name) ? tr("عرض") : tr("تعديل")}
+                      {(readOnly || RESERVED.has(r.name)) ? tr("عرض") : tr("تعديل")}
                     </Button>
-                    {!RESERVED.has(r.name) ? (
+                    {!readOnly && !RESERVED.has(r.name) ? (
                       <Button
                         size="sm"
                         variant="danger"

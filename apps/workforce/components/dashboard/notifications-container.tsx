@@ -109,7 +109,7 @@ export function NotificationsContainer({
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
             <div>
-              {tr("تم تحميل")}{rows.length} {tr("من")}{total}
+              {tr("تم تحميل")}{' '}{rows.length} {tr("من")}{' '}{total}
             </div>
             {hasMore ? (
               <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>

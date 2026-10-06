@@ -6,7 +6,7 @@ import { prisma } from '@/server/db'
 import { MembersContainer } from '@/components/dashboard/members-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
-import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function MembersPage() {
   const tr = await getTranslations()
@@ -15,22 +15,22 @@ export default async function MembersPage() {
   if (!session?.permissions.includes('members.view' as any)) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الأعضاء")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الأعضاء")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
       </main>
     )
   }
-  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+  if (session.userId === FALLBACK_ADMIN_ID && !servesVirtualDemoData(session.userId)) {
     return <VirtualLoginNotice title={tr("الأعضاء")} />
   }
 
   const teamId = session?.profile?.teamId ?? null
-  const sampleData = servesLocalVirtualData(session.userId)
+  const sampleData = servesVirtualDemoData(session.userId)
 
   if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الأعضاء")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الأعضاء")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("لا يوجد فريق مرتبط.")}</p>
       </main>
     )
@@ -97,10 +97,10 @@ export default async function MembersPage() {
 
   return (
     <main className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الأعضاء")}</h1>
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الأعضاء")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("إدارة أعضاء الفريق والدعوات.")}</p>
-        {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
+        {sampleData ? <p className="mt-1 text-sm text-amber-700">{tr(VIRTUAL_SAMPLE_NOTE)}</p> : null}
       </div>
       <MembersContainer
         initialMembers={safeMembers as any}

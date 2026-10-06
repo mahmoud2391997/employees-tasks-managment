@@ -19,3 +19,13 @@
   }
 }
 
+
+@layer base {
+  ::selection { background: #dbeafe; color: #1d4ed8; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), select { cursor: pointer; }
+  dialog::backdrop { backdrop-filter: blur(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

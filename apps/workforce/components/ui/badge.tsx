@@ -18,6 +18,6 @@ export function Badge({
           : variant === 'info'
             ? 'border-blue-200 bg-blue-50 text-blue-700'
             : 'border-slate-200 bg-slate-50 text-slate-700'
-  return <span className={clsx('inline-flex items-center rounded-lg border px-2 py-1 text-xs font-semibold', styles, className)} {...props} />
+  return <span className={clsx('inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium', styles, className)} {...props} />
 }
 

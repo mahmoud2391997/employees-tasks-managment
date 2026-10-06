@@ -4,7 +4,7 @@ import { LanguageSwitch, useTranslations } from '@/lib/i18n/provider'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, Layers3, X, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
 
 const sections = [
   { label: 'Main', items: [
@@ -24,95 +24,39 @@ const sections = [
   ]},
 ]
 
-export function Sidebar({
-  name,
-  role,
-  permissions,
-  companyName,
-  collapsed,
-  onToggle,
-}: {
-  name: string
-  role?: string | null
-  permissions: string[]
-  companyName: string
-  collapsed: boolean
-  onToggle: () => void
+export function Sidebar({ name, role, permissions, companyName, collapsed, onToggle, mobile = false, onNavigate }: {
+  name: string; role?: string | null; permissions: string[]; companyName: string;
+  collapsed: boolean; onToggle: () => void; mobile?: boolean; onNavigate?: () => void
 }) {
   const tr = useTranslations()
-
   const pathname = usePathname()
-  const visibleSections = sections
-
-  return (
-    <aside className="fixed inset-y-0 start-0 z-40 flex w-[var(--sidebar-width)] flex-col overflow-hidden border-e border-slate-200 bg-white transition-[width] duration-200 ease-in-out">
-      <div className={`flex h-20 shrink-0 items-center border-b border-slate-100 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-4'}`}>
-        {!collapsed && (
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="min-w-0 text-start">
-              <div className="truncate text-base font-bold text-slate-900">TeamFlow</div>
-              <div className="truncate text-xs text-slate-400">{companyName}</div>
-            </div>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-              <Menu size={21} />
-            </div>
-          </div>
-        )}
-        <button
-          aria-label={collapsed ? tr("توسيع القائمة") : tr("طي القائمة")}
-          aria-expanded={!collapsed}
-          onClick={onToggle}
-          className={`rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-700 ${collapsed ? 'flex h-10 w-10 items-center justify-center bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'p-2'}`}
-        >
-          <ChevronRight className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} size={18} />
-        </button>
+  return <aside className={`${mobile ? 'flex h-full w-full' : 'fixed inset-y-0 start-0 z-40 hidden w-[var(--sidebar-width)] md:flex'} flex-col overflow-hidden border-e border-slate-800 bg-[#101e36] text-white transition-[width] duration-200`}>
+    <div className={`flex h-[76px] shrink-0 items-center border-b border-white/10 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-5'}`}>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-lg shadow-blue-500/20"><Layers3 size={23} /></div>
+        {!collapsed ? <div className="min-w-0"><div className="text-lg font-bold tracking-tight">TeamFlow<span className="text-blue-400">.</span></div><div className="truncate text-[11px] text-slate-400">{companyName}</div></div> : null}
       </div>
-      <nav className="flex-1 space-y-6 overflow-y-auto p-3">
-        {visibleSections.map((section) => <div key={section.label}>
-          {!collapsed && section.label && (
-            <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              {section.label === 'Main' ? tr("الرئيسية") : section.label === 'Team' ? tr("الفريق") : tr("الحساب")}
-            </div>
-          )}
-          <div className="space-y-1">
-            {section.items
-              .filter((item) => !item.permission || permissions.includes(item.permission))
-              .map((item) => {
-                const Icon = item.icon
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={collapsed ? tr(item.label) : undefined}
-                    className={`flex h-11 items-center rounded-xl text-sm font-medium transition-colors ${collapsed ? 'justify-center px-2' : 'justify-between gap-3 px-3'} ${active ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-                  >
-                    {!collapsed ? tr(item.label) : null}
-                    <Icon size={19} strokeWidth={active ? 2.3 : 1.9} />
-                  </Link>
-                )
-              })}
-          </div>
-        </div>)}
-      </nav>
-      <div className="border-t border-slate-100 p-3">
-        {!collapsed ? <div className="mb-3"><LanguageSwitch /></div> : null}
-        {!collapsed && (
-          <div className="mb-3 rounded-xl bg-slate-50 px-3 py-2 text-start">
-            <div className="truncate text-sm font-semibold text-slate-700">{name || tr("عضو فريق")}</div>
-            <div className="truncate text-xs text-slate-400">{role ? tr(role) : tr("عضو")}</div>
-          </div>
-        )}
-        <form method="post" action="/api/auth/logout">
-          <button
-            title={collapsed ? tr("تسجيل الخروج") : undefined}
-            className={`flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 ${collapsed ? 'justify-center' : 'justify-between gap-3 px-3'}`}
-          >
-            {!collapsed ? tr("تسجيل الخروج") : null}
-            <LogOut size={19} />
-          </button>
-        </form>
-      </div>
-    </aside>
-  )
+      {!collapsed ? <button type="button" onClick={onToggle} aria-label={mobile ? tr('إغلاق') : tr('طي القائمة')} aria-expanded={!collapsed}
+        className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white">{mobile ? <X size={18} /> : <ChevronRight size={17} className="rtl:rotate-180" />}</button> : null}
+    </div>
+    {collapsed ? <button type="button" onClick={onToggle} aria-label={tr('توسيع القائمة')} aria-expanded={false} className="mx-auto mt-3 rounded-lg p-2 text-slate-400 hover:bg-white/10"><ChevronRight size={17} className="rtl:rotate-180" /></button> : null}
+    <nav aria-label={tr('القائمة')} className="flex-1 space-y-7 overflow-y-auto px-3 py-6">
+      {sections.map(section => <div key={section.label}>
+        {!collapsed ? <div className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tr(section.label === 'Main' ? 'الرئيسية' : section.label === 'Team' ? 'الفريق' : 'الحساب')}</div> : null}
+        <div className="space-y-1.5">{section.items.filter(item => !item.permission || permissions.includes(item.permission)).map(item => {
+          const Icon = item.icon
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          return <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={active ? 'page' : undefined} title={collapsed ? tr(item.label) : undefined}
+            className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${collapsed ? 'justify-center' : ''} ${active ? 'bg-blue-600 font-semibold text-white shadow-md shadow-blue-950/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+            <Icon size={19} strokeWidth={active ? 2.1 : 1.7} />{!collapsed ? tr(item.label) : null}
+          </Link>
+        })}</div>
+      </div>)}
+    </nav>
+    <div className="shrink-0 space-y-4 border-t border-white/10 p-4">
+      {!collapsed ? <LanguageSwitch /> : null}
+      {!collapsed ? <div className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold">{name?.trim().charAt(0) || 'T'}</span><div className="min-w-0"><div className="truncate text-sm font-medium text-slate-200">{name || tr('عضو فريق')}</div><div className="mt-0.5 text-xs text-slate-500">{tr(role || 'عضو')}</div></div></div> : null}
+      <form method="post" action="/api/auth/logout"><button title={tr('تسجيل الخروج')} className={`flex h-10 w-full items-center gap-3 rounded-lg text-sm text-slate-400 hover:bg-white/5 hover:text-rose-300 ${collapsed ? 'justify-center' : 'px-2'}`}><LogOut size={18} />{!collapsed ? tr('تسجيل الخروج') : null}</button></form>
+    </div>
+  </aside>
 }

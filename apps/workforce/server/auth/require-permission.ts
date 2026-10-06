@@ -12,7 +12,7 @@ export async function requirePermission(req: NextRequest, permission: Permission
     return { ok: false as const, status: 403, message: 'ليس لديك صلاحية', user }
   }
   if (user.id === FALLBACK_ADMIN_ID && req.method !== 'GET' && req.method !== 'HEAD') {
-    return { ok: false as const, status: 503, message: VIRTUAL_READONLY_MESSAGE, user }
+    return { ok: false as const, status: 403, message: VIRTUAL_READONLY_MESSAGE, user }
   }
   if (!user.profile?.teamId) {
     return { ok: false as const, status: 400, message: 'لا يوجد فريق مرتبط بالحساب', user }

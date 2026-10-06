@@ -1,3 +1,4 @@
+import { DEMO_PREVIEW_TOKEN, isDemoModeEnabled } from '@/lib/demo-config'
 import { verifyAccessToken } from '@/server/auth/jwt'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -31,8 +32,10 @@ function isClosedOnboardingPage(pathname: string) {
 export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const pathname = request.nextUrl.pathname
-  const demoAvailable = process.env.WORKFORCE_DEMO_MODE?.trim().toLowerCase() !== 'false'
-  const verified = token ? await verifyAccessToken(token) : null
+  const demoAvailable = isDemoModeEnabled()
+  const verified = token === DEMO_PREVIEW_TOKEN
+    ? demoAvailable ? { sub: 'public-demo', mode: 'demo' } : null
+    : token ? await verifyAccessToken(token) : null
   const payload = verified?.mode === 'demo' && !demoAvailable ? null : verified
 
   if (isClosedOnboardingPage(pathname)) {

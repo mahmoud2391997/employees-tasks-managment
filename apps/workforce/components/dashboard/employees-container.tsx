@@ -1,5 +1,6 @@
 'use client'
 
+import { Search, Users, Plus } from 'lucide-react'
 import { useTranslations } from '@/lib/i18n/provider'
 
 import Link from 'next/link'
@@ -134,10 +135,17 @@ export function EmployeesContainer({
         />
       ) : null}
 
-      <Card className="p-4">
+      <Card className="p-4 sm:p-5">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Users size={20} /></span>
+          <div><h2 className="text-sm font-semibold text-slate-800">{tr('دليل الفريق')}</h2><p className="mt-1 text-xs text-slate-400">{total} {tr('الموظفون')}</p></div>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="w-full max-w-sm">
+          <div className="relative w-full max-w-sm">
+            <Search size={18} className="pointer-events-none absolute start-3 top-3 text-slate-400" />
             <Input
+              className="ps-10"
+              aria-label={tr("ابحث عن موظف...")}
               placeholder={tr("ابحث عن موظف...")}
               value={q}
               onChange={(e) => {
@@ -154,7 +162,7 @@ export function EmployeesContainer({
                 setShowForm(true)
               }}
             >
-              {tr("+ إضافة موظف")}</Button>
+              <Plus size={17} />{tr("موظف جديد")}</Button>
           ) : null}
         </div>
       </Card>
@@ -164,21 +172,24 @@ export function EmployeesContainer({
           <Table>
           <THead>
             <tr>
-              <TH className="min-w-72">{tr("الموظف")}</TH>
-              <TH className="min-w-44">{tr("القسم")}</TH>
-              <TH className="min-w-48">{tr("المسمى")}</TH>
+              <TH className="min-w-56">{tr("الموظف")}</TH>
+              <TH className="min-w-32">{tr("القسم")}</TH>
+              <TH className="min-w-40">{tr("المسمى")}</TH>
               <TH className="min-w-32">{tr("الحالة")}</TH>
-              <TH className="min-w-44">{tr("إجراءات")}</TH>
+              <TH className="min-w-32">{tr("إجراءات")}</TH>
             </tr>
           </THead>
           <tbody>
             {pageRows.map((e) => (
               <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD>
-                  <div className="font-semibold">
-                    {(e.profile.firstName || e.profile.email || tr("مستخدم")) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-600">{(e.profile.firstName || e.profile.email || '?').charAt(0)}{e.profile.lastName?.charAt(0)}</span>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-slate-800">{(e.profile.firstName || e.profile.email || tr("مستخدم")) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}</div>
+                      {e.profile.email ? <div dir="ltr" className="mt-1 text-start text-xs text-slate-400">{e.profile.email}</div> : null}
+                    </div>
                   </div>
-                  {e.profile.email ? <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div> : null}
                 </TD>
                 <TD>{e.department?.name ?? '—'}</TD>
                 <TD>{e.position ?? '—'}</TD>
@@ -186,7 +197,7 @@ export function EmployeesContainer({
                   <StatusBadge status={e.status} />
                 </TD>
                 <TD>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
+                  <div className="flex flex-wrap items-center justify-start gap-1.5">
                     <Link
                       className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       href={`/employees/${e.id}`}
@@ -220,7 +231,7 @@ export function EmployeesContainer({
             {filtered.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={5}>
-                  {tr("لا يوجد موظفون")}</td>
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100"><Users size={22} /></div>{tr(q ? 'لا توجد نتائج مطابقة. جرب البحث باسم آخر.' : 'لا يوجد موظفون')}</td>
               </tr>
             ) : null}
           </tbody>
@@ -233,7 +244,7 @@ export function EmployeesContainer({
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="text-slate-500">
             {tr("عرض")}{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} {tr("من")}{q.trim() ? filtered.length : total}
-            {!q.trim() ? <span className="mr-2 text-xs"> {tr("(تم تحميل")}{employees.length})</span> : null}
+            {!q.trim() ? <span className="mr-2 text-xs"> {tr("(تم تحميل")}{' '}{employees.length})</span> : null}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>
@@ -241,7 +252,7 @@ export function EmployeesContainer({
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
               {tr("السابق")}</Button>
             <div className="min-w-20 text-center text-xs text-slate-500">
-              {tr("صفحة")}{currentPage} / {totalPages}
+              {tr("صفحة")}{' '}{currentPage} / {totalPages}
             </div>
             <Button
               variant="secondary"

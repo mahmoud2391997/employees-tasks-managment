@@ -1,3 +1,4 @@
+import { DEMO_PREVIEW_TOKEN } from '@/lib/demo-config'
 import type { NextRequest } from 'next/server'
 
 import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
@@ -24,6 +25,11 @@ export type SessionUser = {
 
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
   const token = getAccessTokenFromRequest(req)
+  if (token === DEMO_PREVIEW_TOKEN) {
+    if (!isDemoModeEnabled()) return null
+    const demo = await getOrCreateDemoSession()
+    return { id: demo.userId, email: demo.email, profile: demo.profile, permissions: demo.permissions }
+  }
   const payload = token ? await verifyAccessToken(token) : null
   if (payload?.mode === 'demo') {
     if (!isDemoModeEnabled()) return null

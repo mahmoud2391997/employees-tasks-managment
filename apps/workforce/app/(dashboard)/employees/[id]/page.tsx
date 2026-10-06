@@ -8,7 +8,7 @@ import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
-import { getVirtualCompany, servesLocalVirtualData } from '@/server/virtual-data'
+import { getVirtualCompany, servesVirtualDemoData } from '@/server/virtual-data'
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const tr = await getTranslations()
@@ -17,22 +17,22 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   if (!session?.permissions.includes('employees.view' as any)) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الموظف")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الموظف")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
       </main>
     )
   }
 
-  if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
+  if (session.userId === FALLBACK_ADMIN_ID && !servesVirtualDemoData(session.userId)) {
     return <VirtualLoginNotice title={tr("الموظف")} />
   }
 
   const teamId = session?.profile?.teamId ?? null
-  const sampleData = servesLocalVirtualData(session.userId)
+  const sampleData = servesVirtualDemoData(session.userId)
   if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{tr("الموظف")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr("الموظف")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("لا يوجد فريق مرتبط.")}</p>
       </main>
     )
@@ -68,9 +68,9 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
   return (
     <main className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
         <div>
-          <h1 className="text-xl font-semibold">{displayName}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{displayName}</h1>
           {safeEmployeeEmail ? <p className="ltr mt-1 text-sm text-slate-500">{safeEmployeeEmail}</p> : null}
         </div>
         <Link className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100" href="/employees">
@@ -83,7 +83,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
         <InfoCard label={tr("الحالة")} value={employee.status} />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div className="text-sm font-semibold">{tr("المهام المسندة")}</div>
           <div className="text-xs text-slate-500">{tasks.length} {tr("مهمة")}</div>
@@ -123,7 +123,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
       <div className="text-sm text-slate-500">{label}</div>
       <div className="mt-2 text-lg font-semibold">{value}</div>
     </div>
