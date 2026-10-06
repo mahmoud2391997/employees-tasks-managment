@@ -18,6 +18,8 @@ pnpm dev
 
 Open http://localhost:3001. Read `COMPANY_ADMIN_EMAIL` and the generated `COMPANY_ADMIN_PASSWORD` in `apps/workforce/.env` to sign in. Setup preserves an existing env file and never prints passwords. Company provisioning happens on the first authenticated request/login; normal mode starts without demo employees or tasks.
 
+The Compose database uses local port 5433 to avoid conflicting with a default PostgreSQL installation.
+
 If you already run PostgreSQL, omit `db:up` and set `WORKFORCE_DATABASE_URL` to your development database before applying migrations. `db:down` stops the Compose database and preserves its volume.
 
 ## Commands
