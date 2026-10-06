@@ -1,5 +1,7 @@
 'use client'
 
+import { LanguageSwitch, useTranslations } from '@/lib/i18n/provider'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
@@ -37,17 +39,19 @@ export function Sidebar({
   collapsed: boolean
   onToggle: () => void
 }) {
+  const tr = useTranslations()
+
   const pathname = usePathname()
   const visibleSections = sections
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[var(--sidebar-width)] flex-col overflow-hidden border-l border-slate-200 bg-white transition-[width] duration-200 ease-in-out">
+    <aside className="fixed inset-y-0 start-0 z-40 flex w-[var(--sidebar-width)] flex-col overflow-hidden border-e border-slate-200 bg-white transition-[width] duration-200 ease-in-out">
       <div className={`flex h-20 shrink-0 items-center border-b border-slate-100 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-4'}`}>
         {!collapsed && (
           <div className="flex min-w-0 items-center gap-3">
-            <div className="min-w-0 text-right">
+            <div className="min-w-0 text-start">
               <div className="truncate text-base font-bold text-slate-900">TeamFlow</div>
-              <div className="truncate text-xs text-slate-400">نظام {companyName}</div>
+              <div className="truncate text-xs text-slate-400">{companyName}</div>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
               <Menu size={21} />
@@ -55,7 +59,7 @@ export function Sidebar({
           </div>
         )}
         <button
-          aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+          aria-label={collapsed ? tr("توسيع القائمة") : tr("طي القائمة")}
           aria-expanded={!collapsed}
           onClick={onToggle}
           className={`rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-700 ${collapsed ? 'flex h-10 w-10 items-center justify-center bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'p-2'}`}
@@ -67,7 +71,7 @@ export function Sidebar({
         {visibleSections.map((section) => <div key={section.label}>
           {!collapsed && section.label && (
             <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              {section.label === 'Main' ? 'الرئيسية' : section.label === 'Team' ? 'الفريق' : 'الحساب'}
+              {section.label === 'Main' ? tr("الرئيسية") : section.label === 'Team' ? tr("الفريق") : tr("الحساب")}
             </div>
           )}
           <div className="space-y-1">
@@ -80,10 +84,10 @@ export function Sidebar({
                   <Link
                     key={item.href}
                     href={item.href}
-                    title={collapsed ? item.label : undefined}
+                    title={collapsed ? tr(item.label) : undefined}
                     className={`flex h-11 items-center rounded-xl text-sm font-medium transition-colors ${collapsed ? 'justify-center px-2' : 'justify-between gap-3 px-3'} ${active ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                   >
-                    {!collapsed ? item.label : null}
+                    {!collapsed ? tr(item.label) : null}
                     <Icon size={19} strokeWidth={active ? 2.3 : 1.9} />
                   </Link>
                 )
@@ -92,18 +96,19 @@ export function Sidebar({
         </div>)}
       </nav>
       <div className="border-t border-slate-100 p-3">
+        {!collapsed ? <div className="mb-3"><LanguageSwitch /></div> : null}
         {!collapsed && (
-          <div className="mb-3 rounded-xl bg-slate-50 px-3 py-2 text-right">
-            <div className="truncate text-sm font-semibold text-slate-700">{name || 'عضو فريق'}</div>
-            <div className="truncate text-xs text-slate-400">{role || 'عضو'}</div>
+          <div className="mb-3 rounded-xl bg-slate-50 px-3 py-2 text-start">
+            <div className="truncate text-sm font-semibold text-slate-700">{name || tr("عضو فريق")}</div>
+            <div className="truncate text-xs text-slate-400">{role ? tr(role) : tr("عضو")}</div>
           </div>
         )}
         <form method="post" action="/api/auth/logout">
           <button
-            title={collapsed ? 'تسجيل الخروج' : undefined}
+            title={collapsed ? tr("تسجيل الخروج") : undefined}
             className={`flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 ${collapsed ? 'justify-center' : 'justify-between gap-3 px-3'}`}
           >
-            {!collapsed ? 'تسجيل الخروج' : null}
+            {!collapsed ? tr("تسجيل الخروج") : null}
             <LogOut size={19} />
           </button>
         </form>

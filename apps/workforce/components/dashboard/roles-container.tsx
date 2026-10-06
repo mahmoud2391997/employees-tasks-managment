@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { useMemo, useState } from 'react'
 
 import { ALL_PERMISSIONS } from '@/lib/permissions'
@@ -32,6 +34,8 @@ function groupPermissions(perms: readonly string[]) {
 }
 
 export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
+  const tr = useTranslations()
+
   const [roles, setRoles] = useState<Role[]>(initialRoles)
   const [editing, setEditing] = useState<Role | null>(null)
   const [creating, setCreating] = useState(false)
@@ -48,14 +52,14 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
     <div className="space-y-4">
       {creating ? (
         <RoleEditor
-          title="دور جديد"
+          title={tr("دور جديد")}
           grouped={grouped}
           initial={{ name: '', label: '', permissions: [] }}
           onClose={() => setCreating(false)}
           onSave={async (draft) => {
             const res = await fetch('/api/roles', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(draft) })
             const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
-            if (!res.ok || !json?.success) throw new Error(json?.message || 'تعذر الحفظ')
+            if (!res.ok || !json?.success) throw new Error(tr(json?.message || "تعذر الحفظ"))
             setCreating(false)
             await refresh()
           }}
@@ -65,14 +69,14 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
 
       {editing ? (
         <RoleEditor
-          title={`تعديل الدور: ${editing.name}`}
+          title={tr("تعديل الدور: {0}", {0: editing.name})}
           grouped={grouped}
           initial={{ name: editing.name, label: editing.label, permissions: editing.permissions ?? [] }}
           onClose={() => setEditing(null)}
           onSave={async (draft) => {
             const res = await fetch(`/api/roles/${editing.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label: draft.label, permissions: draft.permissions }) })
             const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
-            if (!res.ok || !json?.success) throw new Error(json?.message || 'تعذر الحفظ')
+            if (!res.ok || !json?.success) throw new Error(tr(json?.message || "تعذر الحفظ"))
             setEditing(null)
             await refresh()
           }}
@@ -83,12 +87,11 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
       <Card className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-slate-900">الأدوار</div>
-            <div className="text-xs text-slate-500">{roles.length} دور</div>
+            <div className="text-sm font-semibold text-slate-900">{tr("الأدوار")}</div>
+            <div className="text-xs text-slate-500">{roles.length} {tr("دور")}</div>
           </div>
           <Button type="button" onClick={() => setCreating(true)}>
-            + دور جديد
-          </Button>
+            {tr("+ دور جديد")}</Button>
         </div>
       </Card>
 
@@ -97,22 +100,22 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
         <Table>
           <THead>
             <tr>
-              <TH className="min-w-48">الاسم</TH>
-              <TH className="min-w-64">الوصف</TH>
-              <TH className="min-w-28">الصلاحيات</TH>
-              <TH className="min-w-44">إجراءات</TH>
+              <TH className="min-w-48">{tr("الاسم")}</TH>
+              <TH className="min-w-64">{tr("الوصف")}</TH>
+              <TH className="min-w-28">{tr("الصلاحيات")}</TH>
+              <TH className="min-w-44">{tr("إجراءات")}</TH>
             </tr>
           </THead>
           <tbody>
             {roles.map((r) => (
               <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD className="ltr font-mono text-xs">{r.name}</TD>
-                <TD>{r.label}</TD>
+                <TD>{tr(r.label)}</TD>
                 <TD className="text-slate-600">{(r.permissions ?? []).length}</TD>
                 <TD>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(r)}>
-                      {RESERVED.has(r.name) ? 'عرض' : 'تعديل'}
+                      {RESERVED.has(r.name) ? tr("عرض") : tr("تعديل")}
                     </Button>
                     {!RESERVED.has(r.name) ? (
                       <Button
@@ -124,8 +127,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
                           await refresh()
                         }}
                       >
-                        حذف
-                      </Button>
+                        {tr("حذف")}</Button>
                     ) : null}
                   </div>
                 </TD>
@@ -134,8 +136,7 @@ export function RolesContainer({ initialRoles }: { initialRoles: Role[] }) {
             {roles.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={4}>
-                  لا توجد أدوار
-                </td>
+                  {tr("لا توجد أدوار")}</td>
               </tr>
             ) : null}
           </tbody>
@@ -163,6 +164,8 @@ function RoleEditor({
   allowEditName?: boolean
   readOnly?: boolean
 }) {
+  const tr = useTranslations()
+
   const [name, setName] = useState(initial.name)
   const [label, setLabel] = useState(initial.label)
   const [permissions, setPermissions] = useState<string[]>(initial.permissions ?? [])
@@ -179,15 +182,14 @@ function RoleEditor({
           try {
             await onSave({ name, label, permissions })
           } catch (err: any) {
-            setError(String(err?.message ?? 'تعذر الحفظ'))
+            setError(String(err?.message ?? tr("تعذر الحفظ")))
             setPending(false)
           }
         }}
       >
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block text-sm font-medium">
-            الاسم
-            <Input
+            {tr("الاسم")}<Input
               className="ltr mt-2 font-mono"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -196,13 +198,12 @@ function RoleEditor({
             />
           </label>
           <label className="block text-sm font-medium">
-            الوصف
-            <Input className="mt-2" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(readOnly)} required />
+            {tr("الوصف")}<Input className="mt-2" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(readOnly)} required />
           </label>
         </div>
 
         <div className="rounded-2xl border border-slate-200 p-4">
-          <div className="mb-3 text-sm font-semibold">الصلاحيات</div>
+          <div className="mb-3 text-sm font-semibold">{tr("الصلاحيات")}</div>
           <div className="grid gap-4 md:grid-cols-2">
             {grouped.map(([group, perms]) => (
               <div key={group} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -234,7 +235,7 @@ function RoleEditor({
         {error ? <div className="rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         {!readOnly ? (
           <Button className="w-full" disabled={pending} type="submit">
-            {pending ? '...' : 'حفظ'}
+            {pending ? '...' : tr("حفظ")}
           </Button>
         ) : null}
       </form>

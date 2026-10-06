@@ -1,3 +1,5 @@
+import { getTranslations } from '@/lib/i18n/server'
+
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -9,18 +11,20 @@ import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
 import { getVirtualCompany, servesLocalVirtualData } from '@/server/virtual-data'
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const tr = await getTranslations()
+
   const session = await getServerSession()
   if (!session?.permissions.includes('employees.view' as any)) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">الموظف</h1>
-        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
+        <h1 className="text-xl font-semibold">{tr("الموظف")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
       </main>
     )
   }
 
   if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
-    return <VirtualLoginNotice title="الموظف" />
+    return <VirtualLoginNotice title={tr("الموظف")} />
   }
 
   const teamId = session?.profile?.teamId ?? null
@@ -28,8 +32,8 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">الموظف</h1>
-        <p className="mt-2 text-sm text-slate-500">لا يوجد فريق مرتبط.</p>
+        <h1 className="text-xl font-semibold">{tr("الموظف")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{tr("لا يوجد فريق مرتبط.")}</p>
       </main>
     )
   }
@@ -60,7 +64,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   const safeEmployeeEmail = redactEmailForViewer(employee.profile.email, viewerEmail, canViewEmails)
 
   const displayName =
-    (employee.profile.firstName || safeEmployeeEmail || 'مستخدم') + (employee.profile.lastName ? ` ${employee.profile.lastName}` : '')
+    (employee.profile.firstName || safeEmployeeEmail || tr("مستخدم")) + (employee.profile.lastName ? ` ${employee.profile.lastName}` : '')
 
   return (
     <main className="space-y-4">
@@ -70,20 +74,19 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
           {safeEmployeeEmail ? <p className="ltr mt-1 text-sm text-slate-500">{safeEmployeeEmail}</p> : null}
         </div>
         <Link className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100" href="/employees">
-          رجوع →
-        </Link>
+          {tr("رجوع →")}</Link>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <InfoCard label="القسم" value={employee.department?.name ?? '—'} />
-        <InfoCard label="المسمى" value={employee.position ?? '—'} />
-        <InfoCard label="الحالة" value={employee.status} />
+        <InfoCard label={tr("القسم")} value={employee.department?.name ?? '—'} />
+        <InfoCard label={tr("المسمى")} value={employee.position ?? '—'} />
+        <InfoCard label={tr("الحالة")} value={employee.status} />
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-sm font-semibold">المهام المسندة</div>
-          <div className="text-xs text-slate-500">{tasks.length} مهمة</div>
+          <div className="text-sm font-semibold">{tr("المهام المسندة")}</div>
+          <div className="text-xs text-slate-500">{tasks.length} {tr("مهمة")}</div>
         </div>
         <div className="space-y-2">
           {tasks.map((t) => (
@@ -94,24 +97,24 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
                   {t.description ? <div className="mt-1 text-sm text-slate-500">{t.description}</div> : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <Pill kind="neutral">{t.priority}</Pill>
-                  <Pill kind={t.status === 'COMPLETED' ? 'good' : 'neutral'}>{t.status}</Pill>
+                  <Pill kind="neutral">{tr(t.priority)}</Pill>
+                  <Pill kind={t.status === 'COMPLETED' ? 'good' : 'neutral'}>{tr(t.status)}</Pill>
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
-                {t.department?.name ? <span>القسم: {t.department.name}</span> : null}
+                {t.department?.name ? <span>{tr("القسم:")}{t.department.name}</span> : null}
                 {t.creator ? (
                   <span>
-                    · أنشأها:{' '}
-                    {(t.creator.firstName || redactEmailForViewer(t.creator.email, viewerEmail, canViewEmails) || 'مستخدم') +
+                    {tr("· أنشأها:")}{' '}
+                    {(t.creator.firstName || redactEmailForViewer(t.creator.email, viewerEmail, canViewEmails) || tr("مستخدم")) +
                       (t.creator.lastName ? ` ${t.creator.lastName}` : '')}
                   </span>
                 ) : null}
-                {t.dueDate ? <span>· الاستحقاق: <span className="ltr">{t.dueDate.toISOString().slice(0, 10)}</span></span> : null}
+                {t.dueDate ? <span>{tr("· الاستحقاق:")}<span className="ltr">{t.dueDate.toISOString().slice(0, 10)}</span></span> : null}
               </div>
             </div>
           ))}
-          {tasks.length === 0 ? <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">لا توجد مهام مسندة.</div> : null}
+          {tasks.length === 0 ? <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">{tr("لا توجد مهام مسندة.")}</div> : null}
         </div>
       </div>
     </main>

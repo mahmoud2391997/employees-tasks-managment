@@ -1,10 +1,15 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
+
 export function TaskStatusChart({
   data,
 }: {
   data: Array<{ status: string; count: number }>
 }) {
+  const tr = useTranslations()
+
   const colors: Record<string, string> = {
     TODO: '#d0d7de',
     IN_PROGRESS: '#0969da',
@@ -14,7 +19,7 @@ export function TaskStatusChart({
 
   const rows = data.filter((d) => d.count > 0)
   if (rows.length === 0) {
-    return <div className="text-sm text-[#656d76]">لا توجد مهام</div>
+    return <div className="text-sm text-[#656d76]">{tr("لا توجد مهام")}</div>
   }
 
   const total = rows.reduce((sum, r) => sum + r.count, 0)
@@ -34,7 +39,7 @@ export function TaskStatusChart({
             acc += len
             return (
               <circle
-                key={row.status}
+                key={tr(row.status)}
                 cx="50"
                 cy="50"
                 r={r}
@@ -52,19 +57,19 @@ export function TaskStatusChart({
             {total}
           </text>
           <text x="50" y="62" textAnchor="middle" dominantBaseline="middle" className="fill-[#656d76] text-[6px]">
-            tasks
+            {tr('tasks')}
           </text>
         </svg>
       </div>
 
       <div className="rounded-lg border border-[#d0d7de] bg-white p-4">
-        <div className="mb-2 text-sm font-semibold">Breakdown</div>
+        <div className="mb-2 text-sm font-semibold">{tr('Breakdown')}</div>
         <div className="space-y-2">
           {rows.map((row) => (
-            <div key={row.status} className="flex items-center justify-between gap-3 text-sm">
+            <div key={tr(row.status)} className="flex items-center justify-between gap-3 text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm" style={{ background: colors[row.status] ?? '#6b7280' }} />
-                <span className="font-mono text-xs">{row.status}</span>
+                <span className="font-mono text-xs">{tr(row.status)}</span>
               </div>
               <div className="font-semibold">{row.count}</div>
             </div>

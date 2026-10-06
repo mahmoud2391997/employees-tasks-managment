@@ -54,3 +54,7 @@ Development setup and automated checks are now available. This is not a producti
 ## Next development session
 
 Start Docker, run `pnpm db:up`, `pnpm db:deploy`, then `pnpm dev`. Sign in with the generated credentials in `apps/workforce/.env`. Work through `MANUAL_TESTS.md` on the empty development database. Prioritize the employee-before-invitation profile collision before using real employee data.
+
+## Follow-up implementation
+
+Login now offers an explicit local Try demo action instead of bypassing authentication globally. Demo sessions are signed, identified in the dashboard, and cleared by Exit demo. Arabic and English UI translations share a cookie-based preference with RTL/LTR layouts. Date rendering now accepts both initial server Date values and API date strings. Local PostgreSQL migrations and login/dashboard/API smoke checks have succeeded; browser checks cover demo entry, exit, language switching and the members page. Existing user-entered content and stored notification messages retain their original language.

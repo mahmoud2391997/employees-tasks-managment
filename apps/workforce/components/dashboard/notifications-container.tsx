@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +27,8 @@ export function NotificationsContainer({
   initialTotal: number
   initialHasMore: boolean
 }) {
+  const tr = useTranslations()
+
   const [rows, setRows] = useState<Notification[]>(initial)
   const [total, setTotal] = useState<number>(initialTotal)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
@@ -73,8 +77,8 @@ export function NotificationsContainer({
     <div className="space-y-4">
       <Card className="p-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="text-sm font-semibold text-slate-900">الإشعارات</div>
-          <Badge variant={unread ? 'info' : 'neutral'}>غير مقروء: {unread}</Badge>
+          <div className="text-sm font-semibold text-slate-900">{tr("الإشعارات")}</div>
+          <Badge variant={unread ? 'info' : 'neutral'}>{tr("غير مقروء:")}{unread}</Badge>
         </div>
       </Card>
 
@@ -86,34 +90,33 @@ export function NotificationsContainer({
                 <div className="font-semibold">{n.title}</div>
                 <div className="mt-1 text-sm text-slate-500">{n.message}</div>
                 <div className="mt-2 text-xs text-slate-500">
-                  <span className="ltr font-mono">{n.type}</span> · <span className="ltr">{n.createdAt.slice(0, 19).replace('T', ' ')}</span>
+                  <span className="ltr font-mono">{n.type}</span> · <span className="ltr">{new Date(n.createdAt).toISOString().slice(0, 19).replace('T', ' ')}</span>
                 </div>
               </div>
               {!n.read ? (
                 <Button size="sm" variant="secondary" type="button" onClick={() => markRead(n.id)}>
-                  تحديد كمقروء
-                </Button>
+                  {tr("تحديد كمقروء")}</Button>
               ) : (
-                <Badge variant="neutral">مقروء</Badge>
+                <Badge variant="neutral">{tr("مقروء")}</Badge>
               )}
             </div>
           </Card>
         ))}
-        {rows.length === 0 ? <Card className="p-6 text-sm text-slate-500">لا توجد إشعارات</Card> : null}
+        {rows.length === 0 ? <Card className="p-6 text-sm text-slate-500">{tr("لا توجد إشعارات")}</Card> : null}
       </div>
 
       {rows.length > 0 ? (
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
             <div>
-              تم تحميل {rows.length} من {total}
+              {tr("تم تحميل")}{rows.length} {tr("من")}{total}
             </div>
             {hasMore ? (
               <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
-                {loadingMore ? '...' : 'تحميل المزيد'}
+                {loadingMore ? '...' : tr("تحميل المزيد")}
               </Button>
             ) : (
-              <Badge variant="neutral">آخر صفحة</Badge>
+              <Badge variant="neutral">{tr("آخر صفحة")}</Badge>
             )}
           </div>
         </Card>

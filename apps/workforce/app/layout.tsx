@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { Cairo } from 'next/font/google'
 
 import './globals.css'
+import { LanguageProvider } from '@/lib/i18n/provider'
+import { getLocale } from '@/lib/i18n/server'
 
 export const metadata = {
   title: 'Workforce',
@@ -14,11 +16,12 @@ const cairo = Cairo({
   variable: '--font-cairo',
 })
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="ar" dir="rtl">
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <body className={cairo.variable}>
-        {children}
+        <LanguageProvider locale={locale}>{children}</LanguageProvider>
       </body>
     </html>
   )

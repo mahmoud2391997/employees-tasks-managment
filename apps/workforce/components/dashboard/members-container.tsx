@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { useMemo, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -51,6 +53,8 @@ export function MembersContainer({
   roles: RoleOption[]
   permissions: string[]
 }) {
+  const tr = useTranslations()
+
   const [members, setMembers] = useState<Member[]>(initialMembers)
   const [total, setTotal] = useState<number>(initialTotal)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
@@ -64,11 +68,11 @@ export function MembersContainer({
   const canAssign = permissions.includes('members.assign_role')
 
   const roleOptions = useMemo(() => {
-    const base = roles.map((r) => ({ value: r.name, label: `${r.label} (${r.name})` }))
+    const base = roles.map((r) => ({ value: r.name, label: `${tr(r.label)} (${r.name})` }))
     const uniq = new Map<string, { value: string; label: string }>()
     for (const o of base) uniq.set(o.value, o)
     return Array.from(uniq.values())
-  }, [roles])
+  }, [roles, tr])
 
   const apiTake = 50
 
@@ -120,7 +124,7 @@ export function MembersContainer({
           roleOptions={roleOptions}
           onInvited={async (result) => {
             setInviteUrl(result.url)
-            setEmailNotice(result.emailSent ? 'تم إرسال الدعوة إلى البريد الإلكتروني.' : 'لم يُرسل البريد. انسخ الرابط وأرسله يدوياً.')
+            setEmailNotice(result.emailSent ? tr("تم إرسال الدعوة إلى البريد الإلكتروني.") : tr("لم يُرسل البريد. انسخ الرابط وأرسله يدوياً."))
             await refresh()
           }}
         />
@@ -128,7 +132,7 @@ export function MembersContainer({
 
       {inviteUrl ? (
         <Card className="border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-          <div className="font-semibold">رابط الدعوة</div>
+          <div className="font-semibold">{tr("رابط الدعوة")}</div>
           {emailNotice ? <div className="mt-1">{emailNotice}</div> : null}
           <div className="ltr mt-1 break-all font-mono text-xs">{inviteUrl}</div>
         </Card>
@@ -139,18 +143,18 @@ export function MembersContainer({
         <Table>
           <THead>
             <tr>
-              <TH className="min-w-72">العضو</TH>
-              <TH className="min-w-56">الدور</TH>
-              <TH className="min-w-32">الحالة</TH>
-              <TH className="min-w-40">إجراءات</TH>
+              <TH className="min-w-72">{tr("العضو")}</TH>
+              <TH className="min-w-56">{tr("الدور")}</TH>
+              <TH className="min-w-32">{tr("الحالة")}</TH>
+              <TH className="min-w-40">{tr("إجراءات")}</TH>
             </tr>
           </THead>
           <tbody>
             {members.map((m) => {
               const profile = m.user.profile
               const display = profile
-                ? (profile.firstName || profile.email || 'مستخدم') + (profile.lastName ? ` ${profile.lastName}` : '')
-                : m.user.email || 'مستخدم'
+                ? (profile.firstName || profile.email || tr("مستخدم")) + (profile.lastName ? ` ${profile.lastName}` : '')
+                : m.user.email || tr("مستخدم")
               return (
                 <tr key={m.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                   <TD>
@@ -174,17 +178,17 @@ export function MembersContainer({
                       >
                         {roleOptions.map((o) => (
                           <option key={o.value} value={o.value}>
-                            {o.value}
+                            {tr(o.value)}
                           </option>
                         ))}
-                        {!roleOptions.some((o) => o.value === m.role) ? <option value={m.role}>{m.role}</option> : null}
+                        {!roleOptions.some((o) => o.value === m.role) ? <option value={m.role}>{tr(m.role)}</option> : null}
                       </Select>
                       </div>
                     ) : (
-                      <span className="ltr font-mono text-xs">{m.role}</span>
+                      <span className="ltr font-mono text-xs">{tr(m.role)}</span>
                     )}
                   </TD>
-                  <TD>{m.isActive ? <Badge variant="success">نشط</Badge> : <Badge variant="neutral">غير نشط</Badge>}</TD>
+                  <TD>{m.isActive ? <Badge variant="success">{tr("نشط")}</Badge> : <Badge variant="neutral">{tr("غير نشط")}</Badge>}</TD>
                   <TD>
                     {canRemove ? (
                       <Button
@@ -196,8 +200,7 @@ export function MembersContainer({
                           await refresh()
                         }}
                       >
-                        إزالة
-                      </Button>
+                        {tr("إزالة")}</Button>
                     ) : null}
                   </TD>
                 </tr>
@@ -206,8 +209,7 @@ export function MembersContainer({
             {members.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={4}>
-                  لا يوجد أعضاء
-                </td>
+                  {tr("لا يوجد أعضاء")}</td>
               </tr>
             ) : null}
           </tbody>
@@ -219,14 +221,14 @@ export function MembersContainer({
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
             <div>
-              تم تحميل {members.length} من {total}
+              {tr("تم تحميل")}{members.length} {tr("من")}{total}
             </div>
             {hasMore ? (
               <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
-                {loadingMore ? '...' : 'تحميل المزيد'}
+                {loadingMore ? '...' : tr("تحميل المزيد")}
               </Button>
             ) : (
-              <Badge variant="neutral">آخر صفحة</Badge>
+              <Badge variant="neutral">{tr("آخر صفحة")}</Badge>
             )}
           </div>
         </Card>
@@ -234,9 +236,9 @@ export function MembersContainer({
 
       {canInvite ? (
         <Card>
-          <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">الدعوات المعلقة</div>
+          <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-600">{tr("الدعوات المعلقة")}</div>
           <div className="p-5">
-            {invitations.length === 0 ? <div className="text-sm text-slate-500">لا توجد دعوات معلقة</div> : null}
+            {invitations.length === 0 ? <div className="text-sm text-slate-500">{tr("لا توجد دعوات معلقة")}</div> : null}
             <div className="space-y-2">
               {invitations.map((inv) => (
                 <div key={inv.id} className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -244,8 +246,8 @@ export function MembersContainer({
                     <div>
                       <div className="ltr font-semibold">{inv.email ?? '—'}</div>
                       <div className="text-xs text-[#656d76]">
-                        الدور: <span className="ltr font-mono">{inv.role}</span>
-                        {inv.expiresAt ? ` · ينتهي: ${inv.expiresAt.slice(0, 10)}` : ''}
+                        {tr("الدور:")}<span className="ltr font-mono">{tr(inv.role)}</span>
+                        {inv.expiresAt ? tr(" · ينتهي: {0}", {0: new Date(inv.expiresAt).toISOString().slice(0, 10)}) : ''}
                       </div>
                     </div>
                     <Button
@@ -258,8 +260,7 @@ export function MembersContainer({
                         navigator.clipboard?.writeText(url).catch(() => {})
                       }}
                     >
-                      نسخ رابط الدعوة
-                    </Button>
+                      {tr("نسخ رابط الدعوة")}</Button>
                   </div>
                 </div>
               ))}
@@ -278,6 +279,8 @@ function InviteCard({
   roleOptions: Array<{ value: string; label: string }>
   onInvited: (result: { url: string; emailSent: boolean }) => void
 }) {
+  const tr = useTranslations()
+
   const [email, setEmail] = useState('')
   const [role, setRole] = useState(roleOptions[0]?.value ?? 'EMPLOYEE')
   const [pending, setPending] = useState(false)
@@ -286,7 +289,7 @@ function InviteCard({
 
   return (
     <Card className="p-5">
-      <div className="text-lg font-semibold text-slate-900">دعوة عضو</div>
+      <div className="text-lg font-semibold text-slate-900">{tr("دعوة عضو")}</div>
       <form
         className="mt-4 grid gap-3 md:grid-cols-3"
         onSubmit={async (e) => {
@@ -305,7 +308,7 @@ function InviteCard({
             | null
           setPending(false)
           if (!res.ok || !json?.success) {
-            setError(json?.message || 'تعذر إرسال الدعوة')
+            setError(tr(json?.message || "تعذر إرسال الدعوة"))
             if (mode === 'invite' && json?.code === 'EXISTING_USER_CAN_REACTIVATE') setMode('reactivate')
             return
           }
@@ -315,8 +318,7 @@ function InviteCard({
         }}
       >
         <label className="block text-sm font-medium md:col-span-2">
-          البريد الإلكتروني
-          <Input
+          {tr("البريد الإلكتروني")}<Input
             className="ltr mt-2"
             value={email}
             onChange={(e) => {
@@ -327,18 +329,17 @@ function InviteCard({
           />
         </label>
         <label className="block text-sm font-medium">
-          الدور
-          <Select className="mt-2" value={role} onChange={(e) => setRole(e.target.value)}>
+          {tr("الدور")}<Select className="mt-2" value={role} onChange={(e) => setRole(e.target.value)}>
             {roleOptions.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.value}
+                {tr(o.value)}
               </option>
             ))}
           </Select>
         </label>
         {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-3 w-full" disabled={pending} type="submit">
-          {pending ? '...' : mode === 'reactivate' ? 'إعادة التفعيل' : 'إرسال الدعوة'}
+          {pending ? '...' : mode === 'reactivate' ? tr("إعادة التفعيل") : tr("إرسال الدعوة")}
         </Button>
       </form>
     </Card>

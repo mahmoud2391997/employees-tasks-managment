@@ -14,11 +14,12 @@ function secretKey() {
 export type SessionPayload = {
   sub: string
   email: string
+  mode?: 'demo'
 }
 
 export async function issueAccessToken(payload: SessionPayload) {
   const key = secretKey()
-  return new SignJWT({ email: payload.email })
+  return new SignJWT({ email: payload.email, ...(payload.mode === 'demo' ? { mode: 'demo' } : {}) })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -32,7 +33,7 @@ export async function verifyAccessToken(token: string): Promise<SessionPayload |
     const verified = await jwtVerify(token, key, { algorithms: ['HS256'] })
     const sub = String(verified.payload.sub ?? '')
     if (!sub) return null
-    return { sub, email: String(verified.payload.email ?? '') }
+    return { sub, email: String(verified.payload.email ?? ''), ...(verified.payload.mode === 'demo' ? { mode: 'demo' as const } : {}) }
   } catch {
     return null
   }

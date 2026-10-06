@@ -31,17 +31,16 @@ function isClosedOnboardingPage(pathname: string) {
 export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const pathname = request.nextUrl.pathname
-  const demo = process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production'
-  const payload = !demo && token ? await verifyAccessToken(token) : null
+  const demoAvailable = process.env.WORKFORCE_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production'
+  const verified = token ? await verifyAccessToken(token) : null
+  const payload = verified?.mode === 'demo' && !demoAvailable ? null : verified
 
   if (isClosedOnboardingPage(pathname)) {
     const url = request.nextUrl.clone()
-    url.pathname = demo || payload ? '/dashboard' : '/auth/login'
+    url.pathname = payload ? '/dashboard' : '/auth/login'
     url.search = ''
     return NextResponse.redirect(url)
   }
-
-  if (demo) return NextResponse.next()
 
   const allowWithoutSession =
     pathname.startsWith('/auth/login') ||

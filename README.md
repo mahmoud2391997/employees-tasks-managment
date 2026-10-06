@@ -54,8 +54,14 @@ Use `apps/workforce/.env.example` as a reference. `pnpm dev:setup` creates a loc
 - Optional `COMPANY_ADMIN_FIRST_NAME` and `COMPANY_ADMIN_LAST_NAME`.
 - `SITE_URL`: public HTTPS origin for production invitation/notification links.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`: production mail configuration. Local development may omit SMTP; invitation links remain available in the app.
-- `WORKFORCE_DEMO_MODE=true`: explicit local demo mode with seeded examples and login bypass. Use a disposable local database. Never enable it in production.
+- `WORKFORCE_DEMO_MODE=true`: enables the Try demo button on the login page. Clicking it starts a signed demo session with seeded examples; Exit demo returns to login. Use a disposable local database. Never enable it in production.
 
 Missing database configuration no longer grants a setup/admin session. Database outages do not authenticate via env credentials. Legacy virtual data helpers remain for existing tests/screens, but normal login no longer issues those sessions.
 
 See [DEVELOPMENT_REVIEW.md](DEVELOPMENT_REVIEW.md) for review findings and the prioritized backlog, and [MANUAL_TESTS.md](MANUAL_TESTS.md) for workflow checks. Development tooling is ready; real database and browser acceptance checks are still required before release.
+
+## Languages
+
+Use the English / العربية switch on login or in the sidebar. The language preference is saved in a cookie; English uses LTR and Arabic uses RTL. Navigation, dashboard headings, forms and standard statuses are translated. User-entered names, task descriptions and existing notification content retain their original language.
+
+When local demo mode is enabled, verify the production build with `WORKFORCE_DEMO_MODE=false pnpm build`. Production deliberately refuses an enabled demo configuration.

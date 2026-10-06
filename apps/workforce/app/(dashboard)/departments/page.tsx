@@ -1,3 +1,5 @@
+import { getTranslations } from '@/lib/i18n/server'
+
 import { getServerSession } from '@/server/auth/server-session'
 import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
@@ -6,17 +8,19 @@ import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { getVirtualCompany, servesLocalVirtualData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function DepartmentsPage() {
+  const tr = await getTranslations()
+
   const session = await getServerSession()
   if (!session?.permissions.includes('departments.view' as any)) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-slate-500">ليس لديك صلاحية.</p>
+        <h1 className="text-xl font-semibold">{tr("الأقسام")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
       </main>
     )
   }
   if (session.userId === FALLBACK_ADMIN_ID && !servesLocalVirtualData(session.userId)) {
-    return <VirtualLoginNotice title="الأقسام" />
+    return <VirtualLoginNotice title={tr("الأقسام")} />
   }
 
   const teamId = session?.profile?.teamId ?? null
@@ -25,8 +29,8 @@ export default async function DepartmentsPage() {
   if (!teamId && !sampleData) {
     return (
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-slate-500">لا يوجد فريق مرتبط.</p>
+        <h1 className="text-xl font-semibold">{tr("الأقسام")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{tr("لا يوجد فريق مرتبط.")}</p>
       </main>
     )
   }
@@ -46,8 +50,8 @@ export default async function DepartmentsPage() {
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">الأقسام</h1>
-        <p className="mt-2 text-sm text-slate-500">إدارة الأقسام.</p>
+        <h1 className="text-xl font-semibold">{tr("الأقسام")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{tr("إدارة الأقسام.")}</p>
         {sampleData ? <p className="mt-1 text-sm text-amber-700">{VIRTUAL_SAMPLE_NOTE}</p> : null}
       </div>
       <DepartmentsContainer initialDepartments={departments as any} profiles={profiles as any} permissions={session.permissions as any} />

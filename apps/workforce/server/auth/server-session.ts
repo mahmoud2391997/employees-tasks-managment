@@ -23,22 +23,26 @@ export type ServerSession = {
     teamId: string | null
   } | null
   permissions: Permission[]
+  demo?: boolean
 }
 
 export const getServerSession = cache(async (): Promise<ServerSession | null> => {
-  if (isDemoModeEnabled()) return await getOrCreateDemoSession()
   if (!resolveWorkforceDatabaseUrl()) return null
-  try {
-    await ensureCompany()
-  } catch (error) {
-    console.error('auth/server-session: database unavailable; session unavailable', error)
-  }
-
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) return null
   const payload = await verifyAccessToken(token)
   if (!payload) return null
+  if (payload.mode === 'demo') {
+    if (!isDemoModeEnabled()) return null
+    return { ...await getOrCreateDemoSession(), demo: true }
+  }
+  try {
+    await ensureCompany()
+  } catch (error) {
+    console.error('auth/server-session: session unavailable', error)
+    return null
+  }
 
   try {
     const access = await loadAccountAccess(payload.sub)

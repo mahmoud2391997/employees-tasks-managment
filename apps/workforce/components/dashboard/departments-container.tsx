@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -21,6 +23,8 @@ export function DepartmentsContainer({
   profiles: Profile[]
   permissions: string[]
 }) {
+  const tr = useTranslations()
+
   const [rows, setRows] = useState<Department[]>(initialDepartments)
   const [name, setName] = useState('')
   const [managerId, setManagerId] = useState('')
@@ -46,8 +50,8 @@ export function DepartmentsContainer({
     <div className="space-y-4">
       <Modal
         open={Boolean(editing)}
-        title="تعديل القسم"
-        description="تحديث اسم القسم وتحديد المدير."
+        title={tr("تعديل القسم")}
+        description={tr("تحديث اسم القسم وتحديد المدير.")}
         onClose={() => setEditing(null)}
       >
         <form
@@ -62,7 +66,7 @@ export function DepartmentsContainer({
             })
             const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
             if (!res.ok || !json?.success) {
-              setError(json?.message || 'تعذر الحفظ')
+              setError(tr(json?.message || "تعذر الحفظ"))
               return
             }
             setEditing(null)
@@ -70,12 +74,10 @@ export function DepartmentsContainer({
           }}
         >
           <label className="block text-sm font-medium md:col-span-2">
-            الاسم
-            <Input className="mt-2" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+            {tr("الاسم")}<Input className="mt-2" value={editName} onChange={(e) => setEditName(e.target.value)} required />
           </label>
           <label className="block text-sm font-medium">
-            المدير
-            <Select className="mt-2" value={editManagerId} onChange={(e) => setEditManagerId(e.target.value)}>
+            {tr("المدير")}<Select className="mt-2" value={editManagerId} onChange={(e) => setEditManagerId(e.target.value)}>
               <option value="">—</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -86,23 +88,21 @@ export function DepartmentsContainer({
           </label>
           <div className="flex items-end justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setEditing(null)}>
-              إلغاء
-            </Button>
-            <Button type="submit">حفظ</Button>
+              {tr("إلغاء")}</Button>
+            <Button type="submit">{tr("حفظ")}</Button>
           </div>
         </form>
       </Modal>
 
       <Modal
         open={Boolean(confirmDelete)}
-        title="حذف القسم"
-        description="سيتم حذف القسم نهائياً."
+        title={tr("حذف القسم")}
+        description={tr("سيتم حذف القسم نهائياً.")}
         onClose={() => setConfirmDelete(null)}
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="secondary" type="button" onClick={() => setConfirmDelete(null)}>
-            إلغاء
-          </Button>
+            {tr("إلغاء")}</Button>
           <Button
             variant="danger"
             type="button"
@@ -113,14 +113,13 @@ export function DepartmentsContainer({
               await refresh()
             }}
           >
-            حذف
-          </Button>
+            {tr("حذف")}</Button>
         </div>
       </Modal>
 
       {canCreate ? (
         <Card className="p-5">
-          <div className="text-sm font-semibold text-slate-900">قسم جديد</div>
+          <div className="text-sm font-semibold text-slate-900">{tr("قسم جديد")}</div>
           <form
             className="mt-3 grid gap-3 md:grid-cols-3"
             onSubmit={async (e) => {
@@ -135,7 +134,7 @@ export function DepartmentsContainer({
               const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
               setPending(false)
               if (!res.ok || !json?.success) {
-                setError(json?.message || 'تعذر الحفظ')
+                setError(tr(json?.message || "تعذر الحفظ"))
                 return
               }
               setName('')
@@ -144,12 +143,10 @@ export function DepartmentsContainer({
             }}
           >
             <label className="block text-sm font-medium">
-              الاسم
-              <Input className="mt-2" value={name} onChange={(e) => setName(e.target.value)} required />
+              {tr("الاسم")}<Input className="mt-2" value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              المدير
-              <Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+              {tr("المدير")}<Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
                 <option value="">—</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -160,7 +157,7 @@ export function DepartmentsContainer({
             </label>
             <div className="flex items-end">
               <Button className="w-full" disabled={pending} type="submit">
-                {pending ? '...' : 'إنشاء'}
+                {pending ? '...' : tr("إنشاء")}
               </Button>
             </div>
             {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
@@ -173,9 +170,9 @@ export function DepartmentsContainer({
         <Table>
           <THead>
             <tr>
-              <TH className="min-w-64">الاسم</TH>
-              <TH className="min-w-64">المدير</TH>
-              <TH className="min-w-40">إجراءات</TH>
+              <TH className="min-w-64">{tr("الاسم")}</TH>
+              <TH className="min-w-64">{tr("المدير")}</TH>
+              <TH className="min-w-40">{tr("إجراءات")}</TH>
             </tr>
           </THead>
           <tbody>
@@ -197,13 +194,11 @@ export function DepartmentsContainer({
                           setEditManagerId(d.managerId ?? '')
                         }}
                       >
-                        تعديل
-                      </Button>
+                        {tr("تعديل")}</Button>
                     ) : null}
                     {canDelete ? (
                       <Button size="sm" variant="danger" type="button" onClick={() => setConfirmDelete(d)}>
-                        حذف
-                      </Button>
+                        {tr("حذف")}</Button>
                     ) : null}
                   </div>
                 </TD>
@@ -212,8 +207,7 @@ export function DepartmentsContainer({
             {rows.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={3}>
-                  لا توجد أقسام
-                </td>
+                  {tr("لا توجد أقسام")}</td>
               </tr>
             ) : null}
           </tbody>

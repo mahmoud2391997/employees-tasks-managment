@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
@@ -42,6 +44,8 @@ export function EmployeesContainer({
   profiles: Profile[]
   permissions: string[]
 }) {
+  const tr = useTranslations()
+
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [total, setTotal] = useState<number>(initialTotal)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
@@ -134,7 +138,7 @@ export function EmployeesContainer({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="w-full max-w-sm">
             <Input
-              placeholder="ابحث عن موظف..."
+              placeholder={tr("ابحث عن موظف...")}
               value={q}
               onChange={(e) => {
                 setQ(e.target.value)
@@ -150,8 +154,7 @@ export function EmployeesContainer({
                 setShowForm(true)
               }}
             >
-              + إضافة موظف
-            </Button>
+              {tr("+ إضافة موظف")}</Button>
           ) : null}
         </div>
       </Card>
@@ -161,11 +164,11 @@ export function EmployeesContainer({
           <Table>
           <THead>
             <tr>
-              <TH className="min-w-72">الموظف</TH>
-              <TH className="min-w-44">القسم</TH>
-              <TH className="min-w-48">المسمى</TH>
-              <TH className="min-w-32">الحالة</TH>
-              <TH className="min-w-44">إجراءات</TH>
+              <TH className="min-w-72">{tr("الموظف")}</TH>
+              <TH className="min-w-44">{tr("القسم")}</TH>
+              <TH className="min-w-48">{tr("المسمى")}</TH>
+              <TH className="min-w-32">{tr("الحالة")}</TH>
+              <TH className="min-w-44">{tr("إجراءات")}</TH>
             </tr>
           </THead>
           <tbody>
@@ -173,7 +176,7 @@ export function EmployeesContainer({
               <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD>
                   <div className="font-semibold">
-                    {(e.profile.firstName || e.profile.email || 'مستخدم') + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
+                    {(e.profile.firstName || e.profile.email || tr("مستخدم")) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}
                   </div>
                   {e.profile.email ? <div className="ltr text-xs text-[#656d76]">{e.profile.email}</div> : null}
                 </TD>
@@ -188,8 +191,7 @@ export function EmployeesContainer({
                       className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       href={`/employees/${e.id}`}
                     >
-                      عرض
-                    </Link>
+                      {tr("عرض")}</Link>
                     {canEdit ? (
                       <Button
                         size="sm"
@@ -200,8 +202,7 @@ export function EmployeesContainer({
                           setShowForm(true)
                         }}
                       >
-                        تعديل
-                      </Button>
+                        {tr("تعديل")}</Button>
                     ) : null}
                     {canDelete ? (
                       <Button
@@ -210,8 +211,7 @@ export function EmployeesContainer({
                         type="button"
                         onClick={() => deleteEmployee(e.id)}
                       >
-                        حذف
-                      </Button>
+                        {tr("حذف")}</Button>
                     ) : null}
                   </div>
                 </TD>
@@ -220,8 +220,7 @@ export function EmployeesContainer({
             {filtered.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={5}>
-                  لا يوجد موظفون
-                </td>
+                  {tr("لا يوجد موظفون")}</td>
               </tr>
             ) : null}
           </tbody>
@@ -233,18 +232,16 @@ export function EmployeesContainer({
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="text-slate-500">
-            عرض {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} من {q.trim() ? filtered.length : total}
-            {!q.trim() ? <span className="mr-2 text-xs"> (تم تحميل {employees.length})</span> : null}
+            {tr("عرض")}{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} {tr("من")}{q.trim() ? filtered.length : total}
+            {!q.trim() ? <span className="mr-2 text-xs"> {tr("(تم تحميل")}{employees.length})</span> : null}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>
-              الأولى
-            </Button>
+              {tr("الأولى")}</Button>
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-              السابق
-            </Button>
+              {tr("السابق")}</Button>
             <div className="min-w-20 text-center text-xs text-slate-500">
-              صفحة {currentPage} / {totalPages}
+              {tr("صفحة")}{currentPage} / {totalPages}
             </div>
             <Button
               variant="secondary"
@@ -253,14 +250,12 @@ export function EmployeesContainer({
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              التالي
-            </Button>
+              {tr("التالي")}</Button>
             <Button variant="secondary" size="sm" type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
-              الأخيرة
-            </Button>
+              {tr("الأخيرة")}</Button>
             {hasMore ? (
               <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
-                {loadingMore ? '...' : 'تحميل المزيد'}
+                {loadingMore ? '...' : tr("تحميل المزيد")}
               </Button>
             ) : null}
           </div>
@@ -284,6 +279,8 @@ function EmployeeForm({
   onClose: () => void
   onSaved: () => void
 }) {
+  const tr = useTranslations()
+
   const isEdit = Boolean(employee)
 
   const [email, setEmail] = useState(employee?.profile.email ?? '')
@@ -291,7 +288,7 @@ function EmployeeForm({
   const [lastName, setLastName] = useState(employee?.profile.lastName ?? '')
   const [departmentId, setDepartmentId] = useState(employee?.departmentId ?? '')
   const [position, setPosition] = useState(employee?.position ?? '')
-  const [joinDate, setJoinDate] = useState(employee?.joinDate?.slice(0, 10) ?? '')
+  const [joinDate, setJoinDate] = useState(employee?.joinDate ? new Date(employee.joinDate).toISOString().slice(0, 10) : '')
   const [salary, setSalary] = useState(employee?.salary ?? '')
   const [status, setStatus] = useState<Employee['status']>(employee?.status ?? 'ACTIVE')
   const [managerId, setManagerId] = useState(employee?.managerId ?? '')
@@ -300,7 +297,7 @@ function EmployeeForm({
   const [error, setError] = useState('')
 
   return (
-    <Modal open title={isEdit ? 'تعديل موظف' : 'موظف جديد'} onClose={onClose}>
+    <Modal open title={isEdit ? tr("تعديل موظف") : tr("موظف جديد")} onClose={onClose}>
       <form className="grid gap-3 md:grid-cols-2"
         onSubmit={async (e) => {
           e.preventDefault()
@@ -336,7 +333,7 @@ function EmployeeForm({
           const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
           setPending(false)
           if (!res.ok || !json?.success) {
-            setError(json?.message || 'تعذر الحفظ')
+            setError(tr(json?.message || "تعذر الحفظ"))
             return
           }
           onSaved()
@@ -345,23 +342,19 @@ function EmployeeForm({
         {!isEdit ? (
           <>
             <label className="block text-sm font-medium md:col-span-2">
-              البريد الإلكتروني
-              <Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              {tr("البريد الإلكتروني")}<Input className="ltr mt-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              الاسم الأول
-              <Input className="mt-2" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              {tr("الاسم الأول")}<Input className="mt-2" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </label>
             <label className="block text-sm font-medium">
-              الاسم الأخير
-              <Input className="mt-2" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              {tr("الاسم الأخير")}<Input className="mt-2" value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </label>
           </>
         ) : null}
 
         <label className="block text-sm font-medium">
-          القسم
-          <Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          {tr("القسم")}<Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
@@ -371,41 +364,36 @@ function EmployeeForm({
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          المدير
-          <Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+          {tr("المدير")}<Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
-                {(p.firstName || p.email || 'مستخدم') + (p.lastName ? ` ${p.lastName}` : '')}
+                {(p.firstName || p.email || tr("مستخدم")) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          المسمى الوظيفي
-          <Input className="mt-2" value={position} onChange={(e) => setPosition(e.target.value)} />
+          {tr("المسمى الوظيفي")}<Input className="mt-2" value={position} onChange={(e) => setPosition(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
-          الحالة
-          <Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
-            <option value="ACTIVE">نشط</option>
-            <option value="INACTIVE">غير نشط</option>
-            <option value="ON_LEAVE">إجازة</option>
-            <option value="TERMINATED">منتهي</option>
+          {tr("الحالة")}<Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+            <option value="ACTIVE">{tr("نشط")}</option>
+            <option value="INACTIVE">{tr("غير نشط")}</option>
+            <option value="ON_LEAVE">{tr("إجازة")}</option>
+            <option value="TERMINATED">{tr("منتهي")}</option>
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          تاريخ الانضمام
-          <Input className="mt-2" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
+          {tr("تاريخ الانضمام")}<Input className="mt-2" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
-          الراتب (اختياري)
-          <Input className="mt-2" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
+          {tr("الراتب (اختياري)")}<Input className="mt-2" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
         </label>
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-2 w-full" disabled={pending} type="submit">
-          {pending ? '...' : 'حفظ'}
+          {pending ? '...' : tr("حفظ")}
         </Button>
       </form>
     </Modal>
@@ -413,14 +401,16 @@ function EmployeeForm({
 }
 
 function StatusBadge({ status }: { status: Employee['status'] }) {
+  const tr = useTranslations()
+
   const label =
     status === 'ACTIVE'
-      ? 'نشط'
+      ? tr("نشط")
       : status === 'INACTIVE'
-        ? 'غير نشط'
+        ? tr("غير نشط")
         : status === 'ON_LEAVE'
-          ? 'إجازة'
-          : 'منتهي'
+          ? tr("إجازة")
+          : tr("منتهي")
 
   const variant = status === 'ACTIVE' ? 'success' : status === 'ON_LEAVE' ? 'warning' : status === 'TERMINATED' ? 'danger' : 'neutral'
   return <Badge variant={variant}>{label}</Badge>

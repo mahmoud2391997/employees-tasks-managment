@@ -28,3 +28,10 @@ Steps:
 - Verify an expired auth cookie redirects to login.
 - Stop PostgreSQL and confirm admin login does not issue a fallback auth cookie.
 - Test keyboard focus, Escape, and focus return in modals; focus trapping remains on the backlog.
+
+## Demo and language checks
+
+- With WORKFORCE_DEMO_MODE=true locally, open login and click Try demo; confirm the demo banner and sample records.
+- Exit demo and confirm protected pages redirect to login.
+- Switch between English and Arabic on login and dashboard; refresh and navigate to confirm the preference persists and the sidebar changes sides.
+- Confirm the demo endpoint is unavailable when demo mode is disabled and in production.

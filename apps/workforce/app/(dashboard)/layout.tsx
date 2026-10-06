@@ -1,3 +1,5 @@
+import { getTranslations } from '@/lib/i18n/server'
+
 import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 
@@ -7,17 +9,20 @@ import { getServerSession } from '@/server/auth/server-session'
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const tr = await getTranslations()
+
   const session = await getServerSession()
   if (!session) redirect('/auth/login')
 
   const perms = session.permissions
-  const companyName = process.env.COMPANY_NAME?.trim() || 'الشركة'
+  const companyName = process.env.COMPANY_NAME?.trim() || tr("الشركة")
 
   return (
     <DashboardShell
       name={`${session.profile?.firstName || ''} ${session.profile?.lastName || ''}`.trim()}
       role={session.profile?.role}
       permissions={perms as string[]}
+      demo={session.demo}
       companyName={companyName}
     >
       {children}

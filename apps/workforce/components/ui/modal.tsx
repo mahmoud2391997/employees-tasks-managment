@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { type ReactNode, useEffect } from 'react'
 import { X } from 'lucide-react'
 
@@ -16,6 +18,8 @@ export function Modal({
   children: ReactNode
   onClose: () => void
 }) {
+  const tr = useTranslations()
+
   useEffect(() => {
     if (!open) return
     function onKeyDown(e: KeyboardEvent) {
@@ -49,7 +53,7 @@ export function Modal({
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={tr("إغلاق")}
           >
             <X size={16} />
           </button>

@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/provider'
+
 import { useMemo, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -51,6 +53,8 @@ export function TasksContainer({
   currentProfileId: string
   permissions: string[]
 }) {
+  const tr = useTranslations()
+
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [total, setTotal] = useState<number>(initialTotal)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
@@ -117,7 +121,7 @@ export function TasksContainer({
       })
       const json = await res.json().catch(() => null) as { success?: boolean; message?: string } | null
       if (!res.ok || !json?.success) {
-        setError(json?.message ?? 'تعذر حفظ التغيير، حاول مرة أخرى')
+        setError(tr(json?.message ?? "تعذر حفظ التغيير، حاول مرة أخرى"))
         return
       }
       if (method === 'DELETE') {
@@ -127,7 +131,7 @@ export function TasksContainer({
         setTasks((prev) => prev.map((task) => task.id === id ? { ...task, ...patch } : task))
       }
     } catch {
-      setError('تعذر الاتصال بالخادم، حاول مرة أخرى')
+      setError(tr("تعذر الاتصال بالخادم، حاول مرة أخرى"))
     }
   }
 
@@ -164,7 +168,7 @@ export function TasksContainer({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Select className="w-auto" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-            <option value="">كل الأقسام</option>
+            <option value="">{tr("كل الأقسام")}</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
@@ -172,15 +176,14 @@ export function TasksContainer({
             ))}
           </Select>
           <Select className="w-auto" value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as any)}>
-            <option value="all">كل المهام</option>
-            <option value="me">المسندة لي</option>
-            <option value="by_me">التي أنشأتها</option>
+            <option value="all">{tr("كل المهام")}</option>
+            <option value="me">{tr("المسندة لي")}</option>
+            <option value="by_me">{tr("التي أنشأتها")}</option>
           </Select>
         </div>
         {canCreate ? (
           <Button type="button" onClick={() => { setEditing(null); setShowForm(true) }}>
-            + إضافة مهمة
-          </Button>
+            {tr("+ إضافة مهمة")}</Button>
         ) : null}
       </div>
       </Card>
@@ -194,14 +197,14 @@ export function TasksContainer({
             onDrop={async (e) => {
               e.preventDefault()
               const taskId = e.dataTransfer.getData('text/plain')
-              const t = tasks.find((x) => x.id === taskId)
-              if (!t || t.status === col.id) return
+              const draggedTask = tasks.find((x) => x.id === taskId)
+              if (!draggedTask || draggedTask.status === col.id) return
               if (!canEdit) return
               await updateTask(taskId, { status: col.id } as any)
             }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <div className="text-sm font-semibold">{col.label}</div>
+              <div className="text-sm font-semibold">{tr(col.label)}</div>
               <div className="text-xs text-slate-500">({filtered.filter((t) => t.status === col.id).length})</div>
             </div>
 
@@ -223,23 +226,21 @@ export function TasksContainer({
                       <div className="flex shrink-0 gap-1">
                         {canEdit ? (
                           <Button size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
-                            تعديل
-                          </Button>
+                            {tr("تعديل")}</Button>
                         ) : null}
                         {canDelete ? (
                           <Button size="sm" variant="danger" type="button" onClick={() => deleteTask(t.id)}>
-                            حذف
-                          </Button>
+                            {tr("حذف")}</Button>
                         ) : null}
                       </div>
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      <Badge variant="neutral">{t.priority}</Badge>
+                      <Badge variant="neutral">{tr(t.priority)}</Badge>
                       {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
                       {t.assignee ? (
                         <Badge variant="info">
-                          {(t.assignee.firstName || t.assignee.email || 'مستخدم') + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
+                          {(t.assignee.firstName || t.assignee.email || tr("مستخدم")) + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
                         </Badge>
                       ) : null}
                     </div>
@@ -253,14 +254,14 @@ export function TasksContainer({
       <Card className="p-3">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
           <div>
-            تم تحميل {tasks.length} من {total}
+            {tr("تم تحميل")}{tasks.length} {tr("من")}{total}
           </div>
           {hasMore ? (
             <Button variant="secondary" size="sm" type="button" disabled={loadingMore} onClick={loadMore}>
-              {loadingMore ? '...' : 'تحميل المزيد'}
+              {loadingMore ? '...' : tr("تحميل المزيد")}
             </Button>
           ) : (
-            <Badge variant="neutral">آخر صفحة</Badge>
+            <Badge variant="neutral">{tr("آخر صفحة")}</Badge>
           )}
         </div>
       </Card>
@@ -283,18 +284,20 @@ function TaskForm({
   onClose: () => void
   onSaved: () => void
 }) {
+  const tr = useTranslations()
+
   const [title, setTitle] = useState(task?.title ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
   const [departmentId, setDepartmentId] = useState(task?.departmentId ?? '')
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? '')
   const [priority, setPriority] = useState<Task['priority']>(task?.priority ?? 'MEDIUM')
   const [status, setStatus] = useState<Task['status']>(task?.status ?? 'TODO')
-  const [dueDate, setDueDate] = useState(task?.dueDate?.slice(0, 10) ?? '')
+  const [dueDate, setDueDate] = useState(task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
 
   return (
-    <Modal open title={task ? 'تعديل مهمة' : 'مهمة جديدة'} onClose={onClose}>
+    <Modal open title={task ? tr("تعديل مهمة") : tr("مهمة جديدة")} onClose={onClose}>
       <form className="grid gap-3 md:grid-cols-2"
         onSubmit={async (e) => {
           e.preventDefault()
@@ -317,23 +320,20 @@ function TaskForm({
           const json = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
           setPending(false)
           if (!res.ok || !json?.success) {
-            setError(json?.message || 'تعذر الحفظ')
+            setError(tr(json?.message || "تعذر الحفظ"))
             return
           }
           onSaved()
         }}
       >
         <label className="block text-sm font-medium md:col-span-2">
-          العنوان
-          <Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          {tr("العنوان")}<Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label className="block text-sm font-medium md:col-span-2">
-          الوصف
-          <Textarea className="mt-2" value={description} onChange={(e) => setDescription(e.target.value)} />
+          {tr("الوصف")}<Textarea className="mt-2" value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
-          القسم
-          <Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          {tr("القسم")}<Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
@@ -343,42 +343,38 @@ function TaskForm({
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          المسؤول
-          <Select className="mt-2" value={assigneeId} disabled={!canAssign} onChange={(e) => setAssigneeId(e.target.value)}>
+          {tr("المسؤول")}<Select className="mt-2" value={assigneeId} disabled={!canAssign} onChange={(e) => setAssigneeId(e.target.value)}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
-                {(p.firstName || p.email || 'مستخدم') + (p.lastName ? ` ${p.lastName}` : '')}
+                {(p.firstName || p.email || tr("مستخدم")) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          الأولوية
-          <Select className="mt-2" value={priority} onChange={(e) => setPriority(e.target.value as any)}>
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="HIGH">HIGH</option>
-            <option value="URGENT">URGENT</option>
+          {tr("الأولوية")}<Select className="mt-2" value={priority} onChange={(e) => setPriority(e.target.value as any)}>
+            <option value="LOW">{tr('LOW')}</option>
+            <option value="MEDIUM">{tr('MEDIUM')}</option>
+            <option value="HIGH">{tr('HIGH')}</option>
+            <option value="URGENT">{tr('URGENT')}</option>
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          الحالة
-          <Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
-            <option value="TODO">TODO</option>
-            <option value="IN_PROGRESS">IN_PROGRESS</option>
-            <option value="REVIEW">REVIEW</option>
-            <option value="COMPLETED">COMPLETED</option>
+          {tr("الحالة")}<Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+            <option value="TODO">{tr('TODO')}</option>
+            <option value="IN_PROGRESS">{tr('IN_PROGRESS')}</option>
+            <option value="REVIEW">{tr('REVIEW')}</option>
+            <option value="COMPLETED">{tr('COMPLETED')}</option>
           </Select>
         </label>
         <label className="block text-sm font-medium">
-          تاريخ الاستحقاق
-          <Input className="mt-2" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          {tr("تاريخ الاستحقاق")}<Input className="mt-2" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </label>
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-2 w-full" disabled={pending} type="submit">
-          {pending ? '...' : 'حفظ'}
+          {pending ? '...' : tr("حفظ")}
         </Button>
       </form>
     </Modal>

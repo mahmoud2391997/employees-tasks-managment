@@ -23,13 +23,14 @@ export type SessionUser = {
 }
 
 export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
-  if (isDemoModeEnabled()) {
+  const token = getAccessTokenFromRequest(req)
+  const payload = token ? await verifyAccessToken(token) : null
+  if (payload?.mode === 'demo') {
+    if (!isDemoModeEnabled()) return null
     const demo = await getOrCreateDemoSession()
     return { id: demo.userId, email: demo.email, profile: demo.profile, permissions: demo.permissions }
   }
 
-  const token = getAccessTokenFromRequest(req)
-  const payload = token ? await verifyAccessToken(token) : null
   if (payload?.sub === FALLBACK_ADMIN_ID) {
     const access = await loadAccountAccess(FALLBACK_ADMIN_ID)
     if (!access?.active) return null
