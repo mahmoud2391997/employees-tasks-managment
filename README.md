@@ -54,7 +54,7 @@ Use `apps/workforce/.env.example` as a reference. `pnpm dev:setup` creates a loc
 - Optional `COMPANY_ADMIN_FIRST_NAME` and `COMPANY_ADMIN_LAST_NAME`.
 - `SITE_URL`: public HTTPS origin for production invitation/notification links.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`: production mail configuration. Local development may omit SMTP; invitation links remain available in the app.
-- `WORKFORCE_DEMO_MODE=true`: enables the Try demo button on the login page. Clicking it starts a signed demo session with seeded examples; Exit demo returns to login. Available in development and production when true; false or unset hides the button and disables demo sessions. Samples use a dedicated demo account/team, separate from company bootstrap.
+- `WORKFORCE_DEMO_MODE=true`: enables the Try demo button on the login page. Clicking it starts a signed demo session with seeded examples; Exit demo returns to login. Available in development and production by default when true or unset; only false hides the button and disables demo sessions. Samples use a dedicated demo account/team, separate from company bootstrap.
 
 Missing database configuration no longer grants a setup/admin session. Database outages do not authenticate via env credentials. Legacy virtual data helpers remain for existing tests/screens, but normal login no longer issues those sessions.
 

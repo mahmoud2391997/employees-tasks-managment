@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/server/auth/demo', () => ({
-  isDemoModeEnabled: () => process.env.WORKFORCE_DEMO_MODE === 'true',
+  isDemoModeEnabled: () => process.env.WORKFORCE_DEMO_MODE?.trim().toLowerCase() !== 'false',
   getOrCreateDemoSession: async () => ({ userId: 'demo-user', email: 'demo@example.com', profile: { id: 'p1', teamId: 't1', role: 'ADMIN' }, permissions: ['dashboard.view'] }),
 }))
 vi.mock('@/server/db', () => ({ prisma: {} }))
@@ -25,6 +25,11 @@ describe('explicit demo session', () => {
     expect((await getSessionUser(request))?.id).toBe('demo-user')
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')
     expect(await getSessionUser(request)).toBeNull()
+  })
+  it('starts demo when the environment variable is missing', async () => {
+    vi.stubEnv('WORKFORCE_DEMO_MODE', undefined)
+    vi.stubEnv('WORKFORCE_JWT_SECRET', 'a-local-test-secret-with-at-least-32-characters')
+    expect((await POST()).status).toBe(200)
   })
   it('hides demo when false and starts it in production when true', async () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')

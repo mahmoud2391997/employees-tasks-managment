@@ -22,7 +22,7 @@ export type DemoSession = {
 }
 
 export function isDemoModeEnabled() {
-  return process.env.WORKFORCE_DEMO_MODE === 'true'
+  return process.env.WORKFORCE_DEMO_MODE?.trim().toLowerCase() !== 'false'
 }
 
 async function ensureDefaultRoles(teamId: string) {
