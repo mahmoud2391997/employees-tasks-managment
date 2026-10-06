@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand'
 import { isDemoModeEnabled } from '@/lib/demo-config'
 import { DEFAULT_ROLES } from '@/lib/permissions'
 import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } from '@/lib/sample-identity'
@@ -17,7 +18,7 @@ function adminEmail() {
 }
 
 function companyName() {
-  return 'Workforce Demo'
+  return BRAND.name
 }
 
 export function isVirtualAdmin(userId: string | null | undefined) {

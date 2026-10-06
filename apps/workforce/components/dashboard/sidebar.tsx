@@ -3,8 +3,10 @@
 import { LanguageSwitch, useTranslations } from '@/lib/i18n/provider'
 
 import Link from 'next/link'
+import Image from 'next/image'
+import { BRAND } from '@/lib/brand'
 import { usePathname } from 'next/navigation'
-import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, Layers3, X, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CheckSquare, ChevronRight, LayoutDashboard, LogOut, X, Settings, ShieldCheck, User, UserPlus, Users } from 'lucide-react'
 
 const sections = [
   { label: 'Main', items: [
@@ -33,8 +35,8 @@ export function Sidebar({ name, role, permissions, companyName, collapsed, onTog
   return <aside className={`${mobile ? 'flex h-full w-full' : 'fixed inset-y-0 start-0 z-40 hidden w-[var(--sidebar-width)] md:flex'} flex-col overflow-hidden border-e border-slate-800 bg-[#101e36] text-white transition-[width] duration-200`}>
     <div className={`flex h-[76px] shrink-0 items-center border-b border-white/10 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-5'}`}>
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-lg shadow-blue-500/20"><Layers3 size={23} /></div>
-        {!collapsed ? <div className="min-w-0"><div className="text-lg font-bold tracking-tight">TeamFlow<span className="text-blue-400">.</span></div><div className="truncate text-[11px] text-slate-400">{companyName}</div></div> : null}
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-1.5"><Image src={BRAND.logo} alt={tr(BRAND.name)} width={48} height={48} className="h-full w-full object-contain" /></div>
+        {!collapsed ? <div className="min-w-0"><div className="text-sm font-bold">{companyName}</div><div className="mt-1 text-[10px] text-slate-400">{tr(BRAND.legalName)}</div></div> : null}
       </div>
       {!collapsed ? <button type="button" onClick={onToggle} aria-label={mobile ? tr('إغلاق') : tr('طي القائمة')} aria-expanded={!collapsed}
         className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white">{mobile ? <X size={18} /> : <ChevronRight size={17} className="rtl:rotate-180" />}</button> : null}
@@ -47,7 +49,7 @@ export function Sidebar({ name, role, permissions, companyName, collapsed, onTog
           const Icon = item.icon
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
           return <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={active ? 'page' : undefined} title={collapsed ? tr(item.label) : undefined}
-            className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${collapsed ? 'justify-center' : ''} ${active ? 'bg-blue-600 font-semibold text-white shadow-md shadow-blue-950/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+            className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${collapsed ? 'justify-center' : ''} ${active ? 'bg-indigo-700 font-semibold text-white shadow-md shadow-blue-950/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
             <Icon size={19} strokeWidth={active ? 2.1 : 1.7} />{!collapsed ? tr(item.label) : null}
           </Link>
         })}</div>

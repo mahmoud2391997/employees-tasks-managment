@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand'
 import { getTranslations } from '@/lib/i18n/server'
 
 import type { ReactNode } from 'react'
@@ -15,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session) redirect('/auth/login')
 
   const perms = session.permissions
-  const companyName = process.env.COMPANY_NAME?.trim() || tr("الشركة")
+  const companyName = tr(BRAND.name)
 
   return (
     <DashboardShell

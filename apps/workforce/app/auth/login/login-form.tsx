@@ -4,7 +4,9 @@ import { LanguageSwitch, useTranslations } from '@/lib/i18n/provider'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, LockKeyhole } from 'lucide-react'
+import Image from 'next/image'
+import { BRAND } from '@/lib/brand'
+import { LockKeyhole } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardBody, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,8 +31,9 @@ export function LoginForm({ companyName, demoAvailable }: { companyName: string;
         <div className="mb-4 flex justify-end"><LanguageSwitch /></div>
         <Card>
           <CardHeader>
-            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
-              <Building2 size={22} />
+            <div className="mb-5 flex flex-col items-center gap-3 text-center">
+              <Image src={BRAND.logo} alt={tr(BRAND.name)} width={112} height={112} preload className="h-28 w-28 object-contain" />
+              <div><div className="text-xl font-bold text-indigo-950">{companyName}</div><div className="mt-1 text-xs text-slate-500">{tr(BRAND.legalName)}</div></div>
             </div>
             <CardTitle>{tr("تسجيل الدخول")}</CardTitle>
             <CardDescription>{tr('مساحة عمل {company}. سجل الدخول بالبريد وكلمة المرور.', { company: companyName })}</CardDescription>

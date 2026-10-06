@@ -1,3 +1,4 @@
+import { companyDisplayName } from '@/lib/brand'
 import { prisma } from '@/server/db'
 import { configuredSiteUrl, sendNotificationEmail } from '@/server/mail'
 
@@ -56,7 +57,7 @@ async function emailNotification(profileId: string, title: string, message: stri
   const site = configuredSiteUrl()
   await sendNotificationEmail({
     to,
-    companyName: process.env.COMPANY_NAME?.trim() || 'الشركة',
+    companyName: companyDisplayName(),
     title,
     message,
     actionUrl: site ? `${site}/notifications` : null,

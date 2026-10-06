@@ -1,3 +1,4 @@
+import { companyDisplayName } from '@/lib/brand'
 import bcrypt from 'bcryptjs'
 
 import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
@@ -23,7 +24,7 @@ function companyConfig(): CompanyConfig | null {
     throw new Error('COMPANY_ADMIN_EMAIL and COMPANY_ADMIN_PASSWORD (at least 8 characters) are required')
   }
   return {
-    name: process.env.COMPANY_NAME?.trim() || 'الشركة',
+    name: companyDisplayName(),
     email,
     password,
     firstName: process.env.COMPANY_ADMIN_FIRST_NAME?.trim() || 'مدير',

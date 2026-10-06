@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand'
 import type { ReactNode } from 'react'
 import { Cairo } from 'next/font/google'
 
@@ -6,8 +7,9 @@ import { LanguageProvider } from '@/lib/i18n/provider'
 import { getLocale } from '@/lib/i18n/server'
 
 export const metadata = {
-  title: 'Workforce',
-  description: 'Teams and tasks management (separate from ERP).',
+  icons: { icon: BRAND.logo, apple: BRAND.logo },
+  title: 'أعلاف الكوثر | Al Kawther Feeds',
+  description: 'إدارة الموظفين والمهام — أعلاف الكوثر، بحار الجوبة للتجارة.',
 }
 
 const cairo = Cairo({

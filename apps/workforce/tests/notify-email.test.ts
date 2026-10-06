@@ -45,7 +45,7 @@ describe('recordNotification', () => {
     )
     expect(sendNotificationEmail).toHaveBeenCalledWith({
       to: 'alex@example.com',
-      companyName: 'الشركة',
+      companyName: 'أعلاف الكوثر',
       title: 'تم إسناد مهمة',
       message: 'تم إسناد المهمة "Design" إليك',
       actionUrl: 'https://workforce.example.com/notifications',

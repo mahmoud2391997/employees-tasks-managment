@@ -1,4 +1,16 @@
 export const english: Record<string, string> = {
+  'أعلاف الكوثر': 'Al Kawther Feeds',
+  'بحار الجوبة للتجارة ش.م.م': 'Bahar Aljba Trading LLC',
+  'سناو، محافظة شمال الشرقية، سلطنة عمان': 'Sinaw, North Al Sharqiyah, Sultanate of Oman',
+  'بيانات الشركة': 'Company details',
+  'عنوان الشركة': 'Company address',
+  'الاسم القانوني': 'Legal name',
+  'السجل التجاري': 'Commercial registration',
+  'رقم التعريف الضريبي': 'Tax identification number',
+  'الهاتف': 'Phone',
+  'الرمز البريدي': 'Postal code',
+  'صندوق البريد': 'P.O. Box',
+
   'تعذر الاتصال بالخادم': 'Unable to connect to the server',
   'بيانات تجريبية للقراءة فقط.': 'Read-only sample data.',
   'عرض تجريبي للقراءة فقط': 'Read-only demo',

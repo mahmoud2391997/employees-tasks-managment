@@ -1,3 +1,4 @@
+import { companyDisplayName } from '@/lib/brand'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import crypto from 'crypto'
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
   }
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const companyName = process.env.COMPANY_NAME?.trim() || 'الشركة'
+  const companyName = companyDisplayName()
 
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {

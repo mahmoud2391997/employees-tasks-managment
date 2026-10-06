@@ -1,12 +1,13 @@
+import Image from 'next/image'
+import { BRAND } from '@/lib/brand'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { redirect } from 'next/navigation'
 
 import { getServerSession } from '@/server/auth/server-session'
 import { FALLBACK_ADMIN_ID } from '@/server/company'
-import { prisma } from '@/server/db'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function SettingsPage() {
   const tr = await getTranslations()
@@ -27,12 +28,6 @@ export default async function SettingsPage() {
   }
 
   const sampleData = servesVirtualDemoData(session.userId)
-  const teamId = session.profile?.teamId ?? null
-  const team = sampleData
-    ? getVirtualCompany().team
-    : teamId
-      ? await prisma.workforceTeam.findUnique({ where: { id: teamId }, select: { id: true, name: true, createdAt: true } })
-      : null
 
   return (
     <main className="space-y-4">
@@ -43,13 +38,22 @@ export default async function SettingsPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="text-sm font-semibold">{tr("الشركة")}</div>
-        <div className="mt-2 grid gap-2 text-sm">
-          <div>
-            <span className="text-slate-500">{tr("الاسم:")}</span> {team?.name ?? '—'}
-          </div>
-          <div className="ltr font-mono text-xs text-slate-500">id: {team?.id ?? '—'}</div>
+        <div className="mb-6 flex items-center gap-4">
+          <Image src={BRAND.logo} alt={tr(BRAND.name)} width={80} height={80} className="h-20 w-20 object-contain" />
+          <div><h2 className="text-xl font-bold text-indigo-950">{tr(BRAND.name)}</h2><p className="mt-1 text-sm text-slate-500">{tr("بيانات الشركة")}</p></div>
         </div>
+        <dl className="grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
+          {[
+            [tr("الاسم القانوني"), tr(BRAND.legalName)],
+            [tr("السجل التجاري"), BRAND.registrationNumber],
+            [tr("رقم التعريف الضريبي"), BRAND.taxIdentificationNumber],
+            [tr("عنوان الشركة"), tr(BRAND.address)],
+            [tr("الرمز البريدي"), BRAND.postalCode],
+            [tr("صندوق البريد"), BRAND.poBox],
+          ].map(([label, value]) => <div key={label}><dt className="text-slate-500">{label}</dt><dd className="mt-1 font-medium text-slate-900">{value}</dd></div>)}
+          <div><dt className="text-slate-500">{tr("البريد الإلكتروني")}</dt><dd className="mt-1"><a className="text-indigo-700 hover:underline" href={`mailto:${BRAND.email}`}><bdi dir="ltr">{BRAND.email}</bdi></a></dd></div>
+          <div><dt className="text-slate-500">{tr("الهاتف")}</dt><dd className="mt-1"><a className="text-indigo-700 hover:underline" href={`tel:${BRAND.phone.replace(/\s/g, '')}`}><bdi dir="ltr">{BRAND.phone}</bdi></a></dd></div>
+        </dl>
       </div>
     </main>
   )
