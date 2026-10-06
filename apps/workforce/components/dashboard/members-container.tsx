@@ -146,7 +146,7 @@ export function MembersContainer({
               <TH className="min-w-72">{tr("العضو")}</TH>
               <TH className="min-w-56">{tr("الدور")}</TH>
               <TH className="min-w-32">{tr("الحالة")}</TH>
-              <TH className="min-w-40">{tr("إجراءات")}</TH>
+              {canRemove ? <TH className="min-w-40">{tr("إجراءات")}</TH> : null}
             </tr>
           </THead>
           <tbody>
@@ -159,11 +159,11 @@ export function MembersContainer({
                 <tr key={m.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                   <TD>
                     <div className="font-semibold">{display}</div>
-                    {m.user.email ? <div className="ltr text-xs text-[#656d76]">{m.user.email}</div> : null}
+                    {m.user.email ? <div className="mt-1 text-xs text-slate-500"><bdi dir="ltr">{m.user.email}</bdi></div> : null}
                   </TD>
                   <TD>
                     {canAssign ? (
-                      <div className="flex justify-center">
+                      <div className="flex justify-start">
                       <Select
                         className="h-9 w-44!"
                         value={m.role}
@@ -185,12 +185,11 @@ export function MembersContainer({
                       </Select>
                       </div>
                     ) : (
-                      <span className="ltr font-mono text-xs">{tr(m.role)}</span>
+                      <span className="text-sm font-medium">{tr(m.role)}</span>
                     )}
                   </TD>
                   <TD>{m.isActive ? <Badge variant="success">{tr("نشط")}</Badge> : <Badge variant="neutral">{tr("غير نشط")}</Badge>}</TD>
-                  <TD>
-                    {canRemove ? (
+                  {canRemove ? <TD>
                       <Button
                         size="sm"
                         variant="danger"
@@ -201,14 +200,13 @@ export function MembersContainer({
                         }}
                       >
                         {tr("إزالة")}</Button>
-                    ) : null}
-                  </TD>
+                  </TD> : null}
                 </tr>
               )
             })}
             {members.length === 0 ? (
               <tr>
-                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={4}>
+                <td className="px-3 py-10 text-center text-sm text-slate-500" colSpan={canRemove ? 4 : 3}>
                   {tr("لا يوجد أعضاء")}</td>
               </tr>
             ) : null}

@@ -16,7 +16,7 @@ export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionEl
 }
 
 export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th className={clsx('px-5 py-4 text-start text-[11px] font-semibold uppercase tracking-wider', className)} {...props} />
+  return <th className={clsx('px-5 py-4 text-start text-[11px] font-semibold uppercase tracking-wider rtl:tracking-normal', className)} {...props} />
 }
 
 export function TD({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
