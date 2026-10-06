@@ -24,7 +24,7 @@ export function LoginForm({ companyName, demoAvailable }: { companyName: string;
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-50 via-slate-50 to-white" />
-      <div className="pointer-events-none absolute -top-24 right-[-120px] h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-[-120px] h-80 w-80 rounded-full bg-brand-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 left-[-120px] h-80 w-80 rounded-full bg-emerald-200/20 blur-3xl" />
 
       <div className="relative w-full max-w-md">
@@ -33,7 +33,7 @@ export function LoginForm({ companyName, demoAvailable }: { companyName: string;
           <CardHeader>
             <div className="mb-5 flex flex-col items-center gap-3 text-center">
               <Image src={BRAND.logo} alt={tr(BRAND.name)} width={112} height={112} preload className="h-28 w-28 object-contain" />
-              <div><div className="text-xl font-bold text-indigo-950">{companyName}</div><div className="mt-1 text-xs text-slate-500">{tr(BRAND.legalName)}</div></div>
+              <div><div className="text-xl font-bold text-brand-950">{companyName}</div><div className="mt-1 text-xs text-slate-500">{tr(BRAND.legalName)}</div></div>
             </div>
             <CardTitle>{tr("تسجيل الدخول")}</CardTitle>
             <CardDescription>{tr('مساحة عمل {company}. سجل الدخول بالبريد وكلمة المرور.', { company: companyName })}</CardDescription>

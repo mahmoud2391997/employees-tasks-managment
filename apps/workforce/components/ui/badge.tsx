@@ -16,7 +16,7 @@ export function Badge({
         : variant === 'danger'
           ? 'border-rose-200 bg-rose-50 text-rose-700'
           : variant === 'info'
-            ? 'border-blue-200 bg-blue-50 text-blue-700'
+            ? 'border-brand-200 bg-brand-50 text-brand-700'
             : 'border-slate-200 bg-slate-50 text-slate-700'
   return <span className={clsx('inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium', styles, className)} {...props} />
 }

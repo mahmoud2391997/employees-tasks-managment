@@ -33,7 +33,7 @@ type Task = {
 
 const statusColumns: Array<{ id: Task['status']; label: string; surface: string }> = [
   { id: 'TODO', label: 'قيد الانتظار', surface: 'bg-slate-50' },
-  { id: 'IN_PROGRESS', label: 'قيد العمل', surface: 'bg-blue-50/60' },
+  { id: 'IN_PROGRESS', label: 'قيد العمل', surface: 'bg-brand-50/60' },
   { id: 'REVIEW', label: 'للمراجعة', surface: 'bg-amber-50/60' },
   { id: 'COMPLETED', label: 'مكتملة', surface: 'bg-emerald-50/60' },
 ]

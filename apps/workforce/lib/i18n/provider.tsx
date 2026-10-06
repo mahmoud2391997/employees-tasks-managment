@@ -14,7 +14,7 @@ export function LanguageSwitch() {
   const locale = useLocale()
   return <div className="flex items-center gap-1" aria-label="Language / اللغة">
     {(['ar', 'en'] as const).map((language) => <button key={language} type="button" lang={language}
-      aria-pressed={locale === language} className={`rounded-lg border px-3 py-2 text-sm ${locale === language ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
+      aria-pressed={locale === language} className={`rounded-lg border px-3 py-2 text-sm ${locale === language ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-600'}`}
       onClick={() => { document.cookie = `wf_locale=${language}; Path=/; Max-Age=31536000; SameSite=Lax`; window.location.reload() }}>
       {language === 'ar' ? 'العربية' : 'English'}
     </button>)}

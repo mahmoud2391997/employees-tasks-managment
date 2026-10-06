@@ -12,7 +12,7 @@ export function TaskStatusChart({
 
   const colors: Record<string, string> = {
     TODO: '#d0d7de',
-    IN_PROGRESS: '#0969da',
+    IN_PROGRESS: '#1e127c',
     REVIEW: '#9a6700',
     COMPLETED: '#1f883d',
   }

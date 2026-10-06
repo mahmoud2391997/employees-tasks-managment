@@ -47,18 +47,18 @@ export function DashboardShell({ children, name, role, permissions, companyName,
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-5">
-          <Link href="/notifications" aria-label={tr('الإشعارات')} className="rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"><Bell size={20} /></Link>
+          <Link href="/notifications" aria-label={tr('الإشعارات')} className="rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-brand-600"><Bell size={20} /></Link>
           <div className="h-7 w-px bg-slate-200" />
-          <Link href="/profile" className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+          <Link href="/profile" className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
             <div className="hidden text-end sm:block"><p className="text-sm font-semibold text-slate-800">{name || tr('عضو')}</p><p className="mt-0.5 text-xs text-slate-400">{tr(role || 'عضو')}</p></div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">{name?.trim().charAt(0) || 'T'}</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">{name?.trim().charAt(0) || 'T'}</span>
           </Link>
         </div>
       </header>
       <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
-        {demo ? <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-blue-200/70 bg-blue-50/70 px-4 py-2.5 text-xs text-blue-800">
+        {demo ? <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-brand-200/70 bg-brand-50/70 px-4 py-2.5 text-xs text-brand-800">
           <span className="flex items-center gap-2 font-medium"><FlaskConical size={15} />{tr('عرض تجريبي للقراءة فقط')}</span>
-          <form method="post" action="/api/auth/logout"><button className="rounded-md px-2 py-1 font-semibold hover:bg-blue-100">{tr('إنهاء العرض التجريبي')}</button></form>
+          <form method="post" action="/api/auth/logout"><button className="rounded-md px-2 py-1 font-semibold hover:bg-brand-100">{tr('إنهاء العرض التجريبي')}</button></form>
         </div> : null}
         {children}
       </main>

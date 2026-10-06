@@ -133,7 +133,7 @@ export function MembersContainer({
       ) : null}
 
       {inviteUrl ? (
-        <Card className="border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+        <Card className="border-brand-200 bg-brand-50 p-4 text-sm text-brand-700">
           <div className="font-semibold">{tr("رابط الدعوة")}</div>
           {emailNotice ? <div className="mt-1">{emailNotice}</div> : null}
           <div className="ltr mt-1 break-all font-mono text-xs">{inviteUrl}</div>

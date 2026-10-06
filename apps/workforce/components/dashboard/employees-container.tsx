@@ -144,7 +144,7 @@ export function EmployeesContainer({
 
       <Card className="p-4 sm:p-5">
         <div className="mb-5 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Users size={20} /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><Users size={20} /></span>
           <div><h2 className="text-sm font-semibold text-slate-800">{tr('دليل الفريق')}</h2><p className="mt-1 text-xs text-slate-400">{total} {tr('الموظفون')}</p></div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -191,7 +191,7 @@ export function EmployeesContainer({
               <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50/60">
                 <TD>
                   <div className="flex items-center gap-3">
-                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-600">{(e.profile.firstName || e.profile.email || '?').charAt(0)}{e.profile.lastName?.charAt(0)}</span>
+                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand-600">{(e.profile.firstName || e.profile.email || '?').charAt(0)}{e.profile.lastName?.charAt(0)}</span>
                     <div className="min-w-0">
                       <div className="font-semibold text-slate-800">{(e.profile.firstName || e.profile.email || tr("مستخدم")) + (e.profile.lastName ? ` ${e.profile.lastName}` : '')}</div>
                       {e.profile.email ? <div dir="ltr" className="mt-1 text-start text-xs text-slate-400">{e.profile.email}</div> : null}
