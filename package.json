@@ -9,10 +9,18 @@
     "db:push": "pnpm -C packages/workforce-database db:push",
     "db:migrate": "pnpm -C packages/workforce-database migrate:dev",
     "db:deploy": "pnpm -C packages/workforce-database migrate:deploy",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose stop postgres",
+    "typecheck": "pnpm -C packages/workforce-database generate && pnpm -C packages/workforce-database exec tsc --noEmit && pnpm -C apps/workforce exec tsc --noEmit",
+    "check": "pnpm typecheck && pnpm test",
+    "dev:setup": "node scripts/setup-dev.mjs"
   },
   "devDependencies": {
     "vite-tsconfig-paths": "^5.1.0",
     "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22 <23"
   }
 }

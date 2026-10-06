@@ -8,6 +8,18 @@ function makeReq(body: any, ip = '203.0.113.10') {
 }
 
 describe('POST /api/auth/login rate limiting', () => {
+  it('does not authenticate configured admin credentials during a database outage', async () => {
+    vi.resetModules()
+    vi.doMock('@/server/company', () => ({ ensureCompany: vi.fn().mockRejectedValue(new Error('Prisma unavailable')) }))
+    const issueAccessToken = vi.fn()
+    vi.doMock('@/server/auth/jwt', () => ({ issueAccessToken, setAuthCookie: vi.fn() }))
+    const { POST } = await import('@/app/api/auth/login/route')
+    const response = await POST(makeReq({ email: 'admin@company.local', password: 'change-me-please' }))
+    expect(response.status).toBe(500)
+    expect(issueAccessToken).not.toHaveBeenCalled()
+    expect(response.headers.get('set-cookie')).toBeNull()
+  })
+
   it('blocks after 5 failed attempts per email+ip', async () => {
     vi.resetModules()
 

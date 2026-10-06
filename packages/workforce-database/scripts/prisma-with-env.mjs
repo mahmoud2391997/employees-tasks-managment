@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 function parseDotenv(contents) {
   /** @type {Record<string, string>} */
@@ -33,7 +34,7 @@ function loadEnvFile(filePath) {
   }
 }
 
-const packageDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
+const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const repoRoot = path.resolve(packageDir, '..', '..')
 
 const rootEnv = loadEnvFile(path.join(repoRoot, '.env'))
@@ -50,7 +51,7 @@ const args = process.argv.slice(2)
 const result = spawnSync(prismaBin, args, {
   cwd: packageDir,
   stdio: 'inherit',
-  env: { ...process.env, ...extraEnv },
+  env: { ...extraEnv, ...process.env },
 })
 
 process.exit(result.status ?? 1)

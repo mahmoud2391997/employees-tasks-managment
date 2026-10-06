@@ -19,3 +19,12 @@ Steps:
    - Expected: the member becomes **نشط** again.
    - Expected: the member’s **role** is the same as before removal (not reset to `EMPLOYEE`).
 
+
+## Development readiness checks
+
+- On a clean local database, sign in with generated admin credentials; confirm no demo employees/tasks appear in normal mode.
+- Create an employee, invite that same email, and accept the invite. This is a known profile-reuse issue to resolve before release (see DEVELOPMENT_REVIEW.md).
+- Verify task edits/deletes rejected by the API display an error and preserve the visible task.
+- Verify an expired auth cookie redirects to login.
+- Stop PostgreSQL and confirm admin login does not issue a fallback auth cookie.
+- Test keyboard focus, Escape, and focus return in modals; focus trapping remains on the backlog.

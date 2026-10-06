@@ -55,6 +55,7 @@ export function TasksContainer({
   const [total, setTotal] = useState<number>(initialTotal)
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [filterDept, setFilterDept] = useState('')
   const [filterAssignee, setFilterAssignee] = useState<'all' | 'me' | 'by_me'>('all')
 
@@ -106,20 +107,41 @@ export function TasksContainer({
     }
   }
 
+  async function mutateTask(id: string, method: 'PATCH' | 'DELETE', patch?: Partial<Task>) {
+    setError(null)
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: patch ? JSON.stringify(patch) : undefined,
+      })
+      const json = await res.json().catch(() => null) as { success?: boolean; message?: string } | null
+      if (!res.ok || !json?.success) {
+        setError(json?.message ?? 'تعذر حفظ التغيير، حاول مرة أخرى')
+        return
+      }
+      if (method === 'DELETE') {
+        setTasks((prev) => prev.filter((task) => task.id !== id))
+        setTotal((prev) => Math.max(0, prev - 1))
+      } else {
+        setTasks((prev) => prev.map((task) => task.id === id ? { ...task, ...patch } : task))
+      }
+    } catch {
+      setError('تعذر الاتصال بالخادم، حاول مرة أخرى')
+    }
+  }
+
   async function updateTask(id: string, patch: Partial<Task>) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? ({ ...t, ...patch } as Task) : t)))
-    await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
-    await refresh()
+    await mutateTask(id, 'PATCH', patch)
   }
 
   async function deleteTask(id: string) {
-    setTasks((prev) => prev.filter((t) => t.id !== id))
-    await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-    await refresh()
+    await mutateTask(id, 'DELETE')
   }
 
   return (
     <div className="space-y-4">
+      {error ? <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       {showForm ? (
         <TaskForm
           task={editing}

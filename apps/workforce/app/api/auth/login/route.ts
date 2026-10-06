@@ -49,21 +49,6 @@ export async function POST(req: NextRequest) {
     const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
 
     const email = parsed.data.email.toLowerCase().trim()
-    const configuredEmail = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
-    const configuredPassword = process.env.COMPANY_ADMIN_PASSWORD ?? 'change-me-please'
-
-    try {
-      await ensureCompany()
-    } catch (databaseError) {
-      if (email === configuredEmail && parsed.data.password === configuredPassword) {
-        const token = await issueAccessToken({ sub: 'database-unavailable-admin', email: configuredEmail })
-        const res = NextResponse.json({ success: true, databaseUnavailable: true })
-        setAuthCookie(res, token)
-        console.error('auth/login: company provisioning unavailable; issued configured admin fallback session', databaseError)
-        return res
-      }
-      throw databaseError
-    }
     const ip = getClientIp(req)
     const key = `${email}|${ip}`
     const now = Date.now()
@@ -83,21 +68,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let user
-    try {
-      user = await prisma.workforceUser.findUnique({ where: { email } })
-    } catch (databaseError) {
-      const configuredEmail = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
-      const configuredPassword = process.env.COMPANY_ADMIN_PASSWORD ?? 'change-me-please'
-      if (email === configuredEmail && parsed.data.password === configuredPassword) {
-        const token = await issueAccessToken({ sub: 'database-unavailable-admin', email: configuredEmail })
-        const res = NextResponse.json({ success: true, databaseUnavailable: true })
-        setAuthCookie(res, token)
-        console.error('auth/login: database unavailable; issued configured admin fallback session', databaseError)
-        return res
-      }
-      throw databaseError
-    }
+    await ensureCompany()
+    const user = await prisma.workforceUser.findUnique({ where: { email } })
     if (!user) {
       const attempt =
         existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS

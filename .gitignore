@@ -39,3 +39,6 @@ apps/workforce/CLAUDE.md
 data/
 apps/web/data/
 
+
+# TypeScript incremental cache
+*.tsbuildinfo

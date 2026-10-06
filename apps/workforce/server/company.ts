@@ -4,7 +4,6 @@ import { resolveWorkforceDatabaseUrl } from '@workforce/database/env'
 
 import { prisma } from '@/server/db'
 import { DEFAULT_ROLES } from '@/lib/permissions'
-import { getOrCreateDemoSession } from '@/server/auth/demo'
 
 const DEMO_TEAM_NAME = 'Demo Team'
 export const FALLBACK_ADMIN_ID = 'database-unavailable-admin'
@@ -20,9 +19,11 @@ type CompanyConfig = {
 }
 
 function companyConfig(): CompanyConfig | null {
-  const email = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || 'admin@company.local'
-  const password = process.env.COMPANY_ADMIN_PASSWORD ?? 'change-me-please'
-  if (!email || password.length < 8) return null
+  const email = process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase() || ''
+  const password = process.env.COMPANY_ADMIN_PASSWORD ?? ''
+  if (!email || password.length < 8) {
+    throw new Error('COMPANY_ADMIN_EMAIL and COMPANY_ADMIN_PASSWORD (at least 8 characters) are required')
+  }
   return {
     name: process.env.COMPANY_NAME?.trim() || 'الشركة',
     email,
@@ -121,7 +122,6 @@ async function provisionCompany() {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await provisionCompanyOnce(config)
-      await getOrCreateDemoSession()
       return
     } catch (error) {
       lastError = error

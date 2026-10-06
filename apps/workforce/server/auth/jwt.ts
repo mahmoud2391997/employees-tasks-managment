@@ -3,10 +3,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const COOKIE_NAME = 'wf_auth'
 
-const FALLBACK_JWT_SECRET = 'workforce-emergency-fallback-secret-change-in-production'
-
 function secretKey() {
-  const secret = process.env.WORKFORCE_JWT_SECRET?.trim() || FALLBACK_JWT_SECRET
+  const secret = process.env.WORKFORCE_JWT_SECRET?.trim()
+  if (!secret || secret.length < 32) {
+    throw new Error('WORKFORCE_JWT_SECRET must contain at least 32 characters')
+  }
   return new TextEncoder().encode(secret)
 }
 
@@ -18,7 +19,7 @@ export type SessionPayload = {
 export async function issueAccessToken(payload: SessionPayload) {
   const key = secretKey()
   return new SignJWT({ email: payload.email })
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(payload.sub)
     .setIssuedAt()
     .setExpirationTime('7d')
