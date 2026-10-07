@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -5,7 +6,7 @@ import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { DepartmentsContainer } from '@/components/dashboard/departments-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function DepartmentsPage() {
   const tr = await getTranslations()
@@ -35,7 +36,7 @@ export default async function DepartmentsPage() {
     )
   }
 
-  const virtual = sampleData ? getVirtualCompany() : null
+  const virtual = sampleData ? await getDemoCompany() : null
   const [departments, profiles] = virtual
     ? [virtual.departments, virtual.profiles]
     : await Promise.all([

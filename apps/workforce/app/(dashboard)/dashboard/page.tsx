@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
   }
 
   const sampleData = servesVirtualDemoData(session.userId)
-  const virtualStats = sampleData ? virtualDashboardStats() : null
+  const virtualStats = sampleData ? virtualDashboardStats(await getDemoCompany()) : null
 
   const [employees, departments, tasks, completed] = virtualStats
     ? [virtualStats.employees, virtualStats.departments, virtualStats.tasks, virtualStats.completed]

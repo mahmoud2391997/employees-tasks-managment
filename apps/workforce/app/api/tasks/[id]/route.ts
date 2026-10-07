@@ -1,9 +1,9 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/server/db'
 import { FALLBACK_ADMIN_ID } from '@/lib/sample-identity'
-import { VIRTUAL_READONLY_MESSAGE } from '@/server/virtual-data'
 import { recordNotification, taskStatusLabel } from '@/server/notify'
 
 export const runtime = 'nodejs'
@@ -31,7 +31,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!user?.profile?.teamId) {
     return NextResponse.json({ success: false, message: user ? 'لا يوجد فريق مرتبط بالحساب' : 'غير مصرح' }, { status: user ? 400 : 401 })
   }
-  if (user.id === FALLBACK_ADMIN_ID) return NextResponse.json({ success: false, message: VIRTUAL_READONLY_MESSAGE }, { status: 403 })
+  if (user.id === FALLBACK_ADMIN_ID) {
+    if (!user.permissions.includes('tasks.edit') || (parsed.data.assigneeId !== undefined && !user.permissions.includes('tasks.assign'))) return NextResponse.json({ success: false }, { status: 403 })
+    const demo = await demoMutation(req, user.id, 'tasks', parsed.data, id)
+    if (demo) return demo
+  }
   const teamId = user.profile.teamId
   const actorId = user.profile.id
 
@@ -133,6 +137,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
   const actorId = auth.user.profile!.id
+
+  const demo = await demoMutation(req, auth.user.id, 'tasks', {}, id)
+  if (demo) return demo
 
   const existing = await prisma.workforceTask.findFirst({
     where: { id, teamId },

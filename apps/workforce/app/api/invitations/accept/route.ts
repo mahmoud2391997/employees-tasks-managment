@@ -1,3 +1,5 @@
+import { demoMutation } from '@/server/demo-sandbox'
+import { getSessionUser } from '@/server/auth/session'
 import { NextResponse, type NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
@@ -20,6 +22,14 @@ export async function POST(req: NextRequest) {
   const json = await req.json().catch(() => null)
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
+
+  if (req.cookies?.get('wf_demo')?.value) {
+    const user = await getSessionUser(req)
+    if (user) {
+      const demo = await demoMutation(req, user.id, 'accept', parsed.data)
+      if (demo) return demo
+    }
+  }
 
   const token = parsed.data.token.trim()
   const invitation = await prisma.workforceInvitation.findUnique({

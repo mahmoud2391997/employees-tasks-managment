@@ -12,8 +12,8 @@ export const english: Record<string, string> = {
   'صندوق البريد': 'P.O. Box',
 
   'تعذر الاتصال بالخادم': 'Unable to connect to the server',
-  'بيانات تجريبية للقراءة فقط.': 'Read-only sample data.',
-  'عرض تجريبي للقراءة فقط': 'Read-only demo',
+  'بيانات تجريبية تفاعلية. التغييرات مؤقتة ولا تؤثر على بيانات الشركة.': 'Interactive sample data. Changes are temporary and do not affect company records.',
+  'عرض تجريبي تفاعلي': 'Interactive demo',
   'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط': 'This demo contains read-only sample data.',
 
   'القائمة': 'Navigation', 'فتح القائمة': 'Open navigation', 'دليل الفريق': 'Team directory', 'جميع الموظفين': 'All employees', 'نتائج البحث': 'Search results', 'اعثر على أعضاء فريقك وأدر بياناتهم في مكان واحد.': 'Find your people and manage their details in one place.', 'لا توجد نتائج مطابقة. جرب البحث باسم آخر.': 'No matching results. Try another name.',

@@ -1,3 +1,4 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { salarySchema } from '@/lib/salary-schema'
@@ -26,6 +27,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const auth = await import('@/server/auth/require-permission').then((m) => m.requirePermission(req, 'employees.edit'))
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
+
+  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data, id)
+  if (demo) return demo
 
   const joinDate = parsed.data.joinDate ? new Date(parsed.data.joinDate) : parsed.data.joinDate === null ? null : undefined
   if (joinDate instanceof Date && Number.isNaN(joinDate.valueOf())) {
@@ -80,6 +84,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const auth = await requirePermission(req, 'employees.delete')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
+
+  const demo = await demoMutation(req, auth.user.id, 'employees', {}, id)
+  if (demo) return demo
 
   const existing = await prisma.workforceEmployee.findFirst({ where: { id, teamId }, select: { id: true, profileId: true } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })

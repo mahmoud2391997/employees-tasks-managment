@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -5,7 +6,7 @@ import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { RolesContainer } from '@/components/dashboard/roles-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function RolesPage() {
   const tr = await getTranslations()
@@ -36,7 +37,7 @@ export default async function RolesPage() {
   }
 
   const roles = sampleData
-    ? getVirtualCompany().roles
+    ? (await getDemoCompany()).roles
     : await prisma.workforceCustomRole.findMany({
         where: { teamId: teamId! },
         orderBy: [{ createdAt: 'asc' }],
@@ -49,7 +50,7 @@ export default async function RolesPage() {
         <p className="mt-2 text-sm text-slate-500">{tr("إدارة الأدوار والصلاحيات.")}</p>
         {sampleData ? <p className="mt-1 text-sm text-amber-700">{tr(VIRTUAL_SAMPLE_NOTE)}</p> : null}
       </div>
-      <RolesContainer initialRoles={roles as any} readOnly={Boolean(session.demo)} />
+      <RolesContainer initialRoles={roles as any}  />
     </main>
   )
 }

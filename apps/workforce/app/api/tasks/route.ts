@@ -1,3 +1,5 @@
+import { demoMutation } from '@/server/demo-sandbox'
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'tasks.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualTasksApi(auth.user.id, take, skip)
+  const virtual = virtualTasksApi(auth.user.id, take, skip, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
@@ -72,6 +74,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
+
+  const demo = await demoMutation(req, auth.user.id, 'tasks', parsed.data)
+  if (demo) return demo
 
   const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null
   if (dueDate && Number.isNaN(dueDate.valueOf())) {

@@ -54,7 +54,7 @@ Use `apps/workforce/.env.example` as a reference. `pnpm dev:setup` creates a loc
 - Optional `COMPANY_ADMIN_FIRST_NAME` and `COMPANY_ADMIN_LAST_NAME`.
 - `SITE_URL`: public HTTPS origin for production invitation/notification links.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`: production mail configuration. Local development may omit SMTP; invitation links remain available in the app.
-- `WORKFORCE_DEMO_MODE=true`: enables the Try demo button on the login page. Clicking it opens a read-only sample preview; Exit demo returns to login. Demo entry needs no database or JWT secret. Available in development and production by default when true or unset; only false hides the button and disables demo sessions. Sample records are generated in memory and never query or modify company data.
+- `WORKFORCE_DEMO_MODE=true`: enables the Try demo button on the login page. Clicking it opens an interactive sample sandbox; Exit demo returns to login. Demo entry needs no database or JWT secret. Available in development and production by default when true or unset; only false hides the button and disables demo sessions. Sample records are generated in memory and never query or modify company data.
 
 Missing database configuration no longer grants a setup/admin session. Database outages do not authenticate via env credentials. Legacy virtual data helpers remain for existing tests/screens, but normal login no longer issues those sessions.
 
@@ -65,3 +65,7 @@ See [DEVELOPMENT_REVIEW.md](DEVELOPMENT_REVIEW.md) for review findings and the p
 Use the English / العربية switch on login or in the sidebar. The language preference is saved in a cookie; English uses LTR and Arabic uses RTL. Navigation, dashboard headings, forms and standard statuses are translated. User-entered names, task descriptions and existing notification content retain their original language.
 
 For a deployed demo button, set `WORKFORCE_DEMO_MODE=true` in the deployment environment and redeploy. Set it to `false` to hide the button and disable existing demo sessions.
+
+### Interactive demo
+
+Enter the demo from the login screen to use the same production forms and actions with sample records. Each entry starts an isolated sandbox. Demo changes are held in server memory for up to 24 hours and reset on server restart or a new demo entry; multi-instance deployments do not share sandbox state. Invitations and acceptance are simulated without sending email or creating real accounts. Production records are never changed by demo actions.

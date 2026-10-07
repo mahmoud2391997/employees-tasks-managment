@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -6,7 +7,7 @@ import { prisma } from '@/server/db'
 import { TasksContainer } from '@/components/dashboard/tasks-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function TasksPage() {
   const tr = await getTranslations()
@@ -39,7 +40,7 @@ export default async function TasksPage() {
   const take = 50
   const skip = 0
 
-  const virtual = sampleData ? getVirtualCompany() : null
+  const virtual = sampleData ? await getDemoCompany() : null
   const [totalTasks, tasks, departments, profiles] = virtual
     ? [virtual.tasks.length, virtual.tasks.slice(skip, skip + take), virtual.departments.map((d) => ({ id: d.id, name: d.name })), virtual.profiles]
     : await Promise.all([

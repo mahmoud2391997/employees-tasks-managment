@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   const res = accepts.includes('text/html')
     ? NextResponse.redirect(new URL('/auth/login', req.url), { status: 303 })
     : NextResponse.json({ success: true })
+  res.cookies.delete('wf_demo')
   clearAuthCookie(res)
   return res
 }

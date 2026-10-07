@@ -9,6 +9,7 @@ export async function POST() {
   }
   try {
     const response = NextResponse.json({ success: true })
+    response.cookies.set('wf_demo', crypto.randomUUID(), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 86400 })
     setAuthCookie(response, DEMO_PREVIEW_TOKEN)
     return response
   } catch (error) {

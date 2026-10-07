@@ -1,3 +1,5 @@
+import { demoMutation } from '@/server/demo-sandbox'
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { salarySchema } from '@/lib/salary-schema'
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'employees.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualEmployeesApi(auth.user.id, take, skip)
+  const virtual = virtualEmployeesApi(auth.user.id, take, skip, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
@@ -73,6 +75,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
+
+  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data)
+  if (demo) return demo
 
   const joinDate = parsed.data.joinDate ? new Date(parsed.data.joinDate) : undefined
   if (joinDate && Number.isNaN(joinDate.valueOf())) {

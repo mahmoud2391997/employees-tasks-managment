@@ -1,3 +1,4 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -20,6 +21,9 @@ export async function POST(req: NextRequest) {
   const json = await req.json().catch(() => null)
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
+
+  const demo = await demoMutation(req, auth.user.id, 'reactivate', parsed.data)
+  if (demo) return demo
 
   const email = parsed.data.email.toLowerCase().trim()
 

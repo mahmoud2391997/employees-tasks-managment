@@ -5,7 +5,7 @@ import { FALLBACK_ADMIN_ID, FALLBACK_ADMIN_PROFILE_ID, FALLBACK_COMPANY_ID } fro
 
 export const VIRTUAL_DB_UNAVAILABLE_MESSAGE = 'قاعدة البيانات غير متاحة حالياً'
 export const VIRTUAL_READONLY_MESSAGE = 'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط'
-export const VIRTUAL_SAMPLE_NOTE = 'بيانات تجريبية للقراءة فقط.'
+export const VIRTUAL_SAMPLE_NOTE = 'بيانات تجريبية تفاعلية. التغييرات مؤقتة ولا تؤثر على بيانات الشركة.'
 
 const BASE_MS = Date.parse('2026-09-20T12:00:00.000Z')
 
@@ -60,7 +60,7 @@ type Department = {
   updatedAt: string
 }
 
-export function getVirtualCompany() {
+export function createVirtualCompany() {
   const email = adminEmail()
   const admin: Profile = {
     id: FALLBACK_ADMIN_PROFILE_ID,
@@ -312,8 +312,8 @@ export function getVirtualCompany() {
   return { admin, profiles, departments, employees, tasks, members, invitations, roles, notifications, team }
 }
 
-export function virtualDashboardStats() {
-  const { employees, departments, tasks } = getVirtualCompany()
+export function virtualDashboardStats(company = getVirtualCompany()) {
+  const { employees, departments, tasks } = company
   const statuses = ['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED'] as const
   return {
     employees: employees.length,
@@ -336,34 +336,33 @@ function slicePage<T>(rows: T[], take: number, skip: number) {
   return { data, total: rows.length, hasMore: skip + data.length < rows.length }
 }
 
-export function virtualEmployeesApi(userId: string, take: number, skip: number) {
+export function virtualEmployeesApi(userId: string, take: number, skip: number, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  const page = slicePage(getVirtualCompany().employees, take, skip)
+  const page = slicePage(company.employees, take, skip)
   return { status: 200, body: { success: true as const, ...page } }
 }
 
-export function virtualTasksApi(userId: string, take: number, skip: number) {
+export function virtualTasksApi(userId: string, take: number, skip: number, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  const page = slicePage(getVirtualCompany().tasks, take, skip)
+  const page = slicePage(company.tasks, take, skip)
   return { status: 200, body: { success: true as const, ...page } }
 }
 
-export function virtualDepartmentsApi(userId: string) {
+export function virtualDepartmentsApi(userId: string, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  return { status: 200, body: { success: true as const, data: getVirtualCompany().departments } }
+  return { status: 200, body: { success: true as const, data: company.departments } }
 }
 
-export function virtualMembersApi(userId: string, take: number, skip: number, canInvite: boolean) {
+export function virtualMembersApi(userId: string, take: number, skip: number, canInvite: boolean, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  const company = getVirtualCompany()
   const page = slicePage(company.members, take, skip)
   return {
     status: 200,
@@ -371,7 +370,7 @@ export function virtualMembersApi(userId: string, take: number, skip: number, ca
       success: true as const,
       data: {
         members: page.data,
-        invitations: canInvite ? company.invitations : [],
+        invitations: canInvite ? company.invitations.filter(row => !row.acceptedAt) : [],
         roles: company.roles.map((role) => ({ name: role.name, label: role.label })),
       },
       total: page.total,
@@ -380,27 +379,45 @@ export function virtualMembersApi(userId: string, take: number, skip: number, ca
   }
 }
 
-export function virtualNotificationsApi(userId: string, profileId: string, take: number, skip: number) {
+export function virtualNotificationsApi(userId: string, profileId: string, take: number, skip: number, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  const rows = getVirtualCompany().notifications.filter((row) => row.userId === profileId)
+  const rows = company.notifications.filter((row) => row.userId === profileId)
   const page = slicePage(rows, take, skip)
   return { status: 200, body: { success: true as const, ...page } }
 }
 
-export function virtualRolesApi(userId: string) {
+export function virtualRolesApi(userId: string, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  return { status: 200, body: { success: true as const, data: getVirtualCompany().roles } }
+  return { status: 200, body: { success: true as const, data: company.roles } }
 }
 
-export function virtualNotificationMarkRead(userId: string, profileId: string, id: string) {
+export function virtualNotificationMarkRead(userId: string, profileId: string, id: string, company = getVirtualCompany()) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
-  const row = getVirtualCompany().notifications.find((item) => item.id === id && item.userId === profileId)
+  const row = company.notifications.find((item) => item.id === id && item.userId === profileId)
   if (!row) return { status: 404, body: { success: false as const, message: 'غير موجود' } }
-  return { status: 403, body: { success: false as const, message: VIRTUAL_READONLY_MESSAGE } }
+  row.read = true
+  return { status: 200, body: { success: true as const, data: row } }
+}
+
+// Process-local, bounded sandboxes. Each demo entry receives an independent key.
+type DemoSandbox = { company: ReturnType<typeof createVirtualCompany>; expires: number }
+const demoGlobal = globalThis as typeof globalThis & { workforceDemoSandboxes?: Map<string, DemoSandbox> }
+const sandboxes = demoGlobal.workforceDemoSandboxes ??= new Map<string, DemoSandbox>()
+export function getVirtualCompany(key?: string) {
+  if (!key) return createVirtualCompany()
+  const now = Date.now()
+  for (const [id, entry] of sandboxes) if (entry.expires < now) sandboxes.delete(id)
+  let entry = sandboxes.get(key)
+  if (!entry) {
+    if (sandboxes.size >= 500) sandboxes.delete(sandboxes.keys().next().value!)
+    entry = { company: createVirtualCompany(), expires: now + 24 * 60 * 60 * 1000 }
+    sandboxes.set(key, entry)
+  }
+  return entry.company
 }

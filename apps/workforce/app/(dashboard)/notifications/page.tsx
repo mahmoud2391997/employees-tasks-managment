@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -5,7 +6,7 @@ import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { NotificationsContainer } from '@/components/dashboard/notifications-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function NotificationsPage() {
   const tr = await getTranslations()
@@ -30,7 +31,7 @@ export default async function NotificationsPage() {
 
   const take = 50
   const skip = 0
-  const virtualRows = sampleData ? getVirtualCompany().notifications.filter((row) => row.userId === profileId) : null
+  const virtualRows = sampleData ? (await getDemoCompany()).notifications.filter((row) => row.userId === profileId) : null
   const [total, rows] = virtualRows
     ? [virtualRows.length, virtualRows.slice(skip, skip + take)]
     : await Promise.all([
@@ -50,7 +51,7 @@ export default async function NotificationsPage() {
         <p className="mt-2 text-sm text-slate-500">{tr("آخر التنبيهات.")}</p>
         {sampleData ? <p className="mt-1 text-sm text-amber-700">{tr(VIRTUAL_SAMPLE_NOTE)}</p> : null}
       </div>
-      <NotificationsContainer readOnly={Boolean(sampleData)} initial={rows as any} initialTotal={total} initialHasMore={skip + rows.length < total} />
+      <NotificationsContainer  initial={rows as any} initialTotal={total} initialHasMore={skip + rows.length < total} />
     </main>
   )
 }

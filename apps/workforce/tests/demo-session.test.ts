@@ -10,7 +10,7 @@ afterEach(() => vi.unstubAllEnvs())
 function demoRequest(method = 'GET') {
   return new NextRequest('http://localhost/api/tasks', { method, headers: { cookie: `wf_auth=${DEMO_PREVIEW_TOKEN}` } })
 }
-describe('public read-only demo', () => {
+describe('public interactive demo', () => {
   it('requires explicit entry even when demo is available', async () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
     expect(await getSessionUser(new NextRequest('http://localhost/api/auth/me'))).toBeNull()
@@ -27,9 +27,9 @@ describe('public read-only demo', () => {
     expect(response.cookies.get('wf_auth')?.secure).toBe(true)
     const user = await getSessionUser(demoRequest())
     expect(user?.email).toBe('demo@workforce.invalid')
-    expect(user?.permissions).not.toContain('tasks.edit')
+    expect(user?.permissions).toContain('tasks.edit')
     expect((await requirePermission(demoRequest(), 'tasks.view')).ok).toBe(true)
-    expect((await requirePermission(demoRequest('POST'), 'roles.manage')).status).toBe(403)
+    expect((await requirePermission(demoRequest('POST'), 'roles.manage')).status).toBe(200)
     const request = new NextRequest('http://localhost/dashboard', { headers: { cookie: `wf_auth=${DEMO_PREVIEW_TOKEN}` } })
     expect((await updateSession(request)).headers.get('location')).toBeNull()
   })
@@ -40,9 +40,9 @@ describe('public read-only demo', () => {
     const request = new NextRequest('http://localhost/dashboard', { headers: { cookie: `wf_auth=${DEMO_PREVIEW_TOKEN}` } })
     expect((await updateSession(request)).headers.get('location')).toBe('http://localhost/auth/login')
   })
-  it('cannot use the sample cookie to grant write access', async () => {
+  it('grants production actions to the isolated sample identity', async () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
-    expect((await requirePermission(demoRequest('POST'), 'tasks.create')).status).toBe(403)
-    expect((await requirePermission(demoRequest('DELETE'), 'roles.manage')).status).toBe(403)
+    expect((await requirePermission(demoRequest('POST'), 'tasks.create')).status).toBe(200)
+    expect((await requirePermission(demoRequest('DELETE'), 'roles.manage')).status).toBe(200)
   })
 })

@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import Link from 'next/link'
@@ -8,7 +9,7 @@ import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
-import { getVirtualCompany, servesVirtualDemoData } from '@/server/virtual-data'
+import { servesVirtualDemoData } from '@/server/virtual-data'
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const tr = await getTranslations()
@@ -40,7 +41,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
   const { id } = await params
 
-  const virtual = sampleData ? getVirtualCompany() : null
+  const virtual = sampleData ? await getDemoCompany() : null
   const employee = virtual
     ? virtual.employees.find((row) => row.id === id) ?? null
     : await prisma.workforceEmployee.findFirst({

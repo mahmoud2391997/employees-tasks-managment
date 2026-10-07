@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { prisma } from '@/server/db'
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const canInvite = auth.user.permissions.includes('members.invite')
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualMembersApi(auth.user.id, take, skip, canInvite)
+  const virtual = virtualMembersApi(auth.user.id, take, skip, canInvite, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!

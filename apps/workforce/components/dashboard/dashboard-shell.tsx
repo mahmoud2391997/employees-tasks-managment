@@ -57,7 +57,7 @@ export function DashboardShell({ children, name, role, permissions, companyName,
       </header>
       <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
         {demo ? <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-brand-200/70 bg-brand-50/70 px-4 py-2.5 text-xs text-brand-800">
-          <span className="flex items-center gap-2 font-medium"><FlaskConical size={15} />{tr('عرض تجريبي للقراءة فقط')}</span>
+          <span className="flex items-center gap-2 font-medium"><FlaskConical size={15} />{tr('عرض تجريبي تفاعلي')}</span>
           <form method="post" action="/api/auth/logout"><button className="rounded-md px-2 py-1 font-semibold hover:bg-brand-100">{tr('إنهاء العرض التجريبي')}</button></form>
         </div> : null}
         {children}

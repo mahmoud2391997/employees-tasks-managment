@@ -1,3 +1,4 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -21,6 +22,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const json = await req.json().catch(() => null)
   const parsed = updateSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
+
+  const demo = await demoMutation(req, auth.user.id, 'departments', parsed.data, id)
+  if (demo) return demo
 
   const existing = await prisma.workforceDepartment.findFirst({ where: { id, teamId }, select: { id: true } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
@@ -48,6 +52,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const teamId = auth.user.profile!.teamId!
 
   const { id } = await ctx.params
+  const demo = await demoMutation(req, auth.user.id, 'departments', {}, id)
+  if (demo) return demo
+
   const existing = await prisma.workforceDepartment.findFirst({ where: { id, teamId }, select: { id: true } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
 

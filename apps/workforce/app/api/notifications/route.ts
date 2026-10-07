@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { prisma } from '@/server/db'
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   const user = await getSessionUser(req)
   if (!user?.profile) return NextResponse.json({ success: false, message: 'غير مصرح' }, { status: 401 })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualNotificationsApi(user.id, user.profile.id, take, skip)
+  const virtual = virtualNotificationsApi(user.id, user.profile.id, take, skip, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
   const where = { userId: user.profile.id }
   const [total, rows] = await prisma.$transaction([
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
   const json = (await req.json().catch(() => null)) as { id?: string } | null
   const id = String(json?.id ?? '')
   if (!id) return NextResponse.json({ success: false, message: 'id مطلوب' }, { status: 400 })
-  const virtual = virtualNotificationMarkRead(user.id, user.profile.id, id)
+  const virtual = virtualNotificationMarkRead(user.id, user.profile.id, id, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
   const existing = await prisma.workforceNotification.findFirst({ where: { id, userId: user.profile.id } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })

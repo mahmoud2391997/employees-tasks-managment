@@ -10,13 +10,13 @@ export type DemoSession = {
   permissions: Permission[]
 }
 
-/** Public, read-only samples. No database connection or company credentials are used. */
+/** Public, interactive samples. No database connection or company credentials are used. */
 export async function getOrCreateDemoSession(): Promise<DemoSession> {
   const { admin } = getVirtualCompany()
   return {
     userId: FALLBACK_ADMIN_ID,
     email: admin.email,
     profile: admin,
-    permissions: ALL_PERMISSIONS.filter(permission => permission.endsWith('.view') || permission === 'roles.manage' || permission === 'settings.manage'),
+    permissions: [...ALL_PERMISSIONS],
   }
 }

@@ -1,3 +1,4 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -24,6 +25,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const parsed = patchSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
 
+  const demo = await demoMutation(req, auth.user.id, 'roles', parsed.data, id)
+  if (demo) return demo
+
   const existing = await prisma.workforceCustomRole.findFirst({ where: { id, teamId }, select: { id: true, name: true } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
   if (RESERVED.has(existing.name)) return NextResponse.json({ success: false, message: 'لا يمكن تعديل هذا الدور' }, { status: 400 })
@@ -49,6 +53,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const teamId = auth.user.profile!.teamId!
 
   const { id } = await ctx.params
+  const demo = await demoMutation(req, auth.user.id, 'roles', {}, id)
+  if (demo) return demo
+
   const existing = await prisma.workforceCustomRole.findFirst({ where: { id, teamId }, select: { id: true, name: true } })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
   if (RESERVED.has(existing.name)) return NextResponse.json({ success: false, message: 'لا يمكن حذف هذا الدور' }, { status: 400 })

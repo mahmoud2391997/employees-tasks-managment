@@ -1,3 +1,4 @@
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { getServerSession } from '@/server/auth/server-session'
@@ -6,7 +7,7 @@ import { prisma } from '@/server/db'
 import { MembersContainer } from '@/components/dashboard/members-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
-import { getVirtualCompany, servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
+import { servesVirtualDemoData, VIRTUAL_SAMPLE_NOTE } from '@/server/virtual-data'
 
 export default async function MembersPage() {
   const tr = await getTranslations()
@@ -39,12 +40,12 @@ export default async function MembersPage() {
   const take = 50
   const skip = 0
 
-  const virtual = sampleData ? getVirtualCompany() : null
+  const virtual = sampleData ? await getDemoCompany() : null
   const [totalMembers, members, invitations, roles] = virtual
     ? [
         virtual.members.length,
         virtual.members.slice(skip, skip + take),
-        virtual.invitations,
+        virtual.invitations.filter(row => !row.acceptedAt),
         virtual.roles.map((role) => ({ name: role.name, label: role.label })),
       ]
     : await Promise.all([

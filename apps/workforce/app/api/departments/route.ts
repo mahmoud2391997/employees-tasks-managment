@@ -1,3 +1,5 @@
+import { demoMutation } from '@/server/demo-sandbox'
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -16,7 +18,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'departments.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
-  const virtual = virtualDepartmentsApi(auth.user.id)
+  const virtual = virtualDepartmentsApi(auth.user.id, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
@@ -39,6 +41,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
+
+  const demo = await demoMutation(req, auth.user.id, 'departments', parsed.data)
+  if (demo) return demo
 
   if (parsed.data.managerId) {
     const manager = await prisma.workforceProfile.findFirst({ where: { id: parsed.data.managerId, teamId }, select: { id: true } })

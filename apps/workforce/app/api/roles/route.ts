@@ -1,3 +1,5 @@
+import { demoMutation } from '@/server/demo-sandbox'
+import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -19,7 +21,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'roles.manage')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
-  const virtual = virtualRolesApi(auth.user.id)
+  const virtual = virtualRolesApi(auth.user.id, await getDemoCompany(req))
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
@@ -39,6 +41,9 @@ export async function POST(req: NextRequest) {
   const json = await req.json().catch(() => null)
   const parsed = createSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
+
+  const demo = await demoMutation(req, auth.user.id, 'roles', parsed.data)
+  if (demo) return demo
 
   const name = parsed.data.name.toUpperCase().replace(/\s+/g, '_')
   if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {

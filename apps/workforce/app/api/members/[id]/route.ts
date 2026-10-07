@@ -1,3 +1,4 @@
+import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -22,6 +23,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const json = await req.json().catch(() => null)
   const parsed = patchSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 400 })
+
+  const demo = await demoMutation(req, auth.user.id, 'members', parsed.data, id)
+  if (demo) return demo
 
   const requestedRole = parsed.data.role?.toUpperCase().replace(/\s+/g, '_')
   if (requestedRole && !/^[A-Z][A-Z0-9_]*$/.test(requestedRole)) {
@@ -71,6 +75,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const teamId = auth.user.profile!.teamId!
 
   const { id } = await ctx.params
+  const demo = await demoMutation(req, auth.user.id, 'members', {}, id)
+  if (demo) return demo
+
   const existing = await prisma.workforceTeamMember.findFirst({
     where: { id, teamId },
     select: { id: true, userId: true },
