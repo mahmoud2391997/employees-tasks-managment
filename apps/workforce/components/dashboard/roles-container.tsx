@@ -99,7 +99,7 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
 
       <TableWrapper>
         <div className="overflow-x-auto">
-        <Table>
+        <Table className="rtl:[&_th]:text-center rtl:[&_td]:text-center">
           <THead>
             <tr>
               <TH className="min-w-48">{tr("الاسم")}</TH>

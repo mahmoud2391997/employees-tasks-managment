@@ -1,4 +1,10 @@
 export const english: Record<string, string> = {
+  'نقل إلى': 'Move to',
+  'نقل المهمة {0}': 'Move task {0}',
+  'تم نقل المهمة {0} إلى {1}': 'Moved task {0} to {1}',
+  'أفلت المهمة هنا': 'Drop task here',
+  'جارٍ الحفظ': 'Saving',
+
   'أعلاف الكوثر': 'Al Kawther Feeds',
   'بحار الجوبة للتجارة ش.م.م': 'Bahar Aljba Trading LLC',
   'سناو، محافظة شمال الشرقية، سلطنة عمان': 'Sinaw, North Al Sharqiyah, Sultanate of Oman',

@@ -4,7 +4,8 @@ import { apiFetch } from '@/lib/api-fetch'
 
 import { useTranslations } from '@/lib/i18n/provider'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { GripVertical, LoaderCircle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,16 @@ export function TasksContainer({
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Task | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<Task['status'] | null>(null)
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
+  const pendingRef = useRef(new Set<string>())
+  const [announcement, setAnnouncement] = useState('')
+
+  function clearDrag() {
+    setDraggingId(null)
+    setDropTarget(null)
+  }
 
   const canCreate = permissions.includes('tasks.create')
   const canEdit = permissions.includes('tasks.edit')
@@ -114,7 +125,14 @@ export function TasksContainer({
   }
 
   async function mutateTask(id: string, method: 'PATCH' | 'DELETE', patch?: Partial<Task>) {
+    if (pendingRef.current.has(id)) return
+    const previous = tasks.find(task => task.id === id)
+    if (!previous) return
+    pendingRef.current.add(id)
+    setPendingIds(new Set(pendingRef.current))
     setError(null)
+    // Move immediately, retaining the original fields for rollback on failure.
+    if (method === 'PATCH') setTasks(prev => prev.map(task => task.id === id ? { ...task, ...patch } : task))
     try {
       const res = await apiFetch(`/api/tasks/${id}`, {
         method,
@@ -122,23 +140,28 @@ export function TasksContainer({
         body: patch ? JSON.stringify(patch) : undefined,
       })
       const json = await res.json().catch(() => null) as { success?: boolean; message?: string } | null
-      if (!res.ok || !json?.success) {
-        setError(tr(json?.message ?? "تعذر حفظ التغيير، حاول مرة أخرى"))
-        return
-      }
+      if (!res.ok || !json?.success) throw new Error(tr(json?.message ?? "تعذر حفظ التغيير، حاول مرة أخرى"))
       if (method === 'DELETE') {
-        setTasks((prev) => prev.filter((task) => task.id !== id))
-        setTotal((prev) => Math.max(0, prev - 1))
-      } else {
-        setTasks((prev) => prev.map((task) => task.id === id ? { ...task, ...patch } : task))
+        setTasks(prev => prev.filter(task => task.id !== id))
+        setTotal(prev => Math.max(0, prev - 1))
+      } else if (patch?.status) {
+        setAnnouncement(tr("تم نقل المهمة {0} إلى {1}", { 0: previous.title, 1: tr(statusColumns.find(col => col.id === patch.status)!.label) }))
       }
-    } catch {
-      setError(tr("تعذر الاتصال بالخادم، حاول مرة أخرى"))
+    } catch (error) {
+      if (method === 'PATCH') setTasks(prev => prev.map(task => task.id === id ? previous : task))
+      setAnnouncement('')
+      setError(error instanceof Error && !(error instanceof TypeError) && error.message ? error.message : tr("تعذر الاتصال بالخادم، حاول مرة أخرى"))
+    } finally {
+      pendingRef.current.delete(id)
+      setPendingIds(new Set(pendingRef.current))
     }
   }
 
-  async function updateTask(id: string, patch: Partial<Task>) {
-    await mutateTask(id, 'PATCH', patch)
+  async function moveTask(id: string, status: Task['status']) {
+    const task = tasks.find(task => task.id === id)
+    clearDrag()
+    if (!canEdit || !task || task.status === status || pendingRef.current.has(id)) return
+    await mutateTask(id, 'PATCH', { status })
   }
 
   async function deleteTask(id: string) {
@@ -147,6 +170,7 @@ export function TasksContainer({
 
   return (
     <div className="space-y-4">
+      <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {error ? <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       {showForm ? (
         <TaskForm
@@ -194,15 +218,22 @@ export function TasksContainer({
         {statusColumns.map((col) => (
           <div
             key={col.id}
-            className={`min-h-[28rem] rounded-2xl border border-slate-200 ${col.surface} p-3`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={async (e) => {
+            aria-label={tr(col.label)}
+            className={`min-h-[28rem] rounded-2xl border p-3 transition-colors ${dropTarget === col.id ? 'border-brand-500 bg-brand-100/70 ring-2 ring-brand-300' : `border-slate-200 ${col.surface}`}`}
+            onDragOver={(e) => {
+              const task = tasks.find(task => task.id === draggingId)
+              if (!canEdit || !task || task.status === col.id || pendingRef.current.has(task.id)) return
               e.preventDefault()
-              const taskId = e.dataTransfer.getData('text/plain')
-              const draggedTask = tasks.find((x) => x.id === taskId)
-              if (!draggedTask || draggedTask.status === col.id) return
-              if (!canEdit) return
-              await updateTask(taskId, { status: col.id } as any)
+              e.dataTransfer.dropEffect = 'move'
+              setDropTarget(col.id)
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTarget(current => current === col.id ? null : current)
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              if (draggingId && e.dataTransfer.getData('text/plain') === draggingId) void moveTask(draggingId, col.id)
+              else clearDrag()
             }}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -211,32 +242,52 @@ export function TasksContainer({
             </div>
 
             <div className="space-y-2">
+              {dropTarget === col.id ? <div className="rounded-xl border-2 border-dashed border-brand-400 bg-white/60 px-3 py-4 text-center text-xs font-medium text-brand-700">{tr("أفلت المهمة هنا")}</div> : null}
+              {!filtered.some(task => task.status === col.id) && dropTarget !== col.id ? <div className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-xs text-slate-400">{tr("لا توجد مهام")}</div> : null}
               {filtered
                 .filter((t) => t.status === col.id)
                 .map((t) => (
                   <div
                     key={t.id}
-                    draggable={canEdit}
-                    onDragStart={(e) => e.dataTransfer.setData('text/plain', t.id)}
-                    className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+                    draggable={canEdit && !pendingIds.has(t.id)}
+                    aria-busy={pendingIds.has(t.id)}
+                    onDragStart={(e) => {
+                      if ((e.target as HTMLElement).closest('button, select, input, a') || pendingRef.current.has(t.id)) { e.preventDefault(); return }
+                      e.dataTransfer.effectAllowed = 'move'
+                      e.dataTransfer.setData('text/plain', t.id)
+                      setDraggingId(t.id)
+                      setAnnouncement('')
+                    }}
+                    onDragEnd={clearDrag}
+                    className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-[opacity,box-shadow] ${canEdit ? 'cursor-grab active:cursor-grabbing hover:shadow-md' : ''} ${draggingId === t.id ? 'opacity-40' : ''} ${pendingIds.has(t.id) ? 'opacity-60' : ''}`}
+
                   >
                     <div className="flex flex-col gap-3">
                       <div className="min-w-0">
-                        <div className="break-words text-sm font-semibold leading-6 text-slate-800">{t.title}</div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="break-words text-sm font-semibold leading-6 text-slate-800">{t.title}</div>
+                          {pendingIds.has(t.id) ? <LoaderCircle aria-label={tr("جارٍ الحفظ")} size={16} className="mt-1 shrink-0 animate-spin text-brand-600" /> : canEdit ? <GripVertical aria-hidden="true" size={16} className="mt-1 shrink-0 text-slate-400" /> : null}
+                        </div>
                         {t.description ? <div className="mt-1 line-clamp-2 text-xs text-slate-500">{t.description}</div> : null}
                       </div>
                       <div className="flex shrink-0 gap-1 border-t border-slate-100 pt-3">
                         {canEdit ? (
-                          <Button size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
+                          <Button disabled={pendingIds.has(t.id)} size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
                             {tr("تعديل")}</Button>
                         ) : null}
                         {canDelete ? (
-                          <Button size="sm" variant="danger" type="button" onClick={() => deleteTask(t.id)}>
+                          <Button disabled={pendingIds.has(t.id)} size="sm" variant="danger" type="button" onClick={() => deleteTask(t.id)}>
                             {tr("حذف")}</Button>
                         ) : null}
                       </div>
                     </div>
 
+                    {canEdit ? <label className="mt-3 block text-xs text-slate-500">
+                      {tr("نقل إلى")}
+                      <Select className="mt-1 h-8 text-xs" aria-label={tr("نقل المهمة {0}", { 0: t.title })} value={t.status} disabled={pendingIds.has(t.id)} onChange={e => void moveTask(t.id, e.target.value as Task['status'])}>
+                        {statusColumns.map(column => <option key={column.id} value={column.id}>{tr(column.label)}</option>)}
+                      </Select>
+                    </label> : null}
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
                       <Badge variant="neutral">{tr(t.priority)}</Badge>
                       {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
