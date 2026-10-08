@@ -34,8 +34,6 @@ export const DEFAULT_ROLES: Record<string, { label: string; permissions: Permiss
       'employees.create',
       'employees.edit',
       'departments.view',
-      'departments.create',
-      'departments.edit',
       'tasks.view',
       'tasks.create',
       'tasks.edit',
@@ -47,7 +45,7 @@ export const DEFAULT_ROLES: Record<string, { label: string; permissions: Permiss
   },
   EMPLOYEE: {
     label: 'Employee',
-    permissions: ['dashboard.view', 'tasks.view', 'employees.view', 'departments.view', 'members.view'],
+    permissions: ['dashboard.view', 'tasks.view', 'tasks.edit', 'employees.view', 'departments.view', 'members.view'],
   },
 }
 

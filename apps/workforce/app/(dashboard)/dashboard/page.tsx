@@ -1,3 +1,4 @@
+import { taskVisibilityWhere } from '@/lib/task-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -37,6 +38,8 @@ export default async function DashboardPage() {
     )
   }
 
+  const taskWhere = taskVisibilityWhere(teamId ?? '', session.profile, session.permissions)
+
   const sampleData = servesVirtualDemoData(session.userId)
   const virtualStats = sampleData ? virtualDashboardStats(await getDemoCompany()) : null
 
@@ -45,8 +48,8 @@ export default async function DashboardPage() {
     : await Promise.all([
         prisma.workforceEmployee.count({ where: { teamId: teamId! } }),
         prisma.workforceDepartment.count({ where: { teamId: teamId! } }),
-        prisma.workforceTask.count({ where: { teamId: teamId! } }),
-        prisma.workforceTask.count({ where: { teamId: teamId!, status: 'COMPLETED' } }),
+        prisma.workforceTask.count({ where: taskWhere }),
+        prisma.workforceTask.count({ where: { ...taskWhere, status: 'COMPLETED' } }),
       ])
 
   const statusRows = virtualStats
@@ -54,7 +57,7 @@ export default async function DashboardPage() {
     : await prisma.workforceTask
         .groupBy({
           by: ['status'],
-          where: { teamId: teamId! },
+          where: taskWhere,
           _count: { status: true },
         })
         .then((grouped) =>

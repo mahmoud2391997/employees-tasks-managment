@@ -1,3 +1,5 @@
+import { mayAssignTask } from '@/server/task-assignment'
+import { canAssignTasks, canModifyTask } from '@/lib/task-access'
 import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
@@ -31,6 +33,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!user?.profile?.teamId) {
     return NextResponse.json({ success: false, message: user ? 'لا يوجد فريق مرتبط بالحساب' : 'غير مصرح' }, { status: user ? 400 : 401 })
   }
+  const actor = { profileId: user.profile.id, role: user.profile.role, permissions: user.permissions }
+  if (parsed.data.assigneeId !== undefined && !canAssignTasks(actor)) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية إسناد المهام' }, { status: 403 })
+  }
   if (user.id === FALLBACK_ADMIN_ID) {
     if (!user.permissions.includes('tasks.edit') || (parsed.data.assigneeId !== undefined && !user.permissions.includes('tasks.assign'))) return NextResponse.json({ success: false }, { status: 403 })
     const demo = await demoMutation(req, user.id, 'tasks', parsed.data, id)
@@ -46,9 +52,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const existing = await prisma.workforceTask.findFirst({
     where: { id, teamId },
-    select: { id: true, title: true, status: true, createdById: true, assigneeId: true },
+    select: { id: true, title: true, status: true, createdById: true, assigneeId: true, departmentId: true },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
+
+  if ((parsed.data.assigneeId !== undefined || parsed.data.departmentId !== undefined) && actor.role !== 'ADMIN' &&
+      !await mayAssignTask(actor, teamId, parsed.data.assigneeId ?? existing.assigneeId, parsed.data.departmentId === undefined ? existing.departmentId : parsed.data.departmentId)) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية إسناد المهام' }, { status: 403 })
+  }
 
   const assigneeChanged = parsed.data.assigneeId !== undefined && parsed.data.assigneeId !== existing.assigneeId
   const editsContent =
@@ -58,7 +69,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     parsed.data.dueDate !== undefined ||
     parsed.data.priority !== undefined ||
     parsed.data.departmentId !== undefined
-  if (editsContent && !user.permissions.includes('tasks.edit')) {
+  if (!canModifyTask(actor, existing)) {
     return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
   }
   if (assigneeChanged && !user.permissions.includes('tasks.assign')) {
@@ -146,6 +157,10 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     select: { id: true, title: true, createdById: true, assigneeId: true },
   })
   if (!existing) return NextResponse.json({ success: false, message: 'غير موجود' }, { status: 404 })
+
+  if (!canModifyTask({ profileId: actorId, role: auth.user.profile!.role, permissions: auth.user.permissions }, existing, 'delete')) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
+  }
 
   await prisma.workforceTask.delete({ where: { id } })
 

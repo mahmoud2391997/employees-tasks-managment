@@ -12,6 +12,6 @@ export async function permissionsFor(role: string, teamId: string | null): Promi
   })
   const raw = (custom?.permissions ?? []) as unknown
   if (!Array.isArray(raw)) return []
-  return raw.filter((p): p is Permission => typeof p === 'string' && validPermissions.has(p))
+  return raw.filter((p): p is Permission => typeof p === 'string' && validPermissions.has(p) && p !== 'tasks.assign')
 }
 

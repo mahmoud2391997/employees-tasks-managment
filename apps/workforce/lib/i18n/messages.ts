@@ -58,7 +58,7 @@ export const english: Record<string, string> = {
   'تسجيل الخروج': 'Sign out', 'لا توجد مهام': 'No tasks', 'قيد الانتظار': 'To do', 'قيد العمل': 'In progress', 'للمراجعة': 'In review', 'مكتملة': 'Completed',
   'تعذر حفظ التغيير، حاول مرة أخرى': 'Unable to save the change. Try again.', 'تعذر الاتصال بالخادم، حاول مرة أخرى': 'Unable to connect. Try again.',
   'كل الأقسام': 'All departments', 'كل المهام': 'All tasks', 'المسندة لي': 'Assigned to me', 'التي أنشأتها': 'Created by me', '+ إضافة مهمة': '+ Add task',
-  'تعديل مهمة': 'Edit task', 'مهمة جديدة': 'New task', 'العنوان': 'Title', 'المسؤول': 'Assignee', 'الأولوية': 'Priority', 'تاريخ الاستحقاق': 'Due date',
+  'تعديل مهمة': 'Edit task', 'مهمة جديدة': 'New task', 'العنوان': 'Title', 'المسؤول': 'Assignee', 'الموظف المسند إليه': 'Assigned employee', 'غير مسندة': 'Unassigned', 'الأولوية': 'Priority', 'تاريخ الاستحقاق': 'Due date',
   'تم تسجيل الدخول بوضع الطوارئ لأن قاعدة البيانات غير متاحة حالياً.': 'Emergency session: the database is currently unavailable.', 'إغلاق': 'Close',
   'جرب النسخة التجريبية': 'Try demo', 'استكشف النظام ببيانات تجريبية دون تسجيل الدخول.': 'Explore the workspace with sample data, no account required.',
   'الوضع التجريبي': 'Demo mode', 'إنهاء العرض التجريبي': 'Exit demo', 'تعذر بدء العرض التجريبي': 'Unable to start the demo',

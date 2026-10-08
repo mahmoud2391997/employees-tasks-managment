@@ -1,3 +1,4 @@
+import { employeeVisibilityWhere } from '@/lib/directory-access'
 import { demoMutation } from '@/server/demo-sandbox'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -31,7 +32,7 @@ const createSchema = z.object({
   joinDate: z.string().trim().min(1).optional(),
   salary: salarySchema.optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'TERMINATED']).optional(),
-  managerId: z.string().trim().min(1).optional(),
+  managerId: z.never().optional(),
 })
 
 export async function GET(req: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
-  const where = { teamId }
+  const where = employeeVisibilityWhere(teamId, auth.user.profile)
   const [total, employees] = await prisma.$transaction([
     prisma.workforceEmployee.count({ where }),
     prisma.workforceEmployee.findMany({
@@ -76,6 +77,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
   }
 
+  if (auth.user.profile!.role === 'MANAGER') {
+    const department = parsed.data.departmentId && await prisma.workforceDepartment.findFirst({
+      where: { id: parsed.data.departmentId, teamId, managerId: auth.user.profile!.id }, select: { id: true },
+    })
+    if (!department) return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
+  }
+
   const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data)
   if (demo) return demo
 
@@ -92,13 +100,6 @@ export async function POST(req: NextRequest) {
     if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
-  if (parsed.data.managerId) {
-    const mgr = await prisma.workforceProfile.findFirst({
-      where: { id: parsed.data.managerId, teamId },
-      select: { id: true },
-    })
-    if (!mgr) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
-  }
 
   const salary = parsed.data.salary === undefined ? undefined : String(parsed.data.salary)
 
@@ -139,7 +140,6 @@ export async function POST(req: NextRequest) {
           joinDate,
           salary,
           status: parsed.data.status ?? 'ACTIVE',
-          managerId: parsed.data.managerId,
         },
         include: { profile: true, department: true, manager: true },
       })

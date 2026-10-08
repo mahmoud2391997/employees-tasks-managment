@@ -1,3 +1,4 @@
+import { memberVisibilityWhere } from '@/lib/directory-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -37,6 +38,8 @@ export default async function MembersPage() {
     )
   }
 
+  const memberWhere = memberVisibilityWhere(teamId ?? '', session.profile)
+
   const take = 50
   const skip = 0
 
@@ -49,9 +52,9 @@ export default async function MembersPage() {
         virtual.roles.map((role) => ({ name: role.name, label: role.label })),
       ]
     : await Promise.all([
-        prisma.workforceTeamMember.count({ where: { teamId: teamId! } }),
+        prisma.workforceTeamMember.count({ where: memberWhere }),
         prisma.workforceTeamMember.findMany({
-          where: { teamId: teamId! },
+          where: memberWhere,
           include: {
             user: {
               select: {

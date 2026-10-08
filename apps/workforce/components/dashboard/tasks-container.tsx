@@ -1,5 +1,7 @@
 'use client'
 
+import { canAssignTasks, canModifyTask } from '@/lib/task-access'
+
 import { apiFetch } from '@/lib/api-fetch'
 
 import { useTranslations } from '@/lib/i18n/provider'
@@ -46,6 +48,8 @@ export function TasksContainer({
   departments,
   profiles,
   currentProfileId,
+  currentRole,
+  assignmentEnabled,
   permissions,
 }: {
   initialTasks: Task[]
@@ -53,6 +57,8 @@ export function TasksContainer({
   initialHasMore: boolean
   departments: Department[]
   profiles: Profile[]
+  assignmentEnabled: boolean
+  currentRole: string
   currentProfileId: string
   permissions: string[]
 }) {
@@ -80,9 +86,10 @@ export function TasksContainer({
   }
 
   const canCreate = permissions.includes('tasks.create')
-  const canEdit = permissions.includes('tasks.edit')
-  const canDelete = permissions.includes('tasks.delete')
-  const canAssign = permissions.includes('tasks.assign')
+  const actor = { profileId: currentProfileId, role: currentRole, permissions }
+  const canEditTask = (task: Task) => canModifyTask(actor, task)
+  const canDeleteTask = (task: Task) => canModifyTask(actor, task, 'delete')
+  const canAssign = assignmentEnabled && canAssignTasks(actor)
 
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
@@ -127,7 +134,7 @@ export function TasksContainer({
   async function mutateTask(id: string, method: 'PATCH' | 'DELETE', patch?: Partial<Task>) {
     if (pendingRef.current.has(id)) return
     const previous = tasks.find(task => task.id === id)
-    if (!previous) return
+    if (!previous || !(method === 'DELETE' ? canDeleteTask(previous) : canEditTask(previous))) return
     pendingRef.current.add(id)
     setPendingIds(new Set(pendingRef.current))
     setError(null)
@@ -160,7 +167,7 @@ export function TasksContainer({
   async function moveTask(id: string, status: Task['status']) {
     const task = tasks.find(task => task.id === id)
     clearDrag()
-    if (!canEdit || !task || task.status === status || pendingRef.current.has(id)) return
+    if (!task || !canEditTask(task) || task.status === status || pendingRef.current.has(id)) return
     await mutateTask(id, 'PATCH', { status })
   }
 
@@ -222,7 +229,7 @@ export function TasksContainer({
             className={`min-h-[28rem] rounded-2xl border p-3 transition-colors ${dropTarget === col.id ? 'border-brand-500 bg-brand-100/70 ring-2 ring-brand-300' : `border-slate-200 ${col.surface}`}`}
             onDragOver={(e) => {
               const task = tasks.find(task => task.id === draggingId)
-              if (!canEdit || !task || task.status === col.id || pendingRef.current.has(task.id)) return
+              if (!task || !canEditTask(task) || task.status === col.id || pendingRef.current.has(task.id)) return
               e.preventDefault()
               e.dataTransfer.dropEffect = 'move'
               setDropTarget(col.id)
@@ -249,7 +256,7 @@ export function TasksContainer({
                 .map((t) => (
                   <div
                     key={t.id}
-                    draggable={canEdit && !pendingIds.has(t.id)}
+                    draggable={canEditTask(t) && !pendingIds.has(t.id)}
                     aria-busy={pendingIds.has(t.id)}
                     onDragStart={(e) => {
                       if ((e.target as HTMLElement).closest('button, select, input, a') || pendingRef.current.has(t.id)) { e.preventDefault(); return }
@@ -259,30 +266,30 @@ export function TasksContainer({
                       setAnnouncement('')
                     }}
                     onDragEnd={clearDrag}
-                    className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-[opacity,box-shadow] ${canEdit ? 'cursor-grab active:cursor-grabbing hover:shadow-md' : ''} ${draggingId === t.id ? 'opacity-40' : ''} ${pendingIds.has(t.id) ? 'opacity-60' : ''}`}
+                    className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-[opacity,box-shadow] ${canEditTask(t) ? 'cursor-grab active:cursor-grabbing hover:shadow-md' : ''} ${draggingId === t.id ? 'opacity-40' : ''} ${pendingIds.has(t.id) ? 'opacity-60' : ''}`}
 
                   >
                     <div className="flex flex-col gap-3">
                       <div className="min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="break-words text-sm font-semibold leading-6 text-slate-800">{t.title}</div>
-                          {pendingIds.has(t.id) ? <LoaderCircle aria-label={tr("جارٍ الحفظ")} size={16} className="mt-1 shrink-0 animate-spin text-brand-600" /> : canEdit ? <GripVertical aria-hidden="true" size={16} className="mt-1 shrink-0 text-slate-400" /> : null}
+                          {pendingIds.has(t.id) ? <LoaderCircle aria-label={tr("جارٍ الحفظ")} size={16} className="mt-1 shrink-0 animate-spin text-brand-600" /> : canEditTask(t) ? <GripVertical aria-hidden="true" size={16} className="mt-1 shrink-0 text-slate-400" /> : null}
                         </div>
                         {t.description ? <div className="mt-1 line-clamp-2 text-xs text-slate-500">{t.description}</div> : null}
                       </div>
                       <div className="flex shrink-0 gap-1 border-t border-slate-100 pt-3">
-                        {canEdit ? (
+                        {canEditTask(t) ? (
                           <Button disabled={pendingIds.has(t.id)} size="sm" variant="secondary" type="button" onClick={() => { setEditing(t); setShowForm(true) }}>
                             {tr("تعديل")}</Button>
                         ) : null}
-                        {canDelete ? (
+                        {canDeleteTask(t) ? (
                           <Button disabled={pendingIds.has(t.id)} size="sm" variant="danger" type="button" onClick={() => deleteTask(t.id)}>
                             {tr("حذف")}</Button>
                         ) : null}
                       </div>
                     </div>
 
-                    {canEdit ? <label className="mt-3 block text-xs text-slate-500">
+                    {canEditTask(t) ? <label className="mt-3 block text-xs text-slate-500">
                       {tr("نقل إلى")}
                       <Select className="mt-1 h-8 text-xs" aria-label={tr("نقل المهمة {0}", { 0: t.title })} value={t.status} disabled={pendingIds.has(t.id)} onChange={e => void moveTask(t.id, e.target.value as Task['status'])}>
                         {statusColumns.map(column => <option key={column.id} value={column.id}>{tr(column.label)}</option>)}
@@ -293,9 +300,9 @@ export function TasksContainer({
                       {t.department?.name ? <Badge variant="neutral">{t.department.name}</Badge> : null}
                       {t.assignee ? (
                         <Badge variant="info">
-                          {(t.assignee.firstName || t.assignee.email || tr("مستخدم")) + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
+                          {tr("الموظف المسند إليه")}: {(t.assignee.firstName || t.assignee.email || tr("مستخدم")) + (t.assignee.lastName ? ` ${t.assignee.lastName}` : '')}
                         </Badge>
-                      ) : null}
+                      ) : <Badge variant="neutral">{tr("غير مسندة")}</Badge>}
                     </div>
                   </div>
                 ))}
@@ -383,6 +390,16 @@ function TaskForm({
           {tr("العنوان")}<Input className="mt-2" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label className="block text-sm font-medium md:col-span-2">
+          {tr("الموظف المسند إليه")}<Select className="mt-2" value={assigneeId} disabled={!canAssign} onChange={(e) => setAssigneeId(e.target.value)}>
+            <option value="">{tr("غير مسندة")}</option>
+            {profiles.map((p) => (
+              <option key={p.id} value={p.id}>
+                {(p.firstName || p.email || tr("مستخدم")) + (p.lastName ? ` ${p.lastName}` : '')}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <label className="block text-sm font-medium md:col-span-2">
           {tr("الوصف")}<Textarea className="mt-2" value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
         <label className="block text-sm font-medium">
@@ -391,16 +408,6 @@ function TaskForm({
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="block text-sm font-medium">
-          {tr("المسؤول")}<Select className="mt-2" value={assigneeId} disabled={!canAssign} onChange={(e) => setAssigneeId(e.target.value)}>
-            <option value="">—</option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {(p.firstName || p.email || tr("مستخدم")) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>

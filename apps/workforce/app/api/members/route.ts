@@ -1,3 +1,4 @@
+import { memberVisibilityWhere } from '@/lib/directory-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -28,10 +29,11 @@ export async function GET(req: NextRequest) {
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
+  const memberWhere = memberVisibilityWhere(teamId, auth.user.profile)
   const [totalMembers, members, invitations, roles] = await Promise.all([
-    prisma.workforceTeamMember.count({ where: { teamId } }),
+    prisma.workforceTeamMember.count({ where: memberWhere }),
     prisma.workforceTeamMember.findMany({
-      where: { teamId },
+      where: memberWhere,
       include: {
         user: {
           select: {

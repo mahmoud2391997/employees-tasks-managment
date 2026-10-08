@@ -37,12 +37,14 @@ export function EmployeesContainer({
   initialTotal,
   initialHasMore,
   departments,
+  departmentRequired = false,
   profiles,
   permissions,
 }: {
   initialEmployees: Employee[]
   initialTotal: number
   initialHasMore: boolean
+  departmentRequired?: boolean
   departments: Department[]
   profiles: Profile[]
   permissions: string[]
@@ -129,6 +131,7 @@ export function EmployeesContainer({
         <EmployeeForm
           employee={editing}
           departments={departments}
+          departmentRequired={departmentRequired}
           profiles={profiles}
           onClose={() => {
             setShowForm(false)
@@ -287,11 +290,13 @@ export function EmployeesContainer({
 function EmployeeForm({
   employee,
   departments,
+  departmentRequired,
   profiles,
   onClose,
   onSaved,
 }: {
   employee: Employee | null
+  departmentRequired: boolean
   departments: Department[]
   profiles: Profile[]
   onClose: () => void
@@ -304,12 +309,11 @@ function EmployeeForm({
   const [email, setEmail] = useState(employee?.profile.email ?? '')
   const [firstName, setFirstName] = useState(employee?.profile.firstName ?? '')
   const [lastName, setLastName] = useState(employee?.profile.lastName ?? '')
-  const [departmentId, setDepartmentId] = useState(employee?.departmentId ?? '')
+  const [departmentId, setDepartmentId] = useState(employee?.departmentId ?? (departmentRequired && departments.length === 1 ? departments[0].id : ''))
   const [position, setPosition] = useState(employee?.position ?? '')
   const [joinDate, setJoinDate] = useState(employee?.joinDate ? new Date(employee.joinDate).toISOString().slice(0, 10) : '')
   const [salary, setSalary] = useState(employee?.salary ?? '')
   const [status, setStatus] = useState<Employee['status']>(employee?.status ?? 'ACTIVE')
-  const [managerId, setManagerId] = useState(employee?.managerId ?? '')
 
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
@@ -329,7 +333,6 @@ function EmployeeForm({
                 joinDate: joinDate || null,
                 salary: salary ? salary : null,
                 status,
-                managerId: managerId || null,
               }
             : {
                 email,
@@ -340,7 +343,6 @@ function EmployeeForm({
                 joinDate: joinDate || undefined,
                 salary: salary ? salary : undefined,
                 status,
-                managerId: managerId || undefined,
               }
 
           const res = await apiFetch(isEdit ? `/api/employees/${employee!.id}` : '/api/employees', {
@@ -372,21 +374,11 @@ function EmployeeForm({
         ) : null}
 
         <label className="block text-sm font-medium">
-          {tr("القسم")}<Select className="mt-2" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          {tr("القسم")}<Select className="mt-2" value={departmentId} required={departmentRequired} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">—</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="block text-sm font-medium">
-          {tr("المدير")}<Select className="mt-2" value={managerId} onChange={(e) => setManagerId(e.target.value)}>
-            <option value="">—</option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {(p.firstName || p.email || tr("مستخدم")) + (p.lastName ? ` ${p.lastName}` : '')}
               </option>
             ))}
           </Select>

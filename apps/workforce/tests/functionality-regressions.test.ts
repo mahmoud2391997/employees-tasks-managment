@@ -7,7 +7,7 @@ const ctx = { params: Promise.resolve({ id: 'row1' }) }
 afterEach(() => { vi.resetModules(); vi.unstubAllEnvs() })
 
 function auth(permissions = [...ALL_PERMISSIONS] as string[]) {
-  vi.doMock('@/server/auth/require-permission', () => ({ requirePermission: async () => ({ ok: true, user: { id: 'u1', profile: { id: 'p1', teamId: 't1' }, permissions } }) }))
+  vi.doMock('@/server/auth/require-permission', () => ({ requirePermission: async () => ({ ok: true, user: { id: 'u1', profile: { id: 'p1', teamId: 't1', role: 'ADMIN' }, permissions } }) }))
 }
 
 describe('functionality regressions', () => {

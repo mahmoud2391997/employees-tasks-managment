@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const allowed = new Set(auth.user.permissions as readonly Permission[])
   const permissions = parsed.data.permissions
-    ? parsed.data.permissions.filter((p): p is Permission => allowed.has(p as Permission))
+    ? parsed.data.permissions.filter((p): p is Permission => allowed.has(p as Permission) && p !== 'tasks.assign')
     : undefined
 
   const updated = await prisma.workforceCustomRole.update({

@@ -13,7 +13,7 @@ const updateSchema = z.object({
   joinDate: z.string().trim().min(1).nullable().optional(),
   salary: salarySchema.nullable().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'TERMINATED']).optional(),
-  managerId: z.string().trim().min(1).nullable().optional(),
+  managerId: z.never().optional(),
 })
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -47,13 +47,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (!dep) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
-  if (parsed.data.managerId !== undefined && parsed.data.managerId !== null) {
-    const mgr = await prisma.workforceProfile.findFirst({
-      where: { id: parsed.data.managerId, teamId },
-      select: { id: true },
-    })
-    if (!mgr) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
-  }
 
   const salary =
     parsed.data.salary === undefined
@@ -70,7 +63,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       joinDate: joinDate === undefined ? undefined : joinDate,
       salary,
       status: parsed.data.status,
-      managerId: parsed.data.managerId === undefined ? undefined : parsed.data.managerId,
     },
     include: { profile: true, department: true, manager: true },
   })

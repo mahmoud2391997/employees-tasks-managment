@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (RESERVED.has(name)) return NextResponse.json({ success: false, message: 'لا يمكن استخدام هذا الاسم' }, { status: 400 })
 
   const allowed = new Set(auth.user.permissions as readonly Permission[])
-  const permissions = (parsed.data.permissions ?? []).filter((p): p is Permission => allowed.has(p as Permission))
+  const permissions = (parsed.data.permissions ?? []).filter((p): p is Permission => allowed.has(p as Permission) && p !== 'tasks.assign')
 
   try {
     const created = await prisma.workforceCustomRole.create({

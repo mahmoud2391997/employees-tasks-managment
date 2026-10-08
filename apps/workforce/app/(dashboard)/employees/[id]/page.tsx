@@ -1,3 +1,5 @@
+import { employeeVisibilityWhere } from '@/lib/directory-access'
+import { taskVisibilityWhere } from '@/lib/task-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -39,13 +41,15 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
     )
   }
 
+  const taskWhere = taskVisibilityWhere(teamId ?? '', session.profile, session.permissions)
+
   const { id } = await params
 
   const virtual = sampleData ? await getDemoCompany() : null
   const employee = virtual
     ? virtual.employees.find((row) => row.id === id) ?? null
     : await prisma.workforceEmployee.findFirst({
-        where: { id, teamId: teamId! },
+        where: { id, ...employeeVisibilityWhere(teamId!, session.profile) },
         include: { profile: true, department: true, manager: true },
       })
   if (!employee) notFound()
@@ -55,7 +59,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
         .filter((task) => task.assigneeId === employee.profileId)
         .map((task) => ({ ...task, dueDate: task.dueDate ? new Date(task.dueDate) : null }))
     : await prisma.workforceTask.findMany({
-        where: { teamId: teamId!, assigneeId: employee.profileId },
+        where: { AND: [taskWhere, { assigneeId: employee.profileId }] },
         include: { department: true, creator: true },
         orderBy: [{ createdAt: 'desc' }],
       })

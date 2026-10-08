@@ -1,3 +1,4 @@
+import { taskVisibilityWhere } from '@/lib/task-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -37,23 +38,29 @@ export default async function TasksPage() {
     )
   }
 
+  const taskWhere = taskVisibilityWhere(teamId ?? '', session.profile, session.permissions)
+
   const take = 50
   const skip = 0
 
   const virtual = sampleData ? await getDemoCompany() : null
+  const managedDepartments = !virtual && session.profile?.role === 'MANAGER'
+    ? await prisma.workforceDepartment.findMany({ where: { teamId: teamId!, managerId: session.profile.id }, select: { id: true } })
+    : []
+  const managedIds = managedDepartments.map(d => d.id)
   const [totalTasks, tasks, departments, profiles] = virtual
     ? [virtual.tasks.length, virtual.tasks.slice(skip, skip + take), virtual.departments.map((d) => ({ id: d.id, name: d.name })), virtual.profiles]
     : await Promise.all([
-        prisma.workforceTask.count({ where: { teamId: teamId! } }),
+        prisma.workforceTask.count({ where: taskWhere }),
         prisma.workforceTask.findMany({
-          where: { teamId: teamId! },
+          where: taskWhere,
           include: { department: true, assignee: true, creator: true },
           orderBy: [{ createdAt: 'desc' }],
           take,
           skip,
         }),
         prisma.workforceDepartment.findMany({ where: { teamId: teamId! }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
-        prisma.workforceProfile.findMany({ where: { teamId: teamId! }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
+        prisma.workforceProfile.findMany({ where: { teamId: teamId!, ...(session.profile?.role === 'MANAGER' ? { employees: { some: { teamId: teamId!, departmentId: { in: managedIds } } } } : {}) }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
       ])
 
   const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
@@ -78,6 +85,8 @@ export default async function TasksPage() {
         initialHasMore={skip + tasks.length < totalTasks}
         departments={departments as any}
         profiles={safeProfiles as any}
+        assignmentEnabled={session.profile?.role === 'ADMIN' || managedIds.length > 0}
+        currentRole={session.profile?.role ?? 'EMPLOYEE'}
         currentProfileId={session.profile?.id ?? ''}
         permissions={session.permissions as any}
       />

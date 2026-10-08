@@ -1,3 +1,4 @@
+import { employeeVisibilityWhere } from '@/lib/directory-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -37,6 +38,8 @@ export default async function EmployeesPage() {
     )
   }
 
+  const employeeWhere = employeeVisibilityWhere(teamId ?? '', session.profile)
+
   const take = 50
   const skip = 0
 
@@ -44,16 +47,16 @@ export default async function EmployeesPage() {
   const [totalEmployees, employees, departments, profiles] = virtual
     ? [virtual.employees.length, virtual.employees.slice(skip, skip + take), virtual.departments.map((d) => ({ id: d.id, name: d.name })), virtual.profiles]
     : await Promise.all([
-        prisma.workforceEmployee.count({ where: { teamId: teamId! } }),
+        prisma.workforceEmployee.count({ where: employeeWhere }),
         prisma.workforceEmployee.findMany({
-          where: { teamId: teamId! },
+          where: employeeWhere,
           include: { profile: true, department: true, manager: true },
           orderBy: [{ createdAt: 'desc' }],
           take,
           skip,
         }),
-        prisma.workforceDepartment.findMany({ where: { teamId: teamId! }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
-        prisma.workforceProfile.findMany({ where: { teamId: teamId! }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
+        prisma.workforceDepartment.findMany({ where: { teamId: teamId!, ...(session.profile?.role === 'MANAGER' ? { managerId: session.profile.id } : {}) }, select: { id: true, name: true }, orderBy: [{ createdAt: 'desc' }] }),
+        prisma.workforceProfile.findMany({ where: { teamId: teamId!, ...(session.profile?.role === 'MANAGER' ? { employees: { some: employeeWhere } } : {}) }, select: { id: true, firstName: true, lastName: true, email: true }, orderBy: [{ createdAt: 'desc' }] }),
       ])
 
   const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
@@ -78,6 +81,7 @@ export default async function EmployeesPage() {
         initialHasMore={skip + employees.length < totalEmployees}
         departments={departments as any}
         profiles={safeProfiles as any}
+        departmentRequired={session.profile?.role === 'MANAGER'}
         permissions={session.permissions as any}
       />
     </main>

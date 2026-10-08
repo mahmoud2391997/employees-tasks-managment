@@ -6,7 +6,7 @@ import { useTranslations } from '@/lib/i18n/provider'
 
 import { useMemo, useState } from 'react'
 
-import { ALL_PERMISSIONS } from '@/lib/permissions'
+import { ALL_PERMISSIONS, DEFAULT_ROLES } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -35,10 +35,14 @@ function groupPermissions(perms: readonly string[]) {
   return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
 }
 
+function effectiveRole(role: Role): Role {
+  return { ...role, permissions: DEFAULT_ROLES[role.name]?.permissions ?? role.permissions.filter(p => p !== 'tasks.assign') }
+}
+
 export function RolesContainer({ initialRoles, readOnly = false }: { initialRoles: Role[]; readOnly?: boolean }) {
   const tr = useTranslations()
 
-  const [roles, setRoles] = useState<Role[]>(initialRoles)
+  const [roles, setRoles] = useState<Role[]>(initialRoles.map(effectiveRole))
   const [editing, setEditing] = useState<Role | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -47,7 +51,7 @@ export function RolesContainer({ initialRoles, readOnly = false }: { initialRole
   async function refresh() {
     const res = await apiFetch('/api/roles', { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Role[] } | null
-    if (res.ok && json?.success) setRoles(json.data ?? [])
+    if (res.ok && json?.success) setRoles((json.data ?? []).map(effectiveRole))
   }
 
   return (
@@ -222,8 +226,8 @@ function RoleEditor({
                       <label key={p} className="flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
-                          checked={checked}
-                          disabled={Boolean(readOnly)}
+                          checked={checked && (p !== 'tasks.assign' || ['ADMIN', 'MANAGER'].includes(initial.name))}
+                          disabled={Boolean(readOnly) || p === 'tasks.assign'}
                           onChange={(e) => {
                             const next = e.target.checked
                             setPermissions((prev) => (next ? Array.from(new Set([...prev, p])) : prev.filter((x) => x !== p)))

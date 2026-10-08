@@ -1,3 +1,5 @@
+import { mayAssignTask } from '@/server/task-assignment'
+import { taskVisibilityWhere } from '@/lib/task-access'
 import { demoMutation } from '@/server/demo-sandbox'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -40,7 +42,7 @@ export async function GET(req: NextRequest) {
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
-  const where = { teamId }
+  const where = taskVisibilityWhere(teamId, auth.user.profile, auth.user.permissions)
   const [total, tasks] = await prisma.$transaction([
     prisma.workforceTask.count({ where }),
     prisma.workforceTask.findMany({
@@ -73,6 +75,10 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(json)
   if (!parsed.success) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
+  }
+
+  if (parsed.data.assigneeId && !await mayAssignTask({ profileId: creatorId, role: auth.user.profile!.role, permissions: auth.user.permissions }, teamId, parsed.data.assigneeId, parsed.data.departmentId)) {
+    return NextResponse.json({ success: false, message: 'ليس لديك صلاحية إسناد المهام' }, { status: 403 })
   }
 
   const demo = await demoMutation(req, auth.user.id, 'tasks', parsed.data)
