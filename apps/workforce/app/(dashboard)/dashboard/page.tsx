@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
 import { taskVisibilityWhere } from '@/lib/task-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
@@ -67,6 +69,18 @@ export default async function DashboardPage() {
           })),
         )
 
+  const profileId = session.profile?.id ?? ''
+  const canViewTasks = session.permissions.includes('tasks.view')
+  const canSeeCreated = canViewTasks && ['ADMIN', 'MANAGER'].includes(session.profile?.role ?? '')
+  const demoCompany = sampleData ? await getDemoCompany() : null
+  const taskSelect = { id: true, title: true, status: true, dueDate: true, assignee: { select: { firstName: true, lastName: true } } } as const
+  const [assignedTasks, createdTasks] = demoCompany
+    ? [demoCompany.tasks.filter(t => t.assigneeId === profileId).slice(0, 10), demoCompany.tasks.filter(t => t.createdById === profileId && t.assigneeId && t.assigneeId !== profileId).slice(0, 10)]
+    : await Promise.all([
+        canViewTasks ? prisma.workforceTask.findMany({ where: { teamId: teamId!, assigneeId: profileId }, select: taskSelect, orderBy: { createdAt: 'desc' }, take: 10 }) : [],
+        canSeeCreated ? prisma.workforceTask.findMany({ where: { teamId: teamId!, createdById: profileId, assigneeId: { not: null }, NOT: { assigneeId: profileId } }, select: taskSelect, orderBy: { createdAt: 'desc' }, take: 10 }) : [],
+      ])
+
   return (
     <main className="space-y-4">
       <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
@@ -81,6 +95,30 @@ export default async function DashboardPage() {
         <Stat label={tr("المهام")} value={String(tasks)} />
         <Stat label={tr("المكتملة")} value={String(completed)} />
       </div>
+
+      {canViewTasks ? <div className="grid gap-4 lg:grid-cols-2">
+        {[{ title: tr('المسندة لي'), rows: assignedTasks }, ...(canSeeCreated ? [{ title: tr('مهام أنشأتها للآخرين'), rows: createdTasks }] : [])].map(section => (
+          <section key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-semibold">{section.title}</h2>
+              <Link href="/tasks" className="text-sm text-brand-600 hover:underline">{tr('عرض المهام')}</Link>
+            </div>
+            <p className="mb-3 text-xs text-slate-500">{tr('أحدث 10 مهام')}</p>
+            {section.rows.length ? <ul className="divide-y divide-slate-100">
+              {section.rows.map(task => <li key={task.id} className="py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="break-words text-sm font-medium">{task.title}</span>
+                  <Badge variant="neutral">{tr(task.status)}</Badge>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+                  {task.assignee ? <span>{tr('الموظف المسند إليه')}: {[task.assignee.firstName, task.assignee.lastName].filter(Boolean).join(' ') || tr('مستخدم')}</span> : null}
+                  {task.dueDate ? <span>{tr('تاريخ الاستحقاق')}: {new Date(task.dueDate).toISOString().slice(0, 10)}</span> : null}
+                </div>
+              </li>)}
+            </ul> : <p className="py-6 text-sm text-slate-500">{tr('لا توجد مهام')}</p>}
+          </section>
+        ))}
+      </div> : null}
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
         <div className="mb-2 text-sm font-semibold">{tr("حالة المهام")}</div>

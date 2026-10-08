@@ -1,4 +1,7 @@
 export const english: Record<string, string> = {
+  'مهام أنشأتها للآخرين': 'Tasks I created for others',
+  'عرض المهام': 'View tasks',
+  'أحدث 10 مهام': 'Latest 10 tasks',
   'نقل إلى': 'Move to',
   'نقل المهمة {0}': 'Move task {0}',
   'تم نقل المهمة {0} إلى {1}': 'Moved task {0} to {1}',
