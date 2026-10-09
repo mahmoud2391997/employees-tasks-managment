@@ -36,7 +36,7 @@ export function Sidebar({ name, role, permissions, companyName, collapsed, onTog
     <div className={`sidebar-header flex h-16 shrink-0 items-center border-b border-brand-200/70 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-5'}`}>
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-1.5"><Image src={BRAND.logo} alt={tr(BRAND.name)} width={48} height={48} className="h-full w-full object-contain" /></div>
-        {!collapsed ? <div className="min-w-0"><div className="text-sm font-bold">{companyName}</div><div className="mt-1 text-[10px] text-slate-500">{tr(BRAND.legalName)}</div></div> : null}
+        {!collapsed ? <div className="min-w-0"><div className="text-sm font-bold">{companyName}</div><div className="mt-1 text-[10px] text-slate-500">{tr(BRAND.tagline)}</div></div> : null}
       </div>
       {!collapsed ? <button type="button" onClick={onToggle} aria-label={mobile ? tr('إغلاق') : tr('طي القائمة')} aria-expanded={!collapsed}
         className="rounded-lg p-1.5 text-brand-500 hover:bg-brand-100 hover:text-brand-700">{mobile ? <X size={18} /> : <ChevronRight size={17} className="rtl:rotate-180" />}</button> : null}

@@ -7,14 +7,8 @@ export const VIRTUAL_DB_UNAVAILABLE_MESSAGE = 'قاعدة البيانات غي�
 export const VIRTUAL_READONLY_MESSAGE = 'وضع الدخول الافتراضي يعرض بيانات تجريبية للقراءة فقط'
 export const VIRTUAL_SAMPLE_NOTE = 'بيانات تجريبية تفاعلية. التغييرات مؤقتة ولا تؤثر على بيانات الشركة.'
 
-const BASE_MS = Date.parse('2026-09-20T12:00:00.000Z')
-
-function iso(offsetDays: number) {
-  return new Date(BASE_MS + offsetDays * 24 * 60 * 60 * 1000).toISOString()
-}
-
 function adminEmail() {
-  return 'demo@workforce.invalid'
+  return 'demo@riwaq.invalid'
 }
 
 function companyName() {
@@ -61,237 +55,86 @@ type Department = {
 }
 
 export function createVirtualCompany() {
+  // Anchor each new sandbox to today so recordings keep useful due-date scenarios.
+  const base = new Date()
+  base.setUTCHours(12, 0, 0, 0)
+  const iso = (days: number) => new Date(base.getTime() + days * 86400000).toISOString()
   const email = adminEmail()
   const admin: Profile = {
-    id: FALLBACK_ADMIN_PROFILE_ID,
-    email,
-    firstName: 'Demo',
-    lastName: 'User',
-    role: 'ADMIN',
-    teamId: FALLBACK_COMPANY_ID,
-    createdAt: iso(0),
-    updatedAt: iso(0),
+    id: FALLBACK_ADMIN_PROFILE_ID, email, firstName: 'نور', lastName: 'منصور',
+    role: 'ADMIN', teamId: FALLBACK_COMPANY_ID, createdAt: iso(-90), updatedAt: iso(0),
   }
-  const alex: Profile = {
-    id: 'virtual-profile-alex',
-    email: 'alex@demo.local',
-    firstName: 'Alex',
-    lastName: 'Johnson',
-    role: 'EMPLOYEE',
-    teamId: FALLBACK_COMPANY_ID,
-    createdAt: iso(1),
-    updatedAt: iso(1),
-  }
-  const sara: Profile = {
-    id: 'virtual-profile-sara',
-    email: 'sara@demo.local',
-    firstName: 'Sara',
-    lastName: 'Lee',
-    role: 'MANAGER',
-    teamId: FALLBACK_COMPANY_ID,
-    createdAt: iso(2),
-    updatedAt: iso(2),
-  }
-
-  const engineering: Department = {
-    id: 'virtual-dept-engineering',
-    teamId: FALLBACK_COMPANY_ID,
-    name: 'Engineering',
-    icon: null,
-    managerId: null,
-    manager: null,
-    createdAt: iso(1),
-    updatedAt: iso(1),
-  }
-  const hr: Department = {
-    id: 'virtual-dept-hr',
-    teamId: FALLBACK_COMPANY_ID,
-    name: 'HR',
-    icon: null,
-    managerId: sara.id,
-    manager: sara,
-    createdAt: iso(2),
-    updatedAt: iso(2),
-  }
-  const operations: Department = {
-    id: 'virtual-dept-operations',
-    teamId: FALLBACK_COMPANY_ID,
-    name: 'Operations',
-    icon: null,
-    managerId: null,
-    manager: null,
-    createdAt: iso(3),
-    updatedAt: iso(3),
-  }
-
-  const departments = [operations, hr, engineering]
-  const profiles = [sara, alex, admin]
-
-  const employees = [
-    {
-      id: 'virtual-employee-sara',
-      teamId: FALLBACK_COMPANY_ID,
-      profileId: sara.id,
-      departmentId: hr.id,
-      position: 'Team Manager',
-      joinDate: iso(-40),
-      salary: null as string | null,
-      status: 'ACTIVE' as const,
-      managerId: null as string | null,
-      profile: sara,
-      department: { id: hr.id, name: hr.name },
-      manager: null,
-      createdAt: iso(5),
-      updatedAt: iso(5),
-    },
-    {
-      id: 'virtual-employee-alex',
-      teamId: FALLBACK_COMPANY_ID,
-      profileId: alex.id,
-      departmentId: engineering.id,
-      position: 'Frontend Engineer',
-      joinDate: iso(-20),
-      salary: null as string | null,
-      status: 'ACTIVE' as const,
-      managerId: sara.id,
-      profile: alex,
-      department: { id: engineering.id, name: engineering.name },
-      manager: { id: sara.id, firstName: sara.firstName, lastName: sara.lastName, email: sara.email },
-      createdAt: iso(4),
-      updatedAt: iso(4),
-    },
+  // All names and addresses are fictional; .invalid addresses cannot deliver mail.
+  const office = [
+    { key: 'engineering', name: 'التقنية · Engineering', people: [['آدم', 'حسن', 'مدير التقنية'], ['ليلى', 'عمر', 'مهندسة واجهات'], ['يوسف', 'عادل', 'مهندس برمجيات']], work: ['إطلاق بوابة الفريق · Team portal', 'تحسين تجربة الجوال · Mobile experience', 'مراجعة جودة الإصدار · Release quality', 'تحديث دليل التكامل · Integration guide', 'اختبار الأداء · Performance testing', 'تجهيز الإصدار القادم · Next release'] },
+    { key: 'design', name: 'التصميم · Design', people: [['مريم', 'سالم', 'مديرة التصميم'], ['كريم', 'نادر', 'مصمم منتجات'], ['هنا', 'سعيد', 'باحثة تجربة المستخدم']], work: ['تصميم مساحة الفريق · Team workspace', 'مراجعة رحلة المستخدم · User journey', 'تسليم مكتبة المكونات · Component library', 'توحيد قوالب العرض · Presentation templates', 'اختبار سهولة الاستخدام · Usability study', 'تصميم صفحة الترحيب · Welcome screen'] },
+    { key: 'operations', name: 'العمليات · Operations', people: [['عمر', 'فؤاد', 'مدير العمليات'], ['دينا', 'ماهر', 'منسقة عمليات'], ['زياد', 'أمين', 'محلل عمليات']], work: ['تخطيط الأسبوع · Weekly planning', 'تحديث إجراءات العمل · Work procedures', 'مراجعة مؤشرات الأداء · KPI review', 'تنسيق تسليم الأقسام · Department handoff', 'تقرير سير العمل · Operations report', 'جدولة اجتماع الفرق · Team meeting'] },
+    { key: 'hr', name: 'الموارد البشرية · People', people: [['سارة', 'نبيل', 'مديرة الموارد البشرية'], ['أحمد', 'راشد', 'مسؤول توظيف'], ['نورا', 'حمدي', 'منسقة تدريب']], work: ['تهيئة الموظفين الجدد · Onboarding', 'تنظيم ورشة الفريق · Team workshop', 'مراجعة دليل الموظف · Employee handbook', 'خطة تطوير المهارات · Learning plan', 'استبيان تجربة الفريق · Team survey', 'تحديث ملفات الموظفين · Employee records'] },
+    { key: 'marketing', name: 'التسويق · Marketing', people: [['رنا', 'سمير', 'مديرة التسويق'], ['تامر', 'جلال', 'كاتب محتوى'], ['منى', 'عصام', 'مختصة حملات']], work: ['إطلاق حملة رِواق · Riwaq campaign', 'تحضير تقويم المحتوى · Content calendar', 'مراجعة صفحة المنتج · Product page', 'تنسيق العرض التعريفي · Product demo', 'تحليل نتائج الحملة · Campaign results', 'كتابة قصة العميل · Customer story'] },
+    { key: 'finance', name: 'المالية · Finance', people: [['خالد', 'شريف', 'مدير المالية'], ['ياسمين', 'باسم', 'محاسبة'], ['مازن', 'طارق', 'محلل مالي']], work: ['مراجعة ميزانية الأقسام · Department budget', 'تجهيز تقرير المصروفات · Expense report', 'تدقيق الفواتير · Invoice review', 'تخطيط الربع القادم · Quarterly forecast', 'ملخص الأداء المالي · Finance summary', 'تنسيق طلبات المشتريات · Purchase requests'] },
   ]
-
-  const tasks = [
-    {
-      id: 'virtual-task-kanban',
-      teamId: FALLBACK_COMPANY_ID,
-      title: 'Set up Kanban board',
-      description: 'Drag and drop tasks between columns.',
-      priority: 'URGENT' as const,
-      status: 'TODO' as const,
-      departmentId: engineering.id,
-      assigneeId: alex.id,
-      createdById: admin.id,
-      dueDate: null as string | null,
-      department: { id: engineering.id, name: engineering.name },
-      assignee: alex,
-      creator: admin,
-      createdAt: iso(10),
-      updatedAt: iso(10),
-    },
-    {
-      id: 'virtual-task-ops',
-      teamId: FALLBACK_COMPANY_ID,
-      title: 'Prepare operations report',
-      description: 'Collect weekly metrics and share the team report.',
-      priority: 'LOW' as const,
-      status: 'COMPLETED' as const,
-      departmentId: operations.id,
-      assigneeId: sara.id,
-      createdById: admin.id,
-      dueDate: null as string | null,
-      department: { id: operations.id, name: operations.name },
-      assignee: sara,
-      creator: admin,
-      createdAt: iso(9),
-      updatedAt: iso(9),
-    },
-    {
-      id: 'virtual-task-onboarding',
-      teamId: FALLBACK_COMPANY_ID,
-      title: 'Review onboarding flow',
-      description: 'Validate employee creation and invitation flow end-to-end.',
-      priority: 'MEDIUM' as const,
-      status: 'REVIEW' as const,
-      departmentId: hr.id,
-      assigneeId: sara.id,
-      createdById: admin.id,
-      dueDate: iso(3),
-      department: { id: hr.id, name: hr.name },
-      assignee: sara,
-      creator: admin,
-      createdAt: iso(8),
-      updatedAt: iso(8),
-    },
-    {
-      id: 'virtual-task-design',
-      teamId: FALLBACK_COMPANY_ID,
-      title: 'Design system polish',
-      description: 'Improve spacing, typography, and component consistency.',
-      priority: 'HIGH' as const,
-      status: 'IN_PROGRESS' as const,
-      departmentId: engineering.id,
-      assigneeId: alex.id,
-      createdById: admin.id,
-      dueDate: iso(5),
-      department: { id: engineering.id, name: engineering.name },
-      assignee: alex,
-      creator: admin,
-      createdAt: iso(7),
-      updatedAt: iso(7),
-    },
-  ]
-
-  const members = [
-    {
-      id: 'virtual-member-admin',
-      userId: FALLBACK_ADMIN_ID,
-      teamId: FALLBACK_COMPANY_ID,
-      role: 'ADMIN',
-      isActive: true,
-      createdAt: iso(6),
-      updatedAt: iso(6),
-      user: {
-        id: FALLBACK_ADMIN_ID,
-        email,
-        profile: admin,
-      },
-    },
-  ]
-
-  const invitations = [
-    {
-      id: 'virtual-invite-hire',
-      teamId: FALLBACK_COMPANY_ID,
-      email: 'new.hire@demo.local',
-      role: 'EMPLOYEE',
-      token: `demo-invite-${FALLBACK_COMPANY_ID}`,
-      expiresAt: iso(14),
-      invitedById: admin.id,
-      acceptedAt: null as string | null,
-      createdAt: iso(6),
-      updatedAt: iso(6),
-      invitedBy: { id: admin.id, email: admin.email, firstName: admin.firstName, lastName: admin.lastName },
-    },
-  ]
-
+  const staff = office.flatMap(dept => dept.people.map(([firstName, lastName], index): Profile => ({
+    id: `virtual-profile-${dept.key}-${index}`, email: `${dept.key}.${index + 1}@riwaq.invalid`,
+    firstName, lastName, role: index === 0 ? 'MANAGER' : 'EMPLOYEE',
+    teamId: FALLBACK_COMPANY_ID, createdAt: iso(-80 + index), updatedAt: iso(-1),
+  })))
+  const profiles = [admin, ...staff]
+  const departments: Department[] = office.map((dept, index) => ({
+    id: `virtual-dept-${dept.key}`, teamId: FALLBACK_COMPANY_ID, name: dept.name, icon: null,
+    managerId: staff[index * 3].id, manager: staff[index * 3], createdAt: iso(-85), updatedAt: iso(-1),
+  }))
+  const employees = staff.map((profile, index) => {
+    const department = departments[Math.floor(index / 3)]
+    const manager = index % 3 === 0 ? null : department.manager
+    return {
+      id: `virtual-employee-${index}`, teamId: FALLBACK_COMPANY_ID, profileId: profile.id,
+      departmentId: department.id, position: office[Math.floor(index / 3)].people[index % 3][2],
+      joinDate: iso(-180 + index * 7), salary: null as string | null, status: 'ACTIVE' as const,
+      managerId: manager?.id ?? null, profile, department: { id: department.id, name: department.name },
+      manager, createdAt: iso(-70 + index), updatedAt: iso(-1),
+    }
+  })
+  const statuses = ['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED'] as const
+  const priorities = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'] as const
+  const tasks = office.flatMap((dept, departmentIndex) => dept.work.map((title, index) => {
+    const department = departments[departmentIndex]
+    const number = departmentIndex * 6 + index
+    const assignee = index === departmentIndex % 4 ? admin : staff[departmentIndex * 3 + index % 3]
+    const creator = index < 4 ? admin : department.manager!
+    return {
+      id: `virtual-task-${dept.key}-${index}`, teamId: FALLBACK_COMPANY_ID, title,
+      description: `التنسيق مع قسم ${dept.name}، توثيق المخرجات ومشاركة التحديث في اجتماع الفريق. Coordinate with the department, document deliverables, and share progress at the team meeting.`,
+      priority: priorities[(departmentIndex + index * 3) % 4], status: statuses[number % 4],
+      departmentId: department.id, assigneeId: assignee.id, createdById: creator.id,
+      dueDate: index === 5 ? null : iso(statuses[number % 4] === 'COMPLETED' ? -1 : [-2, 0, 2, 5, 10][index]),
+      department: { id: department.id, name: department.name }, assignee, creator,
+      createdAt: iso(-Math.floor(number / 6)), updatedAt: iso(-1),
+    }
+  }))
+  const members = profiles.map((profile, index) => ({
+    id: `virtual-member-${index}`, userId: index === 0 ? FALLBACK_ADMIN_ID : `virtual-user-${index}`,
+    teamId: FALLBACK_COMPANY_ID, role: profile.role, isActive: true,
+    createdAt: iso(-70 + index), updatedAt: iso(-1),
+    user: { id: index === 0 ? FALLBACK_ADMIN_ID : `virtual-user-${index}`, email: profile.email, profile },
+  }))
+  const invitations = ['content', 'research', 'support'].map((position, index) => ({
+    id: `virtual-invite-${position}`, teamId: FALLBACK_COMPANY_ID,
+    email: `${position}.new@riwaq.invalid`, role: 'EMPLOYEE',
+    token: `demo-invite-${FALLBACK_COMPANY_ID}-${position}`, expiresAt: iso(7 + index),
+    invitedById: admin.id, acceptedAt: null as string | null, createdAt: iso(-index), updatedAt: iso(-index),
+    invitedBy: { id: admin.id, email: admin.email, firstName: admin.firstName, lastName: admin.lastName },
+  }))
   const notifications = [
-    {
-      id: 'virtual-notif-task',
-      userId: admin.id,
-      teamId: FALLBACK_COMPANY_ID,
-      type: 'TASK_ASSIGNED',
-      title: 'New task assigned',
-      message: 'Design system polish is ready for Alex.',
-      data: null,
-      read: false,
-      createdAt: iso(11),
-      updatedAt: iso(11),
-    },
-    {
-      id: 'virtual-notif-invite',
-      userId: admin.id,
-      teamId: FALLBACK_COMPANY_ID,
-      type: 'INVITATION_SENT',
-      title: 'Invitation sent',
-      message: 'An invitation is pending for new.hire@demo.local.',
-      data: null,
-      read: false,
-      createdAt: iso(10),
-      updatedAt: iso(10),
-    },
-  ]
+    ['TASK_ASSIGNED', 'مهمة جديدة · New task', 'إطلاق بوابة الفريق جاهز للمتابعة · The team portal is ready for your follow-up.'],
+    ['TASK_UPDATED', 'جاهز للمراجعة · Ready for review', 'تم إرسال مراجعة جودة الإصدار · The release quality review is ready for review.'],
+    ['TASK_COMPLETED', 'إنجاز جديد · Task completed', 'تم تسليم دليل التكامل · The integration guide has been delivered.'],
+    ['INVITATION_SENT', 'دعوة جديدة · New invitation', 'دعوة فريق المحتوى بانتظار القبول · The content team invitation is pending.'],
+    ['TASK_UPDATED', 'تحديث العمليات · Operations update', 'تم تحديث خطة الأسبوع · The weekly plan has been updated.'],
+    ['TASK_ASSIGNED', 'تنسيق الأقسام · Department coordination', 'إطلاق حملة رِواق ضمن مهامك · The Riwaq campaign is assigned to you.'],
+  ].map(([type, title, message], index) => ({
+    id: `virtual-notif-${index}`, userId: admin.id, teamId: FALLBACK_COMPANY_ID,
+    type, title, message, data: null, read: index > 2, createdAt: iso(-index), updatedAt: iso(-index),
+  }))
 
   const roles = Object.entries(DEFAULT_ROLES).map(([name, def], index) => ({
     id: `virtual-role-${name.toLowerCase()}`,

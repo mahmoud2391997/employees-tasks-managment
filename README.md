@@ -1,3 +1,7 @@
+# Riwaq | رِواق
+
+A virtual office for departments, teams, and tasks. The interface uses a teal and mint palette, an amber accent, and a connected-room SVG mark. Arabic and English branding share the same identity.
+
 # Workforce
 
 Arabic, RTL employee and task management for a single company. Next.js App Router and React provide the dashboard and API; Prisma stores data in PostgreSQL. Access is invitation-only, with built-in and custom permission roles.
@@ -69,3 +73,9 @@ For a deployed demo button, set `WORKFORCE_DEMO_MODE=true` in the deployment env
 ### Interactive demo
 
 Enter the demo from the login screen to use the same production forms and actions with sample records. Each entry starts an isolated sandbox. Demo changes are held in server memory for up to 24 hours and reset on server restart or a new demo entry; multi-instance deployments do not share sandbox state. Invitations and acceptance are simulated without sending email or creating real accounts. Production records are never changed by demo actions.
+
+### Recording the Riwaq demo
+
+Start a fresh demo from the login page to load 6 departments, 18 fictional employees, 19 members (including the demo administrator), 36 tasks, 3 pending invitations, and 6 notifications. Each department has a manager, two colleagues, and six tasks. The board has nine tasks in each status, all four priorities, six personal tasks, and eighteen tasks delegated by the administrator. Due dates are relative to the day the sandbox starts, including overdue, today, upcoming, and undated work. Sample names and addresses are fictional; all seed email addresses use `.invalid`. Department names, task titles, descriptions, and notifications include Arabic and English; the interface language switch remains available.
+
+For a recording, show the dashboard, open departments and the employee directory, filter the task board by department, move a task between columns, then open members and notifications. Demo changes stay in the visitor's in-memory sandbox; Exit demo and enter again to reset. No production account data is seeded.

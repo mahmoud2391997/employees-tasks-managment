@@ -1,14 +1,9 @@
 export const BRAND = {
-  name: 'أعلاف الكوثر',
-  legalName: 'بحار الجوبة للتجارة ش.م.م',
-  logo: '/brand/al-kawther-feeds.png',
-  registrationNumber: '1219471',
-  taxIdentificationNumber: '1383870',
-  address: 'سناو، محافظة شمال الشرقية، سلطنة عمان',
-  email: 'alkawthercattlefeed@gmail.com',
-  phone: '+968 93990766',
-  postalCode: '325',
-  poBox: '333',
+  name: 'رِواق',
+  englishName: 'Riwaq',
+  tagline: 'مكتبك الافتراضي',
+  description: 'مساحة مشتركة تجمع الأقسام والفرق والمهام في مكان واحد.',
+  logo: '/brand/riwaq.svg',
 } as const
 
 export function companyDisplayName() {

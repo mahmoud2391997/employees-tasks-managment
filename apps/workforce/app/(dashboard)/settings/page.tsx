@@ -40,19 +40,14 @@ export default async function SettingsPage() {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-4">
           <Image src={BRAND.logo} alt={tr(BRAND.name)} width={80} height={80} className="h-20 w-20 object-contain" />
-          <div><h2 className="text-xl font-bold text-brand-950">{tr(BRAND.name)}</h2><p className="mt-1 text-sm text-slate-500">{tr("بيانات الشركة")}</p></div>
+          <div><h2 className="text-xl font-bold text-brand-950">{tr(BRAND.name)}</h2><p className="mt-1 text-sm text-slate-500">{tr('هوية مساحة العمل')}</p></div>
         </div>
         <dl className="grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
           {[
-            [tr("الاسم القانوني"), tr(BRAND.legalName)],
-            [tr("السجل التجاري"), BRAND.registrationNumber],
-            [tr("رقم التعريف الضريبي"), BRAND.taxIdentificationNumber],
-            [tr("عنوان الشركة"), tr(BRAND.address)],
-            [tr("الرمز البريدي"), BRAND.postalCode],
-            [tr("صندوق البريد"), BRAND.poBox],
+            [tr('اسم المنصة'), tr(BRAND.name)],
+            [tr('نوع مساحة العمل'), tr('مكتب افتراضي للأقسام والفرق')],
+            [tr('تنظيم العمل'), tr('أقسام مترابطة، فرق متعاونة، ومهام واضحة')],
           ].map(([label, value]) => <div key={label}><dt className="text-slate-500">{label}</dt><dd className="mt-1 font-medium text-slate-900">{value}</dd></div>)}
-          <div><dt className="text-slate-500">{tr("البريد الإلكتروني")}</dt><dd className="mt-1"><a className="text-brand-700 hover:underline" href={`mailto:${BRAND.email}`}><bdi dir="ltr">{BRAND.email}</bdi></a></dd></div>
-          <div><dt className="text-slate-500">{tr("الهاتف")}</dt><dd className="mt-1"><a className="text-brand-700 hover:underline" href={`tel:${BRAND.phone.replace(/\s/g, '')}`}><bdi dir="ltr">{BRAND.phone}</bdi></a></dd></div>
         </dl>
       </div>
     </main>

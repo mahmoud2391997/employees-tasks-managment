@@ -8,8 +8,8 @@ import { getLocale } from '@/lib/i18n/server'
 
 export const metadata = {
   icons: { icon: BRAND.logo, apple: BRAND.logo },
-  title: 'أعلاف الكوثر | Al Kawther Feeds',
-  description: 'إدارة الموظفين والمهام — أعلاف الكوثر، بحار الجوبة للتجارة.',
+  title: `${BRAND.name} | ${BRAND.englishName}`,
+  description: 'رِواق — مكتب افتراضي يجمع الأقسام والفرق والمهام. Riwaq — a virtual office for departments, teams, and tasks.',
 }
 
 const cairo = Cairo({

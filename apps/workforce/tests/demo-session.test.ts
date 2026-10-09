@@ -26,7 +26,7 @@ describe('public interactive demo', () => {
     expect(response.cookies.get('wf_auth')?.value).toBe(DEMO_PREVIEW_TOKEN)
     expect(response.cookies.get('wf_auth')?.secure).toBe(true)
     const user = await getSessionUser(demoRequest())
-    expect(user?.email).toBe('demo@workforce.invalid')
+    expect(user?.email).toBe('demo@riwaq.invalid')
     expect(user?.permissions).toContain('tasks.edit')
     expect((await requirePermission(demoRequest(), 'tasks.view')).ok).toBe(true)
     expect((await requirePermission(demoRequest('POST'), 'roles.manage')).status).toBe(200)
