@@ -46,3 +46,7 @@ Generate the JWT secret locally with `openssl rand -hex 32`. The admin password 
 5. Verify notifications and sign-out; confirm the demo button is hidden.
 
 The public demo stores sample records in memory and cannot establish that the production database works. A successful build or unit test also does not replace these live checks.
+
+## Administrator recovery
+
+For a forgotten administrator password, set a new random `COMPANY_ADMIN_PASSWORD` (at least 16 characters) and temporarily set `WORKFORCE_RESET_ADMIN_PASSWORD=true` in Production. Deploy once. The build resets only the configured administrator who already owns a company. It fails if that account or ownership is missing. Remove the recovery flag immediately afterward. Without the flag, deployments never reset existing passwords. There is no public recovery endpoint.

@@ -7,7 +7,7 @@
     "dev": "next dev -p 3001",
     "build": "pnpm -C ../../packages/workforce-database generate && next build --webpack",
     "start": "next start -p 3001",
-    "deploy:build": "pnpm -C ../../packages/workforce-database migrate:deploy && pnpm build"
+    "deploy:build": "pnpm -C ../../packages/workforce-database migrate:deploy && pnpm -C ../../packages/workforce-database generate && node scripts/reset-admin-password.mjs && next build --webpack"
   },
   "dependencies": {
     "@workforce/database": "workspace:*",
