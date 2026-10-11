@@ -64,6 +64,10 @@ Missing database configuration no longer grants a setup/admin session. Database 
 
 See [DEVELOPMENT_REVIEW.md](DEVELOPMENT_REVIEW.md) for review findings and the prioritized backlog, and [MANUAL_TESTS.md](MANUAL_TESTS.md) for workflow checks. Development tooling is ready; real database and browser acceptance checks are still required before release.
 
+## Vercel deployment
+
+See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for the Neon Free setup, exact environment variables, migration build command, and live acceptance checks.
+
 ## Languages
 
 Use the English / العربية switch on login or in the sidebar. The language preference is saved in a cookie; English uses LTR and Arabic uses RTL. Navigation, dashboard headings, forms and standard statuses are translated. User-entered names, task descriptions and existing notification content retain their original language.
