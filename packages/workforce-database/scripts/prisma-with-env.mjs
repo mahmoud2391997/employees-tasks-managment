@@ -47,11 +47,34 @@ const prismaBin =
     ? path.join(packageDir, 'node_modules', '.bin', 'prisma.cmd')
     : path.join(packageDir, 'node_modules', '.bin', 'prisma')
 
+// Match the runtime resolver so Vercel/Neon integration variables also work
+// during migrations and client generation, without copying database secrets.
+const prismaEnv = { ...extraEnv, ...process.env }
+const databaseKeys = [
+  'WORKFORCE_DATABASE_URL',
+  'WORKFORCE_POSTGRES_PRISMA_URL',
+  'WORKFORCE_POSTGRES_URL',
+  'WORKFORCE_POSTGRES_URL_NON_POOLING',
+  'POSTGRES_PRISMA_URL',
+  'POSTGRES_URL',
+  'POSTGRES_URL_NON_POOLING',
+  'DATABASE_URL',
+]
+const selectedKeys = prismaEnv.WORKFORCE_DATABASE_SOURCE === 'neon'
+  ? ['POSTGRES_PRISMA_URL', 'DATABASE_URL']
+  : databaseKeys
+const databaseUrl = selectedKeys.map((key) => prismaEnv[key]?.trim()).find(Boolean)
+if (prismaEnv.WORKFORCE_DATABASE_SOURCE === 'neon' && !databaseUrl) {
+  console.error('Neon database configuration is missing POSTGRES_PRISMA_URL / DATABASE_URL')
+  process.exit(1)
+}
+if (databaseUrl) prismaEnv.WORKFORCE_DATABASE_URL = databaseUrl
+
 const args = process.argv.slice(2)
 const result = spawnSync(prismaBin, args, {
   cwd: packageDir,
   stdio: 'inherit',
-  env: { ...extraEnv, ...process.env },
+  env: prismaEnv,
 })
 
 process.exit(result.status ?? 1)

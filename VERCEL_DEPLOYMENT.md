@@ -2,15 +2,15 @@
 
 ## Hosting settings
 
-Use the existing Vercel project, connected to this Git repository. Root Directory: `apps/workforce`. Node.js: 22.x. Install command: `npx --yes pnpm@12.3.4 install --frozen-lockfile`. For the real database deployment, override Build Command to `npx --yes pnpm@12.3.4 run deploy:build`.
+Use the existing Vercel project, connected to this Git repository. Root Directory: `apps/workforce`. Node.js: 24.x on Vercel (local Node.js 22 is also supported). Install command: `npx --yes pnpm@12.3.4 install --frozen-lockfile`. The committed Vercel configuration sets Build Command to `npx --yes pnpm@12.3.4 run deploy:build`.
 
 This command applies committed Prisma migrations before building the app. A failed migration stops the deployment. The ordinary `build` command remains available for the public demo. Use a separate database for test/preview and production; migrations affect the database before a deployment becomes live.
 
 ## Free database
 
-Create a Neon Free project via the Vercel Marketplace (https://vercel.com/marketplace/neon/neon), connect it to the Vercel project and select the deployment environments to configure. Copy its PostgreSQL pooled connection string to `WORKFORCE_DATABASE_URL`. Keep `sslmode=require` in the URL. This application uses Prisma's PostgreSQL connector; it does not need the Neon JavaScript driver.
+Create a Neon Free project via the Vercel Marketplace (https://vercel.com/marketplace/neon/neon), connect it to the Vercel project and select the deployment environments to configure. The integration supplies `POSTGRES_PRISMA_URL` / `DATABASE_URL`, which this app recognizes automatically. For manual configuration, use `WORKFORCE_DATABASE_URL` with the pooled connection string. Keep `sslmode=require` in the URL. This application uses Prisma's PostgreSQL connector; it does not need the Neon JavaScript driver.
 
-Use `WORKFORCE_DATABASE_URL` explicitly: the runtime supports provider aliases such as `DATABASE_URL`, but the migration command expects `WORKFORCE_DATABASE_URL`.
+Both runtime and migrations recognize the provider aliases. `WORKFORCE_DATABASE_URL`, when configured, takes precedence unless `WORKFORCE_DATABASE_SOURCE=neon` explicitly selects the provider connection.
 
 ## Environment variables
 
@@ -18,7 +18,8 @@ Set these in Vercel for the target environment, then redeploy. Do not commit act
 
 | Variable | Value / purpose |
 | --- | --- |
-| `WORKFORCE_DATABASE_URL` | Neon PostgreSQL pooled connection URL including TLS settings |
+| `WORKFORCE_DATABASE_SOURCE` | `neon`, to select the connected Neon database even if an older shared URL exists |
+| `WORKFORCE_DATABASE_URL` | Neon pooled connection URL; optional when the integration supplies `POSTGRES_PRISMA_URL` / `DATABASE_URL` |
 | `WORKFORCE_JWT_SECRET` | Random secret, at least 32 characters |
 | `WORKFORCE_DEMO_MODE` | `false`, to test real persistent accounts and records |
 | `COMPANY_NAME` | `رِواق`, or your company name |
