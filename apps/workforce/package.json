@@ -25,6 +25,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@prisma/nextjs-monorepo-workaround-plugin": "6.19.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24",
     "@types/react": "^19",
