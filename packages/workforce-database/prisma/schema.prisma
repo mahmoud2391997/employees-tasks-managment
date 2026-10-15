@@ -245,6 +245,7 @@ model WorkforceAuditEvent {
  actorId String
  teamId String
  action String
+ metadata Json?
  createdAt DateTime @default(now())
  @@index([teamId, createdAt])
 }

@@ -64,8 +64,8 @@ export async function deliverNotificationOutbox(limit=20){
  if(!readSmtpConfig())return {sent:0,configured:false}
  const pending=await prisma.workforceNotification.findMany({where:{emailStatus:'PENDING',emailAttempts:{lt:5}},orderBy:{createdAt:'asc'},take:Math.min(limit,100)})
  let sent=0
- for(const item of pending){const claimed=await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'PENDING'},data:{emailStatus:'SENDING',emailAttempts:{increment:1}}});if(!claimed.count)continue
-  try{await emailNotification(item.userId,item.title,item.message,item.id)}catch{await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING'},data:{emailStatus:'UNCERTAIN'}});continue}
-  await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING'},data:{emailStatus:'SENT'}});sent++
+ for(const item of pending){const claimed=await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'PENDING',emailAttempts:item.emailAttempts},data:{emailStatus:'SENDING',emailAttempts:{increment:1}}});if(!claimed.count)continue
+  try{await emailNotification(item.userId,item.title,item.message,item.id)}catch{await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING',emailAttempts:item.emailAttempts+1},data:{emailStatus:'UNCERTAIN'}});continue}
+  await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING',emailAttempts:item.emailAttempts+1},data:{emailStatus:'SENT'}});sent++
  }return {sent,configured:true}
 }

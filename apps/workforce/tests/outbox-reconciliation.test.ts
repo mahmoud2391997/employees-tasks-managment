@@ -1,0 +1,10 @@
+import {beforeEach,expect,it,vi} from 'vitest'
+const m=vi.hoisted(()=>({find:vi.fn(),update:vi.fn(),audit:vi.fn()}))
+vi.mock('@/server/db',()=>({prisma:{$transaction:(fn:any)=>fn({workforceNotification:{findFirst:m.find,updateMany:m.update},workforceAuditEvent:{create:m.audit}})}}))
+import {reconcileOutbox} from '@/server/outbox-reconciliation'
+const input={actorId:'operator',teamId:'team',id:'n1',reason:'Provider confirmed no delivery',action:'requeue' as const,workerPaused:true,nonDeliveryConfirmed:true}
+beforeEach(()=>{vi.clearAllMocks();m.find.mockResolvedValue({id:'n1',emailStatus:'UNCERTAIN',emailAttempts:2,updatedAt:new Date(0)});m.update.mockResolvedValue({count:1})})
+it('requires explicit attestation and a paused worker',async()=>{await expect(reconcileOutbox({...input,nonDeliveryConfirmed:false})).rejects.toThrow();await expect(reconcileOutbox({...input,workerPaused:false})).rejects.toThrow();expect(m.find).not.toHaveBeenCalled()})
+it('requeues with the same delivery identity and an atomic audit record',async()=>{expect(await reconcileOutbox(input)).toEqual({id:'n1',emailStatus:'PENDING'});expect(m.find).toHaveBeenCalledWith({where:{id:'n1',teamId:'team'}});expect(m.update.mock.calls[0][0].data).toEqual({emailStatus:'PENDING'});expect(m.audit.mock.calls[0][0].data.metadata.reason).toBe(input.reason)})
+it('blocks active deliveries, exhausted attempts, another team and stale decisions',async()=>{m.find.mockResolvedValueOnce({emailStatus:'SENDING',updatedAt:new Date()});await expect(reconcileOutbox(input)).rejects.toThrow('progress');m.find.mockResolvedValueOnce({emailStatus:'UNCERTAIN',emailAttempts:5});await expect(reconcileOutbox(input)).rejects.toThrow('limit');m.find.mockResolvedValueOnce(null);await expect(reconcileOutbox(input)).rejects.toThrow();m.update.mockResolvedValueOnce({count:0});await expect(reconcileOutbox(input)).rejects.toThrow('changed');expect(m.audit).not.toHaveBeenCalled()})
+it('marks verified delivery without sending again',async()=>{expect(await reconcileOutbox({...input,action:'mark_delivered',nonDeliveryConfirmed:false})).toEqual({id:'n1',emailStatus:'SENT'})})

@@ -1,3 +1,4 @@
+import {OutboxReconciliation} from "@/components/dashboard/outbox-reconciliation"
 import {AccountEditForm} from '@/components/dashboard/account-edit-form'
 import Image from 'next/image'
 import { BRAND } from '@/lib/brand'
@@ -20,7 +21,6 @@ export default async function SettingsPage() {
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold tracking-tight">{tr("الإعدادات")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
-      <AccountEditForm company />
     </main>
     )
   }
@@ -53,6 +53,7 @@ export default async function SettingsPage() {
         </dl>
       </div>
     <AccountEditForm company />
+    {!sampleData ? <OutboxReconciliation /> : null}
     </main>
   )
 }
