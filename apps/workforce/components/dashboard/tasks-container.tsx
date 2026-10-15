@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api-fetch'
 
 import { useTranslations } from '@/lib/i18n/provider'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { GripVertical, LoaderCircle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -69,6 +69,7 @@ export function TasksContainer({
   const [hasMore, setHasMore] = useState<boolean>(initialHasMore)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [q,setQ]=useState('')
   const [filterDept, setFilterDept] = useState('')
   const [filterAssignee, setFilterAssignee] = useState<'all' | 'me' | 'by_me'>('all')
 
@@ -100,10 +101,12 @@ export function TasksContainer({
     })
   }, [tasks, filterDept, filterAssignee, currentProfileId])
 
+  const searchParams = new URLSearchParams({q,departmentId:filterDept,assignment:filterAssignee})
   const apiTake = 50
 
+  useEffect(()=>{const abort=new AbortController();const timer=setTimeout(async()=>{try{const params=new URLSearchParams({q,departmentId:filterDept,assignment:filterAssignee});params.set('take','50');params.set('skip','0');const res=await apiFetch('/api/tasks?'+params,{cache:'no-store',signal:abort.signal});const json=await res.json();if(abort.signal.aborted)return;if(!res.ok||!json.success)throw Error('Search failed');setTasks(json.data);setTotal(json.total);setHasMore(Boolean(json.hasMore));}catch(e){if(!abort.signal.aborted)console.error('Search unavailable')}},250);return()=>{clearTimeout(timer);abort.abort()}},[q,filterDept,filterAssignee])
   async function refresh() {
-    const res = await apiFetch(`/api/tasks?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/tasks?${searchParams.toString()}&take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
       | null
@@ -118,7 +121,7 @@ export function TasksContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await apiFetch(`/api/tasks?take=${apiTake}&skip=${tasks.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/tasks?${searchParams.toString()}&take=${apiTake}&skip=${tasks.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Task[]; total?: number; hasMore?: boolean }
       | null
@@ -200,6 +203,7 @@ export function TasksContainer({
       <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
+          <label>بحث المهام<input className="rounded border p-2" value={q} onChange={e=>setQ(e.target.value)} maxLength={120}/></label>
           <Select className="w-auto" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
             <option value="">{tr("كل الأقسام")}</option>
             {departments.map((d) => (

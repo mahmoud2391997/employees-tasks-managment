@@ -1,3 +1,4 @@
+import {taskSearchWhere} from '@/lib/server-search'
 import { mayAssignTask } from '@/server/task-assignment'
 import { taskVisibilityWhere } from '@/lib/task-access'
 import { demoMutation } from '@/server/demo-sandbox'
@@ -38,11 +39,11 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'tasks.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualTasksApi(auth.user.id, take, skip, await getDemoCompany(req))
+  const virtual = virtualTasksApi(auth.user.id, take, skip, await getDemoCompany(req), req.nextUrl.searchParams)
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
-  const where = taskVisibilityWhere(teamId, auth.user.profile, auth.user.permissions)
+  const where = {AND:[taskVisibilityWhere(teamId, auth.user.profile, auth.user.permissions), taskSearchWhere(req.nextUrl.searchParams, auth.user.profile!.id)] }
   const [total, tasks] = await prisma.$transaction([
     prisma.workforceTask.count({ where }),
     prisma.workforceTask.findMany({
@@ -106,7 +107,8 @@ export async function POST(req: NextRequest) {
     if (!department) return NextResponse.json({ success: false, message: 'القسم غير موجود' }, { status: 400 })
   }
 
-  const created = await prisma.workforceTask.create({
+  const created = await prisma.$transaction(async tx=>{
+    const created = await tx.workforceTask.create({
     data: {
       title: parsed.data.title,
       description: parsed.data.description,
@@ -129,8 +131,11 @@ export async function POST(req: NextRequest) {
       title: 'تم إسناد مهمة',
       message: `تم إسناد المهمة "${created.title}" إليك`,
       data: { taskId: created.id, assignedBy: creatorId },
-    }).catch((error) => console.error('tasks: notification failed after save', error))
+    }, tx)
   }
+
+    return created
+  })
 
   return NextResponse.json({ success: true, data: created })
 }

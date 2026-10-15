@@ -33,6 +33,7 @@ enum WorkforceTaskPriority {
 model WorkforceUser {
   id           String   @id @default(cuid())
   email        String   @unique
+  authVersion Int @default(0)
   passwordHash String
   profileId    String?  @unique
 
@@ -44,6 +45,7 @@ model WorkforceUser {
 }
 
 model WorkforceTeam {
+  details Json?
   id      String @id @default(cuid())
   name    String
   ownerId String
@@ -200,6 +202,8 @@ model WorkforceInvitation {
 }
 
 model WorkforceNotification {
+  emailStatus String @default("PENDING")
+  emailAttempts Int @default(0)
   id      String @id @default(cuid())
   userId  String
   type    String
@@ -235,3 +239,12 @@ model WorkforceCustomRole {
   @@index([teamId])
 }
 
+
+model WorkforceAuditEvent {
+ id String @id @default(cuid())
+ actorId String
+ teamId String
+ action String
+ createdAt DateTime @default(now())
+ @@index([teamId, createdAt])
+}

@@ -1,4 +1,10 @@
 export const english: Record<string, string> = {
+  'تعديل بيانات الشركة':'Edit company details',
+  'تعديل حسابي':'Edit my account',
+  'كلمة المرور الحالية':'Current password',
+  'كلمة مرور جديدة (اختياري)':'New password (optional)',
+  'تم الحفظ':'Saved',
+  'تعذر تحميل الإعدادات':'Could not load settings',
   'مهام أنشأتها للآخرين': 'Tasks I created for others',
   'عرض المهام': 'View tasks',
   'أحدث 10 مهام': 'Latest 10 tasks',

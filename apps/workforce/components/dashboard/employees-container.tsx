@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api-fetch'
 import { useTranslations } from '@/lib/i18n/provider'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -82,10 +82,12 @@ export function EmployeesContainer({
   const currentPage = Math.min(page, totalPages)
   const pageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
+  const searchParams = new URLSearchParams({q})
   const apiTake = 50
 
+  useEffect(()=>{const abort=new AbortController();const timer=setTimeout(async()=>{try{const params=new URLSearchParams({q});params.set('take','50');params.set('skip','0');const res=await apiFetch('/api/employees?'+params,{cache:'no-store',signal:abort.signal});const json=await res.json();if(abort.signal.aborted)return;if(!res.ok||!json.success)throw Error('Search failed');setEmployees(json.data);setTotal(json.total);setHasMore(Boolean(json.hasMore));setPage(1);}catch(e){if(!abort.signal.aborted)console.error('Search unavailable')}},250);return()=>{clearTimeout(timer);abort.abort()}},[q])
   async function refresh() {
-    const res = await apiFetch(`/api/employees?take=${apiTake}&skip=0`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/employees?${searchParams.toString()}&take=${apiTake}&skip=0`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
       | null
@@ -101,7 +103,7 @@ export function EmployeesContainer({
   async function loadMore() {
     if (!hasMore || loadingMore) return
     setLoadingMore(true)
-    const res = await apiFetch(`/api/employees?take=${apiTake}&skip=${employees.length}`, { cache: 'no-store' })
+    const res = await apiFetch(`/api/employees?${searchParams.toString()}&take=${apiTake}&skip=${employees.length}`, { cache: 'no-store' })
     const json = (await res.json().catch(() => null)) as
       | { success?: boolean; data?: Employee[]; total?: number; hasMore?: boolean }
       | null

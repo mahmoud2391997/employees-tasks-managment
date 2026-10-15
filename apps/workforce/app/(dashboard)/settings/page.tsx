@@ -1,3 +1,4 @@
+import {AccountEditForm} from '@/components/dashboard/account-edit-form'
 import Image from 'next/image'
 import { BRAND } from '@/lib/brand'
 import { getTranslations } from '@/lib/i18n/server'
@@ -19,7 +20,8 @@ export default async function SettingsPage() {
       <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold tracking-tight">{tr("الإعدادات")}</h1>
         <p className="mt-2 text-sm text-slate-500">{tr("ليس لديك صلاحية.")}</p>
-      </main>
+      <AccountEditForm company />
+    </main>
     )
   }
 
@@ -50,6 +52,7 @@ export default async function SettingsPage() {
           ].map(([label, value]) => <div key={label}><dt className="text-slate-500">{label}</dt><dd className="mt-1 font-medium text-slate-900">{value}</dd></div>)}
         </dl>
       </div>
+    <AccountEditForm company />
     </main>
   )
 }

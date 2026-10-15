@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useCallback, type ReactNode } from 'react'
 import { translate, type Locale } from './messages'
 const LocaleContext = createContext<Locale>('ar')
 export function LanguageProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
@@ -7,7 +7,7 @@ export function LanguageProvider({ locale, children }: { locale: Locale; childre
 }
 export function useTranslations() {
   const locale = useContext(LocaleContext)
-  return (key: string, values?: Record<string, string | number>) => translate(locale, key, values)
+  return useCallback((key: string, values?: Record<string, string | number>) => translate(locale, key, values), [locale])
 }
 export function useLocale() { return useContext(LocaleContext) }
 export function LanguageSwitch() {

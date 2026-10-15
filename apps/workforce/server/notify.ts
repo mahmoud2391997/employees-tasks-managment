@@ -1,6 +1,6 @@
 import { companyDisplayName } from '@/lib/brand'
 import { prisma } from '@/server/db'
-import { configuredSiteUrl, sendNotificationEmail } from '@/server/mail'
+import { configuredSiteUrl, sendNotificationEmail,readSmtpConfig } from '@/server/mail'
 
 const STATUS_LABELS: Record<string, string> = {
   TODO: 'قيد الانتظار',
@@ -21,8 +21,8 @@ export async function recordNotification(input: {
   title: string
   message: string
   data?: Record<string, string | number | boolean | null>
-}) {
-  const row = await prisma.workforceNotification.create({
+}, database: Pick<typeof prisma, 'workforceNotification'> = prisma) {
+  const row = await database.workforceNotification.create({
     data: {
       userId: input.userId,
       teamId: input.teamId,
@@ -33,33 +33,39 @@ export async function recordNotification(input: {
     },
   })
 
-  try {
-    await emailNotification(input.userId, input.title, input.message)
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : 'unknown'
-    console.error('mail: notification email failed', { userId: input.userId, type: input.type, reason })
-  }
 
   return row
 }
 
-async function emailNotification(profileId: string, title: string, message: string) {
+async function emailNotification(profileId: string, title: string, message: string,deliveryId?: string) {
   const profile = await prisma.workforceProfile.findUnique({
     where: { id: profileId },
     select: { email: true },
   })
   const to = profile?.email?.trim().toLowerCase()
   if (!to) {
-    console.warn('mail: notification has no recipient email', { profileId })
-    return
+    throw Error('OUTBOX_RECIPIENT_MISSING')
   }
 
   const site = configuredSiteUrl()
-  await sendNotificationEmail({
+  const delivered=await sendNotificationEmail({
     to,
+    deliveryId,
     companyName: companyDisplayName(),
     title,
     message,
     actionUrl: site ? `${site}/notifications` : null,
   })
+  if(!delivered.sent)throw Error('DELIVERY_NOT_CONFIRMED')
+}
+
+/** Existing rows are the durable outbox; SMTP ambiguity requires explicit reconciliation. */
+export async function deliverNotificationOutbox(limit=20){
+ if(!readSmtpConfig())return {sent:0,configured:false}
+ const pending=await prisma.workforceNotification.findMany({where:{emailStatus:'PENDING',emailAttempts:{lt:5}},orderBy:{createdAt:'asc'},take:Math.min(limit,100)})
+ let sent=0
+ for(const item of pending){const claimed=await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'PENDING'},data:{emailStatus:'SENDING',emailAttempts:{increment:1}}});if(!claimed.count)continue
+  try{await emailNotification(item.userId,item.title,item.message,item.id)}catch{await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING'},data:{emailStatus:'UNCERTAIN'}});continue}
+  await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING'},data:{emailStatus:'SENT'}});sent++
+ }return {sent,configured:true}
 }

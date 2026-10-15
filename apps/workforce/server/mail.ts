@@ -24,6 +24,7 @@ type SmtpConfig = {
 }
 
 export type OutboundMail = {
+  messageId?: string
   to: string
   subject: string
   text: string
@@ -197,7 +198,7 @@ export async function sendMail(message: OutboundMail) {
   const config = readSmtpConfig()
   if (!config) {
     if (isProduction()) throw new MailNotConfiguredError('SMTP is not configured')
-    console.warn('mail: SMTP is not configured; email was not sent', { to: message.to, subject: message.subject })
+    console.warn('mail: SMTP is not configured; email was not sent')
     return { sent: false as const }
   }
 
@@ -207,7 +208,7 @@ export async function sendMail(message: OutboundMail) {
     return { sent: true as const }
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'unknown'
-    console.error('mail: delivery failed', { to: message.to, subject: message.subject, reason })
+    console.error('mail: delivery failed')
     if (isProduction()) throw new MailDeliveryError('SMTP delivery failed')
     return { sent: false as const }
   }
@@ -225,6 +226,7 @@ export async function sendInvitationEmail(input: {
 }
 
 export async function sendNotificationEmail(input: {
+  deliveryId?: string
   to: string
   companyName: string
   title: string
@@ -232,5 +234,5 @@ export async function sendNotificationEmail(input: {
   actionUrl?: string | null
 }) {
   const body = buildNotificationEmail(input)
-  return sendMail({ to: input.to, ...body })
+  return sendMail({ to: input.to, messageId:input.deliveryId?'<workforce-'+input.deliveryId+'@notifications.invalid>':undefined, ...body })
 }

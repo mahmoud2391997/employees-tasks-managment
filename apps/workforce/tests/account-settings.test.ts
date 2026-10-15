@@ -1,0 +1,8 @@
+import {beforeEach,expect,it,vi} from 'vitest'
+const mocks=vi.hoisted(()=>({tx:{workforceUser:{findUnique:vi.fn(),update:vi.fn()},workforceProfile:{update:vi.fn()},workforceAuditEvent:{create:vi.fn()}}}))
+vi.mock('@/server/db',()=>({prisma:{$transaction:async(fn:any)=>fn(mocks.tx)}}))
+import bcrypt from 'bcryptjs'
+import {updateOwnAccount} from '@/server/account-settings'
+beforeEach(()=>vi.clearAllMocks())
+it('rejects wrong current password and cross-company access without writes',async()=>{mocks.tx.workforceUser.findUnique.mockResolvedValue({profile:{id:'p',teamId:'t'},passwordHash:await bcrypt.hash('correct-password',4)});await expect(updateOwnAccount('u','t',{firstName:'Test',lastName:'',currentPassword:'wrong'})).rejects.toThrow();await expect(updateOwnAccount('u','other',{firstName:'Test',lastName:'',currentPassword:'correct-password'})).rejects.toThrow();expect(mocks.tx.workforceProfile.update).not.toHaveBeenCalled()})
+it('password changes increment session version and audit only action metadata',async()=>{mocks.tx.workforceUser.findUnique.mockResolvedValue({profile:{id:'p',teamId:'t'},passwordHash:await bcrypt.hash('correct-password',4)});await updateOwnAccount('u','t',{firstName:'Test',lastName:'',currentPassword:'correct-password',newPassword:'new-synthetic-password'});const saved=mocks.tx.workforceUser.update.mock.calls[0][0];expect(saved.data.authVersion).toEqual({increment:1});expect(await bcrypt.compare('new-synthetic-password',saved.data.passwordHash)).toBe(true);expect(JSON.stringify(mocks.tx.workforceAuditEvent.create.mock.calls)).not.toContain('passwordHash');expect(JSON.stringify(mocks.tx.workforceAuditEvent.create.mock.calls)).not.toContain('new-synthetic-password')})

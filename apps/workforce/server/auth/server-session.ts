@@ -51,7 +51,7 @@ export const getServerSession = cache(async (): Promise<ServerSession | null> =>
 
   try {
     const access = await loadAccountAccess(payload.sub)
-    if (!access?.active) return null
+    if (!access?.active || (payload?.version ?? 0) !== (access.authVersion ?? 0)) return null
     return {
       userId: access.userId,
       email: access.email,

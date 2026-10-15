@@ -43,7 +43,7 @@ describe('public sample data', () => {
     expect(company.roles.map((role) => role.name)).toEqual(['ADMIN', 'MANAGER', 'EMPLOYEE'])
   })
 
-  it('serves paged samples in production and blocks them when disabled', () => {
+  it('requires an explicit production preview setting', () => {
     const employees = virtualEmployeesApi(FALLBACK_ADMIN_ID, 1, 0)
     expect(employees?.status).toBe(200)
     expect(employees && 'data' in employees.body ? employees.body.data : []).toHaveLength(1)
@@ -61,6 +61,8 @@ describe('public sample data', () => {
 
     vi.stubEnv('NODE_ENV', 'production')
     try {
+      expect(servesVirtualDemoData(FALLBACK_ADMIN_ID)).toBe(false)
+      vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
       expect(servesVirtualDemoData(FALLBACK_ADMIN_ID)).toBe(true)
       expect(virtualTasksApi(FALLBACK_ADMIN_ID, 50, 0)?.status).toBe(200)
       vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')

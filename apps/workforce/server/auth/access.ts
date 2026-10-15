@@ -15,6 +15,7 @@ type ProfileRecord = {
 }
 
 export type AccountAccess = {
+  authVersion: number
   userId: string
   email: string
   active: boolean
@@ -40,6 +41,7 @@ export async function loadAccountAccess(userId: string): Promise<AccountAccess |
       select: {
         id: true,
         email: true,
+        authVersion: true,
         profile: { select: { id: true, email: true, firstName: true, lastName: true, role: true, teamId: true } },
       },
     })
@@ -58,6 +60,7 @@ export async function loadAccountAccess(userId: string): Promise<AccountAccess |
     const permissions = active ? await permissionsFor(role, teamId) : []
 
     return {
+      authVersion: user.authVersion ?? 0,
       userId: user.id,
       email: user.email,
       active,

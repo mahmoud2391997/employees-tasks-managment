@@ -1,3 +1,4 @@
+import {employeeSearchWhere} from '@/lib/server-search'
 import { employeeVisibilityWhere } from '@/lib/directory-access'
 import { demoMutation } from '@/server/demo-sandbox'
 import { getDemoCompany } from '@/server/demo-sandbox'
@@ -39,11 +40,11 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'employees.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualEmployeesApi(auth.user.id, take, skip, await getDemoCompany(req))
+  const virtual = virtualEmployeesApi(auth.user.id, take, skip, await getDemoCompany(req), req.nextUrl.searchParams)
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
-  const where = employeeVisibilityWhere(teamId, auth.user.profile)
+  const where = {AND:[employeeVisibilityWhere(teamId, auth.user.profile), employeeSearchWhere(req.nextUrl.searchParams)] }
   const [total, employees] = await prisma.$transaction([
     prisma.workforceEmployee.count({ where }),
     prisma.workforceEmployee.findMany({

@@ -15,7 +15,9 @@
     "typecheck": "pnpm -C packages/workforce-database generate && pnpm -C packages/workforce-database exec tsc --noEmit && pnpm -C apps/workforce exec tsc --noEmit",
     "check": "pnpm typecheck && pnpm test",
     "dev:setup": "node scripts/setup-dev.mjs",
-    "verify:local": "node scripts/verify-local.mjs"
+    "verify:local": "node scripts/verify-local.mjs",
+    "prestart": "node scripts/check-env.mjs",
+    "predeploy": "sh scripts/predeploy.sh"
   },
   "devDependencies": {
     "vite-tsconfig-paths": "^5.1.0",

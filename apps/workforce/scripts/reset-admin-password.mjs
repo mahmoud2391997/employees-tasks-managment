@@ -24,7 +24,7 @@ try {
   const team = await prisma.workforceTeam.findFirst({ where: { ownerId: user.id }, select: { id: true } })
   if (!team) throw new Error('Recovery is restricted to the configured company owner')
   const passwordHash = await bcrypt.hash(password, 12)
-  await prisma.workforceUser.update({ where: { id: user.id }, data: { passwordHash } })
+  await prisma.workforceUser.update({ where: { id: user.id }, data: { passwordHash,authVersion:{increment:1} } })
   console.log('Configured company administrator password reset successfully')
 } finally {
   await prisma.$disconnect()

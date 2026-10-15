@@ -15,9 +15,9 @@ describe('public interactive demo', () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
     expect(await getSessionUser(new NextRequest('http://localhost/api/auth/me'))).toBeNull()
   })
-  it('works in production without a database or JWT secret and exposes only samples', async () => {
+  it('supports explicitly enabled production previews without company credentials', async () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('WORKFORCE_DEMO_MODE', undefined)
+    vi.stubEnv('WORKFORCE_DEMO_MODE', 'true')
     vi.stubEnv('WORKFORCE_DATABASE_URL', '')
     vi.stubEnv('WORKFORCE_JWT_SECRET', '')
     vi.stubEnv('COMPANY_ADMIN_EMAIL', 'private@real-company.com')
@@ -32,6 +32,12 @@ describe('public interactive demo', () => {
     expect((await requirePermission(demoRequest('POST'), 'roles.manage')).status).toBe(200)
     const request = new NextRequest('http://localhost/dashboard', { headers: { cookie: `wf_auth=${DEMO_PREVIEW_TOKEN}` } })
     expect((await updateSession(request)).headers.get('location')).toBeNull()
+  })
+  it('rejects production sample entry and existing sample cookies by default', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('WORKFORCE_DEMO_MODE', undefined)
+    expect((await POST()).status).toBe(403)
+    expect(await getSessionUser(demoRequest())).toBeNull()
   })
   it('disables entry and existing sample sessions when false', async () => {
     vi.stubEnv('WORKFORCE_DEMO_MODE', 'false')

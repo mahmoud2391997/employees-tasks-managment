@@ -6,7 +6,7 @@ afterEach(() => {
 })
 
 describe('recordNotification', () => {
-  it('stores the notification and emails the profile', async () => {
+  it('persists notification before delivery; SMTP is deferred to the outbox worker', async () => {
     vi.resetModules()
     vi.stubEnv('COMPANY_NAME', 'الشركة')
 
@@ -43,12 +43,6 @@ describe('recordNotification', () => {
         }),
       }),
     )
-    expect(sendNotificationEmail).toHaveBeenCalledWith({
-      to: 'alex@example.com',
-      companyName: 'رِواق',
-      title: 'تم إسناد مهمة',
-      message: 'تم إسناد المهمة "Design" إليك',
-      actionUrl: 'https://workforce.example.com/notifications',
-    })
+    expect(sendNotificationEmail).not.toHaveBeenCalled()
   })
 })

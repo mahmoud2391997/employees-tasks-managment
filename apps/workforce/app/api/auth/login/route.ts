@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     failedLoginAttempts.delete(key)
-    const token = await issueAccessToken({ sub: user.id, email: user.email })
+    const token = await issueAccessToken({ sub: user.id, email: user.email, version: user.authVersion ?? 0 })
     const res = NextResponse.json({ success: true })
     setAuthCookie(res, token)
     return res

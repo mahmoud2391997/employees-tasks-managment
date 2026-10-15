@@ -12,6 +12,7 @@ const { PrismaClient } = require(`${root}packages/workforce-database/src/generat
 const db = new PrismaClient()
 const base = process.env.VERIFY_BASE_URL || 'http://localhost:3001'
 assert(['localhost','127.0.0.1'].includes(new URL(base).hostname), 'Only localhost is supported')
+assert(['localhost','127.0.0.1'].includes(new URL(process.env.WORKFORCE_DATABASE_URL||'').hostname), 'Verification database must be local and disposable')
 let cookie = ''
 const ids = { employees: [], departments: [], tasks: [], invitations: [], profiles: [], users: [], roles: [] }
 let passed = 0
@@ -20,7 +21,7 @@ async function call(path, method='GET', body, expected=200, auth=cookie) {
   assert.equal(res.status, expected, `${method} ${path}: unexpected status ${res.status}`)
   passed++
   const data = await res.json()
-  return { data, cookie: res.headers.get('set-cookie')?.split(';')[0] }
+  return { data, cookie: res.headers.getSetCookie().map(value=>value.split(';')[0]).join('; ') }
 }
 const tag = randomUUID()
 const email = `verify-${tag}@example.invalid`
@@ -78,9 +79,11 @@ try {
   await call('/api/members/reactivate','POST',{email})
   await call('/api/auth/me','GET',undefined,200,accepted.cookie)
   const demo=await call('/api/auth/demo','POST',{},200,'')
-  await call(`/api/tasks/${task.id}`,'PATCH',{status:'TODO'},403,demo.cookie)
+  const realBefore=await db.workforceTask.findUnique({where:{id:task.id}})
+  await call(`/api/tasks/${task.id}`,'PATCH',{status:'TODO'},404,demo.cookie)
+  assert.deepEqual(await db.workforceTask.findUnique({where:{id:task.id}}),realBefore)
   const demoNotifications=(await call('/api/notifications','GET',undefined,200,demo.cookie)).data.data
-  await call('/api/notifications','POST',{id:demoNotifications[0].id},403,demo.cookie)
+  await call('/api/notifications','POST',{id:demoNotifications[0].id},200,demo.cookie)
   for(const path of ['/api/employees','/api/tasks','/api/departments','/api/members','/api/roles'])await call(path,'GET',undefined,200,demo.cookie)
   await call(`/api/tasks/${task.id}`,'DELETE');ids.tasks=[]
   await call(`/api/employees/${emp.id}`,'DELETE');ids.employees=[]
@@ -91,7 +94,7 @@ try {
   }))
   assert.deepEqual(concurrent.sort(),[200,409]);passed+=2
   await call(`/api/departments/${dep.id}`,'DELETE');ids.departments=[]
-  console.log(`PASS: ${passed} local API/database checks; employee-to-invite reused profile, task notifications persisted, inactive member denied, demo writes denied.`)
+  console.log(`PASS: ${passed} local API/database checks; employee-to-invite reused profile, task notifications persisted, inactive member denied, demo real-record access denied and sample notification edits isolated.`)
 } finally {
   const fixtureUser = await db.workforceUser.findUnique({where:{email},select:{id:true}})
   if(fixtureUser && !ids.users.includes(fixtureUser.id))ids.users.push(fixtureUser.id)

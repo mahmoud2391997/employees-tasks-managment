@@ -79,15 +79,15 @@ describe('functionality regressions', () => {
     expect(transaction).not.toHaveBeenCalled()
   })
 
-  it('returns success for a saved task even if notification recording fails', async () => {
+  it('fails the task transaction if durable notification persistence fails', async () => {
     auth()
     const create = vi.fn().mockResolvedValue({ id: 'task1', title: 'Test', assigneeId: 'p2' })
-    vi.doMock('@/server/db', () => ({ prisma: { workforceProfile: { findFirst: async () => ({ id: 'p2' }) }, workforceTask: { create } } }))
+    vi.doMock('@/server/db', () => ({ prisma: { $transaction:async(fn:any)=>fn({workforceTask:{create}}),workforceProfile: { findFirst: async () => ({ id: 'p2' }) }, workforceTask: { create } } }))
     vi.doMock('@/server/notify', () => ({ recordNotification: vi.fn().mockRejectedValue(new Error('Notification unavailable')) }))
     const log = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
       const { POST } = await import('@/app/api/tasks/route')
-      expect((await POST(req({ title: 'Test', assigneeId: 'p2' }))).status).toBe(200)
+      await expect(POST(req({ title: 'Test', assigneeId: 'p2' }))).rejects.toThrow('Notification unavailable')
       expect(create).toHaveBeenCalledOnce()
     } finally { log.mockRestore() }
   })

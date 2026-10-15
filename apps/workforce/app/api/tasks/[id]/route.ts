@@ -94,7 +94,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (!assignee) return NextResponse.json({ success: false, message: 'معرّف غير صحيح' }, { status: 400 })
   }
 
-  const updated = await prisma.workforceTask.update({
+  const updated = await prisma.$transaction(async tx=>{
+    const updated = await tx.workforceTask.update({
     where: { id },
     data: {
       title: parsed.data.title,
@@ -117,7 +118,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       title: 'تم إسناد مهمة',
       message: `تم إسناد المهمة "${updated.title}" إليك`,
       data: { taskId: id, assignedBy: actorId },
-    }).catch((error) => console.error('tasks: notification failed after save', error))
+    }, tx)
   }
 
   const statusChanged = Boolean(parsed.data.status && existing.status !== parsed.data.status)
@@ -135,8 +136,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         ? `أصبحت المهمة "${updated.title}" في الحالة ${taskStatusLabel(parsed.data.status)}`
         : `تم تحديث المهمة "${updated.title}"`,
       data: { taskId: id, changedBy: actorId, newStatus: parsed.data.status ?? null },
-    }).catch((error) => console.error('tasks: notification failed after save', error))
+    }, tx)
   }
+
+    return updated
+  })
 
   return NextResponse.json({ success: true, data: updated })
 }
@@ -162,7 +166,8 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
   }
 
-  await prisma.workforceTask.delete({ where: { id } })
+  await prisma.$transaction(async tx=>{
+  await tx.workforceTask.delete({ where: { id } })
 
   const recipients = new Set<string>()
   if (existing.createdById && existing.createdById !== actorId) recipients.add(existing.createdById)
@@ -175,9 +180,10 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
       title: 'تم حذف مهمة',
       message: `تم حذف المهمة "${existing.title}"`,
       data: { taskId: id, deletedBy: actorId },
-    }).catch((error) => console.error('tasks: notification failed after save', error))
+    }, tx)
   }
 
+  })
   return NextResponse.json({ success: true })
 }
 

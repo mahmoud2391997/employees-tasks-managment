@@ -39,7 +39,7 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
 
   if (payload?.sub === FALLBACK_ADMIN_ID) {
     const access = await loadAccountAccess(FALLBACK_ADMIN_ID)
-    if (!access?.active) return null
+    if (!access?.active || (payload?.version ?? 0) !== (access.authVersion ?? 0)) return null
     return {
       id: access.userId,
       email: access.email,
@@ -53,7 +53,7 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
 
   try {
     const access = await loadAccountAccess(payload.sub)
-    if (!access?.active) return null
+    if (!access?.active || (payload?.version ?? 0) !== (access.authVersion ?? 0)) return null
     return {
       id: access.userId,
       email: access.email,

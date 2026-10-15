@@ -1,3 +1,4 @@
+import {AccountEditForm} from '@/components/dashboard/account-edit-form'
 import { getTranslations } from '@/lib/i18n/server'
 
 import { redirect } from 'next/navigation'
@@ -25,6 +26,7 @@ export default async function ProfilePage() {
           <Row label={tr("الفريق")} value={session.profile?.teamId ?? '—'} valueClassName="ltr" />
         </div>
       </div>
+    <AccountEditForm />
     </main>
   )
 }
