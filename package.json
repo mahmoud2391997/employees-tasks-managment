@@ -17,7 +17,8 @@
     "dev:setup": "node scripts/setup-dev.mjs",
     "verify:local": "node scripts/verify-local.mjs",
     "prestart": "node scripts/check-env.mjs",
-    "predeploy": "sh scripts/predeploy.sh"
+    "predeploy": "sh scripts/predeploy.sh",
+    "verify:mail:local": "node scripts/mail-acceptance-local.mjs"
   },
   "devDependencies": {
     "vite-tsconfig-paths": "^5.1.0",
