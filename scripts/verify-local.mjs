@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
+import {existsSync} from 'node:fs'
 import { createRequire } from 'node:module'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../', import.meta.url))
-process.loadEnvFile(`${root}apps/workforce/.env`)
+if(existsSync(`${root}apps/workforce/.env`))process.loadEnvFile(`${root}apps/workforce/.env`)
 const dbUrl = new URL(process.env.WORKFORCE_DATABASE_URL)
 assert(['localhost', '127.0.0.1'].includes(dbUrl.hostname), 'This check only uses a local database')
 assert(!process.env.SMTP_HOST, 'Disable SMTP before running local checks')
@@ -17,7 +18,7 @@ let cookie = ''
 const ids = { employees: [], departments: [], tasks: [], invitations: [], profiles: [], users: [], roles: [] }
 let passed = 0
 async function call(path, method='GET', body, expected=200, auth=cookie) {
-  const res = await fetch(`${base}${path}`, { method, headers: { 'content-type':'application/json', cookie:auth }, body:body === undefined ? undefined : JSON.stringify(body), redirect:'manual' })
+  const res = await fetch(`${base}${path}`, { method, headers: { 'content-type':'application/json', cookie:auth, origin:process.env.SITE_URL || base }, body:body === undefined ? undefined : JSON.stringify(body), redirect:'manual' })
   assert.equal(res.status, expected, `${method} ${path}: unexpected status ${res.status}`)
   passed++
   const data = await res.json()
@@ -88,7 +89,7 @@ try {
   await call(`/api/tasks/${task.id}`,'DELETE');ids.tasks=[]
   await call(`/api/employees/${emp.id}`,'DELETE');ids.employees=[]
   const concurrent=await Promise.all([1,2].map(async () => {
-    const res=await fetch(`${base}/api/employees`,{method:'POST',headers:{cookie,'content-type':'application/json'},body:JSON.stringify({email,firstName:'Concurrent'})})
+    const res=await fetch(`${base}/api/employees`,{method:'POST',headers:{cookie,'content-type':'application/json',origin:process.env.SITE_URL||base},body:JSON.stringify({email,firstName:'Concurrent'})})
     const json=await res.json();if(res.ok)ids.employees.push(json.data.id)
     return res.status
   }))
