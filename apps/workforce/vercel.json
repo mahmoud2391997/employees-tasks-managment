@@ -5,7 +5,8 @@
   "buildCommand": "npx --yes pnpm@12.3.4 run deploy:build",
   "git": {
     "deploymentEnabled": {
-      "prod-readiness/**": false
+      "prod-readiness/**": false,
+      "main": false
     }
   }
 }
