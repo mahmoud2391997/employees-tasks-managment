@@ -86,6 +86,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
         <InfoCard label={tr("القسم")} value={employee.department?.name ?? '—'} />
         <InfoCard label={tr("المسمى")} value={employee.position ?? '—'} />
         <InfoCard label={tr("الحالة")} value={employee.status} />
+        {session.permissions.includes("salary.view")?<InfoCard label={tr("الراتب")} value={employee.salary?.toString()??"—"}/>:null}
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">

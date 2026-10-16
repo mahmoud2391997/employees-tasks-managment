@@ -1,3 +1,4 @@
+import {salaryForViewer} from '@/lib/salary-access'
 import { BRAND } from '@/lib/brand'
 import { isDemoModeEnabled } from '@/lib/demo-config'
 import { DEFAULT_ROLES } from '@/lib/permissions'
@@ -179,12 +180,12 @@ function slicePage<T>(rows: T[], take: number, skip: number) {
   return { data, total: rows.length, hasMore: skip + data.length < rows.length }
 }
 
-export function virtualEmployeesApi(userId: string, take: number, skip: number, company = getVirtualCompany(), params=new URLSearchParams()) {
+export function virtualEmployeesApi(userId: string, take: number, skip: number, company = getVirtualCompany(), params=new URLSearchParams(), permissions:readonly string[] = []) {
   const gate = virtualReadGate(userId)
   if (gate.kind === 'skip') return null
   if (gate.kind === 'unavailable') return unavailable<{ success: false; message: string }>()
   const q=(params.get('q')||'').trim().toLowerCase();const department=params.get('departmentId');const assignment=params.get('assignment');const status=params.get('status');
-  const rows=company.employees.filter(row=>{const r=row as unknown as Record<string,unknown>;return (!q||JSON.stringify(r).toLowerCase().includes(q))&&(!department||r.departmentId===department)&&(!status||r.status===status)&&(!assignment||assignment==='all'||assignment==='me'&&r.assigneeId===company.admin.id||assignment==='by_me'&&r.createdById===company.admin.id)})
+  const rows=company.employees.map(row=>salaryForViewer(row,permissions)).filter(row=>{const r=row as unknown as Record<string,unknown>;const search=[row.profile.firstName,row.profile.lastName,row.position,row.department?.name].filter(Boolean).join(' ').toLowerCase();return (!q||search.includes(q))&&(!department||r.departmentId===department)&&(!status||r.status===status)&&(!assignment||assignment==='all'||assignment==='me'&&r.assigneeId===company.admin.id||assignment==='by_me'&&r.createdById===company.admin.id)})
   const page = slicePage(rows, take, skip)
   return { status: 200, body: { success: true as const, ...page } }
 }

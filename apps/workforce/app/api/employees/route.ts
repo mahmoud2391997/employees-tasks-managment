@@ -1,3 +1,4 @@
+import {salaryForViewer,salarySubmitted,canEditSalary} from '@/lib/salary-access'
 import {employeeSearchWhere} from '@/lib/server-search'
 import { employeeVisibilityWhere } from '@/lib/directory-access'
 import { demoMutation } from '@/server/demo-sandbox'
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, 'employees.view')
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const { take, skip } = parseTakeSkip(req)
-  const virtual = virtualEmployeesApi(auth.user.id, take, skip, await getDemoCompany(req), req.nextUrl.searchParams)
+  const virtual = virtualEmployeesApi(auth.user.id, take, skip, await getDemoCompany(req), req.nextUrl.searchParams, auth.user.permissions)
   if (virtual) return NextResponse.json(virtual.body, { status: virtual.status })
 
   const teamId = auth.user.profile!.teamId!
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
   const canViewEmails = canViewAllEmails({ permissions: auth.user.permissions, role: auth.user.profile?.role })
   const viewerEmail = auth.user.email
   const data = employees.map((e) => ({
-    ...e,
+    ...salaryForViewer(e,auth.user.permissions),
     profile: { ...e.profile, email: redactEmailForViewer(e.profile.email, viewerEmail, canViewEmails) },
     manager: e.manager ? { ...e.manager, email: redactEmailForViewer(e.manager.email, viewerEmail, canViewEmails) } : null,
   }))
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
   const teamId = auth.user.profile!.teamId!
 
   const json = await req.json().catch(() => null)
+  if(salarySubmitted(json)&&!canEditSalary(auth.user.permissions))return NextResponse.json({success:false,message:'صلاحية تعديل الرواتب مطلوبة'},{status:403})
   const parsed = createSchema.safeParse(json)
   if (!parsed.success) {
     return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (!department) return NextResponse.json({ success: false, message: 'ليس لديك صلاحية' }, { status: 403 })
   }
 
-  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data)
+  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data, undefined, auth.user.permissions)
   if (demo) return demo
 
   const joinDate = parsed.data.joinDate ? new Date(parsed.data.joinDate) : undefined
@@ -156,6 +158,6 @@ export async function POST(req: NextRequest) {
     throw error
   }
 
-  return NextResponse.json({ success: true, data: created })
+  return NextResponse.json({ success: true, data: salaryForViewer(created,auth.user.permissions) })
 }
 

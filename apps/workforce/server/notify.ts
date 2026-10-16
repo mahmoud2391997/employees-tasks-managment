@@ -1,4 +1,4 @@
-import { companyDisplayName } from '@/lib/brand'
+import {getTeamBranding} from '@/server/branding'
 import { prisma } from '@/server/db'
 import { configuredSiteUrl, sendNotificationEmail,readSmtpConfig } from '@/server/mail'
 
@@ -37,7 +37,7 @@ export async function recordNotification(input: {
   return row
 }
 
-async function emailNotification(profileId: string, title: string, message: string,deliveryId?: string) {
+async function emailNotification(profileId: string, title: string, message: string,deliveryId?: string,teamId?:string|null) {
   const profile = await prisma.workforceProfile.findUnique({
     where: { id: profileId },
     select: { email: true },
@@ -47,11 +47,13 @@ async function emailNotification(profileId: string, title: string, message: stri
     throw Error('OUTBOX_RECIPIENT_MISSING')
   }
 
+  const branding=await getTeamBranding(teamId)
   const site = configuredSiteUrl()
   const delivered=await sendNotificationEmail({
     to,
     deliveryId,
-    companyName: companyDisplayName(),
+    companyName: branding.systemName,
+    brandColor: branding.brandColor,
     title,
     message,
     actionUrl: site ? `${site}/notifications` : null,
@@ -65,7 +67,7 @@ export async function deliverNotificationOutbox(limit=20){
  const pending=await prisma.workforceNotification.findMany({where:{emailStatus:'PENDING',emailAttempts:{lt:5}},orderBy:{createdAt:'asc'},take:Math.min(limit,100)})
  let sent=0
  for(const item of pending){const claimed=await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'PENDING',emailAttempts:item.emailAttempts},data:{emailStatus:'SENDING',emailAttempts:{increment:1}}});if(!claimed.count)continue
-  try{await emailNotification(item.userId,item.title,item.message,item.id)}catch{await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING',emailAttempts:item.emailAttempts+1},data:{emailStatus:'UNCERTAIN'}});continue}
+  try{await emailNotification(item.userId,item.title,item.message,item.id,item.teamId)}catch{await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING',emailAttempts:item.emailAttempts+1},data:{emailStatus:'UNCERTAIN'}});continue}
   await prisma.workforceNotification.updateMany({where:{id:item.id,emailStatus:'SENDING',emailAttempts:item.emailAttempts+1},data:{emailStatus:'SENT'}});sent++
  }return {sent,configured:true}
 }

@@ -1,3 +1,4 @@
+import {getPublicBranding} from '@/server/branding'
 import { BRAND } from '@/lib/brand'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -7,6 +8,7 @@ import { LoginForm } from './login-form'
 export default async function LoginPage() {
   const tr = await getTranslations()
 
-  const companyName = tr(BRAND.name)
+  const branding=await getPublicBranding()
+  const companyName = branding.systemName===BRAND.name?tr(BRAND.name):branding.systemName
   return <LoginForm companyName={companyName} demoAvailable={isDemoModeEnabled()} />
 }

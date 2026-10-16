@@ -1,3 +1,5 @@
+import {getTeamBranding} from '@/server/branding'
+import {brandingFromDetails} from '@/lib/branding'
 import {OutboxReconciliation} from "@/components/dashboard/outbox-reconciliation"
 import {AccountEditForm} from '@/components/dashboard/account-edit-form'
 import Image from 'next/image'
@@ -30,6 +32,8 @@ export default async function SettingsPage() {
   }
 
   const sampleData = servesVirtualDemoData(session.userId)
+  const branding=sampleData?brandingFromDetails(null):await getTeamBranding(session.profile?.teamId)
+  const systemName=branding.systemName===BRAND.name?tr(BRAND.name):branding.systemName
 
   return (
     <main className="space-y-4">
@@ -41,12 +45,12 @@ export default async function SettingsPage() {
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-4">
-          <Image src={BRAND.logo} alt={tr(BRAND.name)} width={80} height={80} className="h-20 w-20 object-contain" />
-          <div><h2 className="text-xl font-bold text-brand-950">{tr(BRAND.name)}</h2><p className="mt-1 text-sm text-slate-500">{tr('هوية مساحة العمل')}</p></div>
+          {branding.systemName===BRAND.name?<Image src={BRAND.logo} alt={tr(BRAND.name)} width={80} height={80} className="h-20 w-20 object-contain" />:<span aria-hidden="true" className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-3xl font-bold text-white">{systemName.slice(0,1)}</span>}
+          <div><h2 className="text-xl font-bold text-brand-950">{systemName}</h2><p className="mt-1 text-sm text-slate-500">{tr('هوية مساحة العمل')}</p></div>
         </div>
         <dl className="grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
           {[
-            [tr('اسم المنصة'), tr(BRAND.name)],
+            [tr('اسم المنصة'), systemName],
             [tr('نوع مساحة العمل'), tr('مكتب افتراضي للأقسام والفرق')],
             [tr('تنظيم العمل'), tr('أقسام مترابطة، فرق متعاونة، ومهام واضحة')],
           ].map(([label, value]) => <div key={label}><dt className="text-slate-500">{label}</dt><dd className="mt-1 font-medium text-slate-900">{value}</dd></div>)}

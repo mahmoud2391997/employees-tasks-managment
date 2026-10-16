@@ -13,7 +13,7 @@ import {createRequire} from 'node:module'
 const root=fileURLToPath(new URL('../',import.meta.url))
 const dbUrl=new URL(process.env.WORKFORCE_DATABASE_URL||'')
 assert(['localhost','127.0.0.1'].includes(dbUrl.hostname),'Only a disposable localhost database is allowed')
-assert(dbUrl.pathname.includes('mail_acceptance'),'Database name must contain mail_acceptance')
+assert(dbUrl.pathname.includes('mail_acceptance')||dbUrl.pathname==='/workforce_round3_test','Database must be an explicitly disposable mail acceptance or round3 test database')
 const require=createRequire(join(root,'apps/workforce/package.json'))
 const {PrismaClient}=require(join(root,'packages/workforce-database/src/generated/client'))
 const db=new PrismaClient()
@@ -29,8 +29,8 @@ async function startApp(smtpEnabled){
  for(let i=0;i<100;i++){if(app.exitCode!==null)throw Error('App exited; inspect local test log');try{const response=await fetch(`http://127.0.0.1:${appPort}/auth/login`);if(response.ok)return}catch{}await delay(200)}throw Error('App startup timeout')
 }
 async function stopApp(){if(!app||app.exitCode!==null)return;const ended=new Promise(resolve=>app.once('exit',resolve));app.kill('SIGTERM');await ended}
-async function call(path,body,cookie='',expected=200,headers={}){
- const response=await new Promise((resolve,reject)=>{const request=httpsRequest(site+path,{family:4,ca:readFileSync(join(temp,'cert.pem')),method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',cookie,origin:site,...headers}},result=>{let text='';result.on('data',chunk=>text+=chunk);result.on('end',()=>resolve({status:result.statusCode,text,headers:result.headers,cookie:(result.headers['set-cookie']||[]).map(value=>value.split(';')[0]).join('; ')}))});request.on('error',reject);if(body!==undefined)request.write(JSON.stringify(body));request.end()})
+async function call(path,body,cookie='',expected=200,headers={},method=body===undefined?'GET':'POST'){
+ const response=await new Promise((resolve,reject)=>{const request=httpsRequest(site+path,{family:4,ca:readFileSync(join(temp,'cert.pem')),method,headers:{'content-type':'application/json',cookie,origin:site,...headers}},result=>{let text='';result.on('data',chunk=>text+=chunk);result.on('end',()=>resolve({status:result.statusCode,text,headers:result.headers,cookie:(result.headers['set-cookie']||[]).map(value=>value.split(';')[0]).join('; ')}))});request.on('error',reject);if(body!==undefined)request.write(JSON.stringify(body));request.end()})
  if(Array.isArray(expected))assert(expected.includes(response.status),`${path}: unexpected status ${response.status}`);else assert.equal(response.status,expected,`${path}: expected ${expected}, got ${response.status}`);checks++;return {...response,json:()=>JSON.parse(response.text)}
 }
 try{
@@ -58,6 +58,7 @@ try{
  const burstEmail=`burst-${randomUUID()}@example.test`
  const burst=await Promise.all(Array.from({length:6},()=>call('/api/auth/login',{email:burstEmail,password:'synthetic-invalid'},'',[401,429])))
  assert.equal(burst.filter(response=>response.status===401).length,5);assert.equal(burst.filter(response=>response.status===429).length,1)
+ if(process.env.WORKFORCE_BRANDING_ACCEPTANCE==='1'){const {verifyBrandingPayroll}=await import('./branding-payroll-acceptance-local.mjs');await verifyBrandingPayroll({call,db,cookie,site,env})}
  const tag=randomUUID(),email=`invite-${tag}@example.test`,password=randomUUID()+randomUUID()
  const invited=(await call('/api/members/invite',{email,role:'EMPLOYEE'},cookie)).json()
  assert.equal(invited.data.emailSent,true);assert.equal(messages.length,1);assert(messages[0].replace(/=\r\n/g,'').includes(site+'/invite/'+invited.data.invitation.token));checks++

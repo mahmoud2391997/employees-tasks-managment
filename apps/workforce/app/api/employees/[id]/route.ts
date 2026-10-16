@@ -1,3 +1,4 @@
+import {salaryForViewer,salarySubmitted,canEditSalary} from '@/lib/salary-access'
 import { demoMutation } from '@/server/demo-sandbox'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
@@ -18,17 +19,15 @@ const updateSchema = z.object({
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params
-  const json = await req.json().catch(() => null)
-  const parsed = updateSchema.safeParse(json)
-  if (!parsed.success) {
-    return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
-  }
-
   const auth = await import('@/server/auth/require-permission').then((m) => m.requirePermission(req, 'employees.edit'))
   if (!auth.ok) return NextResponse.json({ success: false, message: auth.message }, { status: auth.status })
   const teamId = auth.user.profile!.teamId!
+  const json = await req.json().catch(() => null)
+  if(salarySubmitted(json)&&!canEditSalary(auth.user.permissions))return NextResponse.json({success:false,message:'صلاحية تعديل الرواتب مطلوبة'},{status:403})
+  const parsed = updateSchema.safeParse(json)
+  if (!parsed.success) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة', errors: parsed.error.issues }, { status: 400 })
 
-  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data, id)
+  const demo = await demoMutation(req, auth.user.id, 'employees', parsed.data, id, auth.user.permissions)
   if (demo) return demo
 
   const joinDate = parsed.data.joinDate ? new Date(parsed.data.joinDate) : parsed.data.joinDate === null ? null : undefined
@@ -67,7 +66,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     include: { profile: true, department: true, manager: true },
   })
 
-  return NextResponse.json({ success: true, data: updated })
+  return NextResponse.json({ success: true, data: salaryForViewer(updated,auth.user.permissions) })
 }
 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

@@ -1,3 +1,5 @@
+import {getTeamBranding} from '@/server/branding'
+import {brandingFromDetails} from '@/lib/branding'
 import { BRAND } from '@/lib/brand'
 import { getTranslations } from '@/lib/i18n/server'
 
@@ -16,7 +18,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session) redirect('/auth/login')
 
   const perms = session.permissions
-  const companyName = tr(BRAND.name)
+  const branding=session.demo?brandingFromDetails(null):await getTeamBranding(session.profile?.teamId)
+  const companyName = branding.systemName===BRAND.name?tr(BRAND.name):branding.systemName
 
   return (
     <DashboardShell

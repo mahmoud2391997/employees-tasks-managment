@@ -1,3 +1,4 @@
+import {salaryForViewer,salarySubmitted,canEditSalary} from '@/lib/salary-access'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import { ALL_PERMISSIONS } from '@/lib/permissions'
@@ -10,11 +11,12 @@ export async function getDemoCompany(req?: NextRequest) {
 }
 
 // Inputs have already passed the production route's Zod schema and authentication.
-export async function demoMutation(req: NextRequest, userId: string, resource: string, input: Record<string, unknown> = {}, id?: string) {
+export async function demoMutation(req: NextRequest, userId: string, resource: string, input: Record<string, unknown> = {}, id?: string, permissions:readonly string[] = []) {
   if (userId !== FALLBACK_ADMIN_ID) return null
   const fail = (message: string, status = 400) => NextResponse.json({ success: false, message }, { status })
   if (!servesVirtualDemoData(userId)) return fail('العرض التجريبي غير متاح', 403)
   if (!req.cookies?.get('wf_demo')?.value) return fail('ابدأ عرضاً تجريبياً جديداً', 403)
+  if(resource==='employees'&&salarySubmitted(input)&&!canEditSalary(permissions))return fail('صلاحية تعديل الرواتب مطلوبة',403)
   const company = await getDemoCompany(req)
   // Collections have different shapes; relationships are hydrated below before returning.
   const collections: Record<string, Array<Record<string, any>>> = {
@@ -112,5 +114,5 @@ export async function demoMutation(req: NextRequest, userId: string, resource: s
   if (resource === 'tasks') row.assignee = company.profiles.find(profile => profile.id === row!.assigneeId) ?? null
   if (resource === 'employees' || resource === 'departments') row.manager = company.profiles.find(profile => profile.id === row!.managerId) ?? null
   if (resource === 'members' && data.role && row.user.profile) row.user.profile.role = data.role
-  return NextResponse.json({ success: true, data: row })
+  return NextResponse.json({ success: true, data: resource==='employees'?salaryForViewer(row!,permissions):row })
 }

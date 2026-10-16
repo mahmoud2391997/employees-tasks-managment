@@ -24,7 +24,7 @@ type Employee = {
   departmentId: string | null
   position: string | null
   joinDate: string | null
-  salary: string | null
+  salary?: string | null
   status: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED'
   managerId: string | null
   profile: { id: string; email: string | null; firstName: string | null; lastName: string | null; role: string; teamId: string | null }
@@ -131,6 +131,8 @@ export function EmployeesContainer({
     <div className="space-y-4">
       {showForm ? (
         <EmployeeForm
+          canViewSalary={permissions.includes('salary.view')}
+          canEditSalary={permissions.includes('salary.edit')}
           employee={editing}
           departments={departments}
           departmentRequired={departmentRequired}
@@ -290,6 +292,8 @@ export function EmployeesContainer({
 }
 
 function EmployeeForm({
+  canViewSalary,
+  canEditSalary,
   employee,
   departments,
   departmentRequired,
@@ -297,6 +301,8 @@ function EmployeeForm({
   onClose,
   onSaved,
 }: {
+  canViewSalary: boolean
+  canEditSalary: boolean
   employee: Employee | null
   departmentRequired: boolean
   departments: Department[]
@@ -315,6 +321,7 @@ function EmployeeForm({
   const [position, setPosition] = useState(employee?.position ?? '')
   const [joinDate, setJoinDate] = useState(employee?.joinDate ? new Date(employee.joinDate).toISOString().slice(0, 10) : '')
   const [salary, setSalary] = useState(employee?.salary ?? '')
+  const [salaryTouched,setSalaryTouched]=useState(false)
   const [status, setStatus] = useState<Employee['status']>(employee?.status ?? 'ACTIVE')
 
   const [pending, setPending] = useState(false)
@@ -333,7 +340,7 @@ function EmployeeForm({
                 departmentId: departmentId || null,
                 position: position || null,
                 joinDate: joinDate || null,
-                salary: salary ? salary : null,
+                ...(canEditSalary&&salaryTouched?{salary:salary?salary:null}:{}),
                 status,
               }
             : {
@@ -343,7 +350,7 @@ function EmployeeForm({
                 departmentId: departmentId || undefined,
                 position: position || undefined,
                 joinDate: joinDate || undefined,
-                salary: salary ? salary : undefined,
+                ...(canEditSalary&&salary?{salary}:{}),
                 status,
               }
 
@@ -399,9 +406,9 @@ function EmployeeForm({
         <label className="block text-sm font-medium">
           {tr("تاريخ الانضمام")}<Input className="mt-2" type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
         </label>
-        <label className="block text-sm font-medium">
-          {tr("الراتب (اختياري)")}<Input className="mt-2" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
-        </label>
+        {canEditSalary ? <label className="block text-sm font-medium">
+          {tr("الراتب (اختياري)")}<Input className="mt-2" inputMode="decimal" value={salary} onChange={(e) => {setSalaryTouched(true);setSalary(e.target.value)}} />
+        </label> : canViewSalary&&employee ? <p>{tr("الراتب")}: {employee.salary??"—"}</p> : null}
 
         {error ? <div className="md:col-span-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-2 w-full" disabled={pending} type="submit">

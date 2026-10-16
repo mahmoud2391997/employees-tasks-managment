@@ -1,3 +1,4 @@
+import {salaryForViewer} from '@/lib/salary-access'
 import { employeeVisibilityWhere } from '@/lib/directory-access'
 import { getDemoCompany } from '@/server/demo-sandbox'
 import { getTranslations } from '@/lib/i18n/server'
@@ -62,7 +63,7 @@ export default async function EmployeesPage() {
   const canViewEmails = canViewAllEmails({ permissions: session.permissions as any, role: session.profile?.role })
   const viewerEmail = session.email
   const safeEmployees = employees.map((e) => ({
-    ...e,
+    ...salaryForViewer(e,session.permissions),
     profile: { ...e.profile, email: redactEmailForViewer(e.profile.email, viewerEmail, canViewEmails) },
     manager: e.manager ? { ...e.manager, email: redactEmailForViewer(e.manager.email, viewerEmail, canViewEmails) } : null,
   }))

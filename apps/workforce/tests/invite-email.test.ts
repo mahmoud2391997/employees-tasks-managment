@@ -32,6 +32,7 @@ describe('POST /api/members/invite email delivery', () => {
     }))
     vi.doMock('@/server/db', () => ({
       prisma: {
+        workforceTeam: { findUnique: vi.fn().mockResolvedValue({details:{systemName:"Approved test office",brandColor:"#5500aa"}}) },
         workforceUser: { findUnique: vi.fn().mockResolvedValue(null) },
         workforceInvitation: { findFirst: vi.fn().mockResolvedValue(null), create, delete: vi.fn() },
       },
@@ -80,6 +81,7 @@ describe('POST /api/members/invite email delivery', () => {
     }))
     vi.doMock('@/server/db', () => ({
       prisma: {
+        workforceTeam: { findUnique: vi.fn().mockResolvedValue({details:{systemName:"Approved test office",brandColor:"#5500aa"}}) },
         workforceUser: { findUnique: vi.fn().mockResolvedValue(null) },
         workforceInvitation: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -117,6 +119,7 @@ describe('POST /api/members/invite email delivery', () => {
     }))
     vi.doMock('@/server/db', () => ({
       prisma: {
+        workforceTeam: { findUnique: vi.fn().mockResolvedValue({details:{systemName:"Approved test office",brandColor:"#5500aa"}}) },
         workforceUser: { findUnique: vi.fn().mockResolvedValue(null) },
         workforceInvitation: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -138,7 +141,7 @@ describe('POST /api/members/invite email delivery', () => {
     expect(json.data.emailSent).toBe(true)
     expect(json.data.inviteUrl).toBe('https://workforce.example.com/invite/abc123tokenvalue')
     expect(sendInvitationEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'new.hire@example.com', role: 'MANAGER' }),
+      expect.objectContaining({ to: 'new.hire@example.com', role: 'MANAGER',companyName:'Approved test office',brandColor:'#5500aa' }),
     )
   })
 })

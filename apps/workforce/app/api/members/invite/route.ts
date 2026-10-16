@@ -1,5 +1,5 @@
 import { demoMutation } from '@/server/demo-sandbox'
-import { companyDisplayName } from '@/lib/brand'
+import {getTeamBranding} from '@/server/branding'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import crypto from 'crypto'
@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
   }
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const companyName = companyDisplayName()
+  const branding=await getTeamBranding(teamId)
+  const companyName = branding.systemName
 
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -92,6 +93,7 @@ export async function POST(req: NextRequest) {
         const delivery = await sendInvitationEmail({
           to: email,
           companyName,
+          brandColor:branding.brandColor,
           role,
           inviteUrl,
           expiresAt,

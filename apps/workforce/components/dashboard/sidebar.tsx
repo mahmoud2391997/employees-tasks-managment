@@ -35,11 +35,11 @@ export function Sidebar({ name, role, permissions, companyName, collapsed, onTog
   return <aside data-collapsed={collapsed} className={`${mobile ? 'flex h-full w-full' : 'fixed inset-y-0 start-0 z-40 hidden w-[var(--sidebar-width)] md:flex'} sidebar h-dvh min-h-0 flex-col overflow-hidden border-e border-brand-200 bg-brand-50 text-slate-800 transition-[width] duration-200`}>
     <div className={`sidebar-header flex h-16 shrink-0 items-center border-b border-brand-200/70 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 px-5'}`}>
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-1.5"><Image src={BRAND.logo} alt={tr(BRAND.name)} width={48} height={48} className="h-full w-full object-contain" /></div>
-        {!collapsed ? <div className="min-w-0"><div className="text-sm font-bold">{companyName}</div><div className="mt-1 text-[10px] text-slate-500">{tr(BRAND.tagline)}</div></div> : null}
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-1.5">{companyName===tr(BRAND.name)?<Image src={BRAND.logo} alt={tr(BRAND.name)} width={48} height={48} className="h-full w-full object-contain" />:<span aria-hidden="true" className="flex h-full w-full items-center justify-center rounded-lg bg-brand-600 text-xl font-bold text-white">{companyName.slice(0,1)}</span>}</div>
+        {!collapsed ? <div className="min-w-0"><div className="text-sm font-bold truncate">{companyName}</div><div className="mt-1 text-[10px] text-slate-500">{tr(BRAND.tagline)}</div></div> : null}
       </div>
       {!collapsed ? <button type="button" onClick={onToggle} aria-label={mobile ? tr('إغلاق') : tr('طي القائمة')} aria-expanded={!collapsed}
-        className="rounded-lg p-1.5 text-brand-500 hover:bg-brand-100 hover:text-brand-700">{mobile ? <X size={18} /> : <ChevronRight size={17} className="rtl:rotate-180" />}</button> : null}
+        className="rounded-lg p-1.5 text-brand-600 hover:bg-brand-100 hover:text-brand-700">{mobile ? <X size={18} /> : <ChevronRight size={17} className="rtl:rotate-180" />}</button> : null}
     </div>
     {collapsed ? <button type="button" onClick={onToggle} aria-label={tr('توسيع القائمة')} aria-expanded={false} className="sidebar-expand mx-auto mt-2 rounded-lg p-1.5 text-slate-500 hover:bg-white/10"><ChevronRight size={17} className="rtl:rotate-180" /></button> : null}
     <nav aria-label={tr('القائمة')} className="sidebar-nav min-h-0 flex-1 space-y-4 px-3 py-3">

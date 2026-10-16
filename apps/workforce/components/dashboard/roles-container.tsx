@@ -218,7 +218,7 @@ function RoleEditor({
           <div className="grid gap-4 md:grid-cols-2">
             {grouped.map(([group, perms]) => (
               <div key={group} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{group}</div>
+                <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{group==='salary'?tr('الرواتب'):group}</div>
                 <div className="space-y-1">
                   {perms.map((p) => {
                     const checked = permissions.includes(p)
@@ -233,7 +233,7 @@ function RoleEditor({
                             setPermissions((prev) => (next ? Array.from(new Set([...prev, p])) : prev.filter((x) => x !== p)))
                           }}
                         />
-                        <span className="ltr font-mono text-xs text-slate-700">{p}</span>
+                        <span className="ltr font-mono text-xs text-slate-700">{p==='salary.view'?tr('عرض الرواتب'):p==='salary.edit'?tr('تعديل الرواتب'):p}</span>
                       </label>
                     )
                   })}

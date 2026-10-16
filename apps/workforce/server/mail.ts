@@ -1,3 +1,4 @@
+import {readableBrandColor} from '@/lib/branding'
 import nodemailer from 'nodemailer'
 
 export class MailNotConfiguredError extends Error {
@@ -124,6 +125,7 @@ function safeHttpUrl(value: string) {
 
 export function buildInvitationEmail(input: {
   companyName: string
+  brandColor?: string
   role: string
   inviteUrl: string
   expiresAt: Date
@@ -143,7 +145,7 @@ export function buildInvitationEmail(input: {
   ].join('\n')
   const html = `
     <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;color:#0f172a;line-height:1.6">
-      <h1 style="font-size:18px">دعوة للانضمام إلى ${escapeHtml(company)}</h1>
+      <h1 style="font-size:18px;color:${readableBrandColor(input.brandColor||'#0f766e')}">دعوة للانضمام إلى ${escapeHtml(company)}</h1>
       <p>تمت دعوتك للانضمام بدور <strong>${escapeHtml(role)}</strong>.</p>
       <p>الرابط صالح حتى <span dir="ltr">${escapeHtml(expires)}</span>.</p>
       <p><a href="${escapeHtml(inviteUrl)}">قبول الدعوة</a></p>
@@ -154,6 +156,7 @@ export function buildInvitationEmail(input: {
 
 export function buildNotificationEmail(input: {
   companyName: string
+  brandColor?: string
   title: string
   message: string
   actionUrl?: string | null
@@ -169,7 +172,7 @@ export function buildNotificationEmail(input: {
   const html = `
     <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;color:#0f172a;line-height:1.6">
       <p>لديك إشعار جديد في <strong>${escapeHtml(company)}</strong>.</p>
-      <h1 style="font-size:18px">${escapeHtml(title)}</h1>
+      <h1 style="font-size:18px;color:${readableBrandColor(input.brandColor||'#0f766e')}">${escapeHtml(title)}</h1>
       <p>${escapeHtml(message)}</p>
       ${actionUrl ? `<p><a href="${escapeHtml(actionUrl)}">فتح الإشعارات</a></p>` : ''}
     </div>
@@ -217,6 +220,7 @@ export async function sendMail(message: OutboundMail) {
 export async function sendInvitationEmail(input: {
   to: string
   companyName: string
+  brandColor?: string
   role: string
   inviteUrl: string
   expiresAt: Date
@@ -229,6 +233,7 @@ export async function sendNotificationEmail(input: {
   deliveryId?: string
   to: string
   companyName: string
+  brandColor?: string
   title: string
   message: string
   actionUrl?: string | null

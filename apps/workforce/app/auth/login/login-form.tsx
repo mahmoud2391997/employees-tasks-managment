@@ -32,8 +32,8 @@ export function LoginForm({ companyName, demoAvailable }: { companyName: string;
         <Card>
           <CardHeader>
             <div className="mb-5 flex flex-col items-center gap-3 text-center">
-              <Image src={BRAND.logo} alt={tr(BRAND.name)} width={112} height={112} preload className="h-28 w-28 object-contain" />
-              <div><div className="text-xl font-bold text-brand-950">{companyName}</div><div className="mt-1 text-xs text-slate-500">{tr(BRAND.tagline)}</div></div>
+              {companyName===tr(BRAND.name)?<Image src={BRAND.logo} alt={tr(BRAND.name)} width={112} height={112} preload className="h-28 w-28 object-contain" />:<span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-3xl bg-brand-600 text-4xl font-bold text-white">{companyName.slice(0,1)}</span>}
+              <div><div className="max-w-full break-words text-xl font-bold text-brand-950">{companyName}</div><div className="mt-1 text-xs text-slate-500">{tr(BRAND.tagline)}</div></div>
             </div>
             <p className="mb-5 text-center text-sm leading-6 text-slate-600">{tr(BRAND.description)}</p>
             <CardTitle>{tr("تسجيل الدخول")}</CardTitle>
