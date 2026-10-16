@@ -17,14 +17,6 @@ const FAILED_WINDOW_MS = 15 * 60 * 1000
 // If/when this project has shared infra (Redis/Upstash/etc), move this to a shared store.
 const failedLoginAttempts = new Map<string, FailedAttempt>()
 
-function getClientIp(req: NextRequest) {
-  const xff = req.headers.get('x-forwarded-for')
-  if (xff) return xff.split(',')[0]?.trim() || 'unknown'
-  const xri = req.headers.get('x-real-ip')
-  if (xri) return xri.trim()
-  return 'unknown'
-}
-
 function pruneExpiredAttempts(now: number) {
   for (const [key, attempt] of failedLoginAttempts.entries()) {
     if (now - attempt.windowStartMs > FAILED_WINDOW_MS) failedLoginAttempts.delete(key)
@@ -49,8 +41,8 @@ export async function POST(req: NextRequest) {
     const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
 
     const email = parsed.data.email.toLowerCase().trim()
-    const ip = getClientIp(req)
-    const key = `${email}|${ip}`
+    // Account-level throttling cannot be bypassed by rotating/spoofing proxy headers.
+    const key = email
     const now = Date.now()
     pruneExpiredAttempts(now)
 

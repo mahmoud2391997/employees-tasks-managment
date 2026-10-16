@@ -20,7 +20,7 @@ describe('POST /api/auth/login rate limiting', () => {
     expect(response.headers.get('set-cookie')).toBeNull()
   })
 
-  it('blocks after 5 failed attempts per email+ip', async () => {
+  it('blocks account guessing after 5 failures even with rotating forwarded IP headers', async () => {
     vi.resetModules()
 
     vi.doMock('@/server/db', () => ({
@@ -39,7 +39,7 @@ describe('POST /api/auth/login rate limiting', () => {
     const { POST } = await import('@/app/api/auth/login/route')
 
     for (let i = 0; i < 5; i++) {
-      const res = await POST(makeReq({ email: 'a@b.com', password: 'bad' }))
+      const res = await POST(makeReq({ email: 'a@b.com', password: 'bad' }, `203.0.113.${i+1}`))
       expect(res.status).toBe(401)
     }
 
