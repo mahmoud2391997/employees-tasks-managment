@@ -11,6 +11,8 @@ export const getTeamBranding=cache(async(teamId:string|null|undefined)=>{
 export const getPublicBranding=cache(async()=>{
  const email=process.env.COMPANY_ADMIN_EMAIL?.trim().toLowerCase()
  if(!resolveWorkforceDatabaseUrl()||!email)return brandingFromDetails(null)
- const team=await prisma.workforceTeam.findFirst({where:{owner:{email}},orderBy:{createdAt:'asc'},select:{details:true}})
- return brandingFromDetails(team?.details)
+ try{const team=await prisma.workforceTeam.findFirst({where:{owner:{email}},orderBy:{createdAt:'asc'},select:{details:true}});return brandingFromDetails(team?.details)}catch{
+  // Branding is optional public presentation: a DB outage must not hide the isolated demo entry.
+  return brandingFromDetails(null)
+ }
 })
