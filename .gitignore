@@ -42,3 +42,6 @@ apps/web/data/
 
 # TypeScript incremental cache
 *.tsbuildinfo
+
+# Local synthetic browser evidence
+test-artifacts/

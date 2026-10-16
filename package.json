@@ -18,9 +18,11 @@
     "verify:local": "node scripts/verify-local.mjs",
     "prestart": "node scripts/check-env.mjs",
     "predeploy": "sh scripts/predeploy.sh",
-    "verify:mail:local": "node scripts/mail-acceptance-local.mjs"
+    "verify:mail:local": "node scripts/mail-acceptance-local.mjs",
+    "verify:ui:local": "node scripts/ui-acceptance-local.mjs"
   },
   "devDependencies": {
+    "playwright": "1.63.0",
     "vite-tsconfig-paths": "^5.1.0",
     "vitest": "4.1.11"
   },
