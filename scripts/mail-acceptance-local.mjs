@@ -31,7 +31,7 @@ async function startApp(smtpEnabled){
 async function stopApp(){if(!app||app.exitCode!==null)return;const ended=new Promise(resolve=>app.once('exit',resolve));app.kill('SIGTERM');await ended}
 async function call(path,body,cookie='',expected=200,headers={}){
  const response=await new Promise((resolve,reject)=>{const request=httpsRequest(site+path,{family:4,ca:readFileSync(join(temp,'cert.pem')),method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',cookie,origin:site,...headers}},result=>{let text='';result.on('data',chunk=>text+=chunk);result.on('end',()=>resolve({status:result.statusCode,text,headers:result.headers,cookie:(result.headers['set-cookie']||[]).map(value=>value.split(';')[0]).join('; ')}))});request.on('error',reject);if(body!==undefined)request.write(JSON.stringify(body));request.end()})
- assert.equal(response.status,expected,`${path}: expected ${expected}, got ${response.status}`);checks++;return {...response,json:()=>JSON.parse(response.text)}
+ if(Array.isArray(expected))assert(expected.includes(response.status),`${path}: unexpected status ${response.status}`);else assert.equal(response.status,expected,`${path}: expected ${expected}, got ${response.status}`);checks++;return {...response,json:()=>JSON.parse(response.text)}
 }
 try{
  execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost,IP:127.0.0.1','-keyout',join(temp,'key.pem'),'-out',join(temp,'cert.pem')],{stdio:'ignore'})
@@ -55,6 +55,9 @@ try{
  for(let attempt=0;attempt<5;attempt++)await call('/api/auth/login',{email:limitedEmail,password:'synthetic-invalid'},'',401,{'x-forwarded-for':`203.0.113.${attempt+1}`})
  await call('/api/auth/login',{email:limitedEmail,password:'synthetic-invalid'},'',429,{'x-forwarded-for':'203.0.113.99'})
  await call('/api/outbox/reconcile',{id:'missing',action:'requeue',reason:'Synthetic reason',workerPaused:true,nonDeliveryConfirmed:true},cookie,403,{origin:'https://foreign.example.test'})
+ const burstEmail=`burst-${randomUUID()}@example.test`
+ const burst=await Promise.all(Array.from({length:6},()=>call('/api/auth/login',{email:burstEmail,password:'synthetic-invalid'},'',[401,429])))
+ assert.equal(burst.filter(response=>response.status===401).length,5);assert.equal(burst.filter(response=>response.status===429).length,1)
  const tag=randomUUID(),email=`invite-${tag}@example.test`,password=randomUUID()+randomUUID()
  const invited=(await call('/api/members/invite',{email,role:'EMPLOYEE'},cookie)).json()
  assert.equal(invited.data.emailSent,true);assert.equal(messages.length,1);assert(messages[0].replace(/=\r\n/g,'').includes(site+'/invite/'+invited.data.invitation.token));checks++

@@ -47,5 +47,5 @@ describe('POST /api/auth/login rate limiting', () => {
     expect(limited.status).toBe(429)
     expect(limited.headers.get('retry-after')).toBeTruthy()
   })
-})
 
+})

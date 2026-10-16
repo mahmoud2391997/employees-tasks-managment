@@ -60,26 +60,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Reserve budget synchronously before database/hash awaits so concurrent
+    // requests cannot all observe the same unused attempt slot.
+    const attempt = existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
+      ? existingAttempt : { count: 0, windowStartMs: now }
+    attempt.count += 1
+    failedLoginAttempts.set(key, attempt)
+
     await ensureCompany()
     const user = await prisma.workforceUser.findUnique({ where: { email } })
     if (!user) {
-      const attempt =
-        existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
-          ? existingAttempt
-          : { count: 0, windowStartMs: now }
-      attempt.count += 1
-      failedLoginAttempts.set(key, attempt)
       return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
     }
 
     const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
     if (!ok) {
-      const attempt =
-        existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
-          ? existingAttempt
-          : { count: 0, windowStartMs: now }
-      attempt.count += 1
-      failedLoginAttempts.set(key, attempt)
       return NextResponse.json({ success: false, message: 'بيانات الدخول غير صحيحة' }, { status: 401 })
     }
 
