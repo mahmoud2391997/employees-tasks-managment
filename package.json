@@ -19,7 +19,9 @@
     "prestart": "node scripts/check-env.mjs",
     "predeploy": "sh scripts/predeploy.sh",
     "verify:mail:local": "node scripts/mail-acceptance-local.mjs",
-    "verify:ui:local": "node scripts/ui-acceptance-local.mjs"
+    "verify:ui:local": "node scripts/ui-acceptance-local.mjs",
+    "roles:guide": "node --experimental-strip-types scripts/generate-role-guide.mjs",
+    "roles:guide:check": "node --experimental-strip-types scripts/generate-role-guide.mjs --check"
   },
   "devDependencies": {
     "playwright": "1.63.0",
