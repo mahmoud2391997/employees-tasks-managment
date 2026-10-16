@@ -83,6 +83,7 @@ try{
  const expiring=(await call('/api/members/invite',{email:`expired-${tag}@example.test`,role:'EMPLOYEE'},cookie)).json()
  await db.workforceInvitation.update({where:{id:expiring.data.invitation.id},data:{expiresAt:new Date(Date.now()-1000)}})
  await call('/api/invitations/accept',{token:expiring.data.invitation.token,password,firstName:'Synthetic'},'',410)
+ if(process.env.WORKFORCE_UI_ACCEPTANCE==='1'){const {runWorkforceUiJourney}=await import('./ui-journey-local.mjs');await runWorkforceUiJourney({site,env,messages,db})}
  completed=true
  console.log(`Local HTTPS invitation, TLS SMTP catcher and reconciliation acceptance passed: ${checks} checks; no external messages.`)
 }finally{
