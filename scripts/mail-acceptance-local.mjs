@@ -22,7 +22,7 @@ const appPort=Number(process.env.MAIL_TEST_APP_PORT||4363),sitePort=Number(proce
 const site=`https://localhost:${sitePort}`,messages=[],sockets=new Set()
 let app,smtp,proxy,checks=0,completed=false
 const logFd=openSync(join(temp,'app.log'),'w',0o600)
-const env={...process.env,NODE_ENV:'production',COMPANY_NAME:'Synthetic mail acceptance',COMPANY_ADMIN_EMAIL:'owner@example.test',COMPANY_ADMIN_PASSWORD:process.env.COMPANY_ADMIN_PASSWORD||randomUUID()+randomUUID(),WORKFORCE_JWT_SECRET:randomUUID()+randomUUID(),NOTIFICATION_OUTBOX_SECRET:randomUUID()+randomUUID(),WORKFORCE_DEMO_MODE:'on',DEMO_MODE:'on',SITE_URL:site,SMTP_HOST:'',SMTP_FROM:'',SMTP_USER:'',SMTP_PASS:''}
+const env={...process.env,NODE_ENV:'production',COMPANY_NAME:'Synthetic mail acceptance',COMPANY_ADMIN_EMAIL:'owner-'+randomUUID()+'@example.test',COMPANY_ADMIN_PASSWORD:process.env.COMPANY_ADMIN_PASSWORD||randomUUID()+randomUUID(),WORKFORCE_JWT_SECRET:randomUUID()+randomUUID(),NOTIFICATION_OUTBOX_SECRET:randomUUID()+randomUUID(),WORKFORCE_DEMO_MODE:'on',DEMO_MODE:'on',SITE_URL:site,SMTP_HOST:'',SMTP_FROM:'',SMTP_USER:'',SMTP_PASS:''}
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms))
 async function startApp(smtpEnabled){
  app=spawn(process.execPath,[join(root,'apps/workforce/node_modules/next/dist/bin/next'),'start','--hostname','127.0.0.1','--port',String(appPort)],{cwd:join(root,'apps/workforce'),env:{...env,...(smtpEnabled?{SMTP_HOST:'127.0.0.1',SMTP_PORT:String(smtpPort),SMTP_SECURE:'true',SMTP_FROM:'fixture@example.test',NODE_EXTRA_CA_CERTS:join(temp,'cert.pem')}:{})},stdio:['ignore',logFd,logFd]})
