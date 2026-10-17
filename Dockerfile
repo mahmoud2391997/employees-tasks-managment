@@ -3,7 +3,7 @@ ENV COREPACK_HOME=/opt/corepack
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/* && corepack enable
 COPY . .
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --fetch-timeout=600000
 RUN pnpm -C packages/workforce-database generate
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm test && pnpm -C apps/workforce build
