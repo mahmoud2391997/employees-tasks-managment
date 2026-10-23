@@ -292,7 +292,8 @@ function InviteCard({
   const tr = useTranslations()
 
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState(roleOptions[0]?.value ?? 'EMPLOYEE')
+  const defaultRole = roleOptions.some(option => option.value === 'EMPLOYEE') ? 'EMPLOYEE' : ''
+  const [role, setRole] = useState(defaultRole)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [mode, setMode] = useState<'invite' | 'reactivate'>('invite')
@@ -323,6 +324,7 @@ function InviteCard({
             return
           }
           setEmail('')
+          setRole(defaultRole)
           setMode('invite')
           onInvited({ url: json?.data?.inviteUrl ?? '', emailSent: Boolean(json?.data?.emailSent) })
         }}
@@ -339,7 +341,8 @@ function InviteCard({
           />
         </label>
         <label className="block text-sm font-medium">
-          {tr("الدور")}<Select className="mt-2" value={role} onChange={(e) => setRole(e.target.value)}>
+          {tr("الدور")}<Select className="mt-2" value={role} required={mode === 'invite'} onChange={(e) => setRole(e.target.value)}>
+            <option value="" disabled>—</option>
             {roleOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {tr(o.value)}

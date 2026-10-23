@@ -16,6 +16,7 @@
     "check": "pnpm typecheck && pnpm test",
     "dev:setup": "node scripts/setup-dev.mjs",
     "verify:local": "node scripts/verify-local.mjs",
+    "verify:fixes:local": "node scripts/verify-production-fixes-local.mjs",
     "prestart": "node scripts/check-env.mjs",
     "predeploy": "sh scripts/predeploy.sh",
     "verify:mail:local": "node scripts/mail-acceptance-local.mjs",

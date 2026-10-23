@@ -1,4 +1,5 @@
 export const english: Record<string, string> = {
+  'خدمة الدخول غير متاحة مؤقتاً، حاول لاحقاً': 'Sign-in is temporarily unavailable. Please try again later.',
   'الرواتب':'Payroll','عرض الرواتب':'View salary','تعديل الرواتب':'Edit salary',
   'اسم النظام':'System name','لون الهوية':'Brand color','الراتب':'Salary','salary':'Salary','salary.view':'View salary','salary.edit':'Edit salary','صلاحية تعديل الرواتب مطلوبة':'Salary editing permission required','بيانات الهوية غير صحيحة':'Invalid branding settings',
   'مرجع الرسالة': 'Message reference',

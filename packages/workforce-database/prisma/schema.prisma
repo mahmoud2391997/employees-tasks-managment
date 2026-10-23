@@ -9,6 +9,14 @@ datasource db {
   url      = env("WORKFORCE_DATABASE_URL")
 }
 
+model WorkforceLoginAttempt {
+  key       String   @id @db.VarChar(64)
+  attempts  Int
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
 enum WorkforceEmployeeStatus {
   ACTIVE
   INACTIVE

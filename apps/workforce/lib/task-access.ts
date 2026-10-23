@@ -16,6 +16,6 @@ export function canModifyTask(actor: TaskActor, task: TaskOwnership, action: 'ed
 export function taskVisibilityWhere(teamId: string, profile: { id: string; role: string } | null, permissions: readonly string[]) {
   if (!profile || !permissions.includes('tasks.view')) return { teamId, id: '__no_visible_tasks__' }
   if (profile.role === 'ADMIN') return { teamId }
-  if (profile.role === 'MANAGER') return { teamId, createdById: profile.id }
+  if (profile.role === 'MANAGER') return { teamId, OR: [{ createdById: profile.id }, { assigneeId: profile.id }] }
   return { teamId, assigneeId: profile.id }
 }

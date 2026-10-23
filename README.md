@@ -4,6 +4,8 @@ A virtual office for departments, teams, and tasks. The interface uses a teal an
 
 # Workforce
 
+See [23 October production fixes](docs/production-fixes-2026-10-23.md) for the current manager-task, invitation-default and shared-login-limit candidate, its tested scope and release prerequisites.
+
 Arabic, RTL employee and task management for a single company. Next.js App Router and React provide the dashboard and API; Prisma stores data in PostgreSQL. Access is invitation-only, with built-in and custom permission roles.
 
 ## Local development

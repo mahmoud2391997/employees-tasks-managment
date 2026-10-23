@@ -1,27 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { reserveLoginAttempt } from '@/server/auth/login-rate-limit'
 
 export const runtime = 'nodejs'
-
-type FailedAttempt = {
-  count: number
-  windowStartMs: number
-}
-
-const MAX_FAILED_ATTEMPTS = 5
-const FAILED_WINDOW_MS = 15 * 60 * 1000
-// NOTE: This limiter is intentionally in-memory only.
-// - It resets on redeploy / cold start.
-// - It does not work correctly with multiple server instances (each instance has its own counter).
-// If/when this project has shared infra (Redis/Upstash/etc), move this to a shared store.
-const failedLoginAttempts = new Map<string, FailedAttempt>()
-
-function pruneExpiredAttempts(now: number) {
-  for (const [key, attempt] of failedLoginAttempts.entries()) {
-    if (now - attempt.windowStartMs > FAILED_WINDOW_MS) failedLoginAttempts.delete(key)
-  }
-}
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -41,31 +23,22 @@ export async function POST(req: NextRequest) {
     const { issueAccessToken, setAuthCookie } = await import('@/server/auth/jwt')
 
     const email = parsed.data.email.toLowerCase().trim()
-    // Account-level throttling cannot be bypassed by rotating/spoofing proxy headers.
-    const key = email
-    const now = Date.now()
-    pruneExpiredAttempts(now)
-
-    const existingAttempt = failedLoginAttempts.get(key)
-    if (existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS) {
-      if (existingAttempt.count >= MAX_FAILED_ATTEMPTS) {
-        const retryAfterMs = Math.max(0, FAILED_WINDOW_MS - (now - existingAttempt.windowStartMs))
-        return NextResponse.json(
-          { success: false, message: 'محاولات كثيرة، حاول لاحقاً' },
-          {
-            status: 429,
-            headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
-          },
-        )
-      }
+    // Do not fall back to per-process counters or issue sessions when the shared store fails.
+    let attempt
+    try {
+      attempt = await reserveLoginAttempt(email)
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'خدمة الدخول غير متاحة مؤقتاً، حاول لاحقاً' },
+        { status: 503, headers: { 'Retry-After': '60' } },
+      )
     }
-
-    // Reserve budget synchronously before database/hash awaits so concurrent
-    // requests cannot all observe the same unused attempt slot.
-    const attempt = existingAttempt && now - existingAttempt.windowStartMs <= FAILED_WINDOW_MS
-      ? existingAttempt : { count: 0, windowStartMs: now }
-    attempt.count += 1
-    failedLoginAttempts.set(key, attempt)
+    if (!attempt.allowed) {
+      return NextResponse.json(
+        { success: false, message: 'محاولات كثيرة، حاول لاحقاً' },
+        { status: 429, headers: { 'Retry-After': String(attempt.retryAfterSeconds) } },
+      )
+    }
 
     await ensureCompany()
     const user = await prisma.workforceUser.findUnique({ where: { email } })
@@ -84,7 +57,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'هذا الحساب غير مفعل في الشركة' }, { status: 403 })
     }
 
-    failedLoginAttempts.delete(key)
     const token = await issueAccessToken({ sub: user.id, email: user.email, version: user.authVersion ?? 0 })
     const res = NextResponse.json({ success: true })
     setAuthCookie(res, token)

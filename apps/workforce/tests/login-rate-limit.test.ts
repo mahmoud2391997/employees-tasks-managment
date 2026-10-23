@@ -1,51 +1,50 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-function makeReq(body: any, ip = '203.0.113.10') {
-  return {
-    headers: new Headers({ 'x-forwarded-for': ip }),
-    json: async () => body,
-  } as any
-}
+const { reserve, ensureCompany, findUser, issueToken } = vi.hoisted(() => ({
+  reserve: vi.fn(), ensureCompany: vi.fn(), findUser: vi.fn(), issueToken: vi.fn(),
+}))
+vi.mock('@/server/auth/login-rate-limit', () => ({ reserveLoginAttempt: reserve }))
+vi.mock('@/server/company', () => ({ ensureCompany }))
+vi.mock('@/server/db', () => ({ prisma: { workforceUser: { findUnique: findUser } } }))
+vi.mock('@/server/auth/jwt', () => ({ issueAccessToken: issueToken, setAuthCookie: vi.fn() }))
 
-describe('POST /api/auth/login rate limiting', () => {
-  it('does not authenticate configured admin credentials during a database outage', async () => {
-    vi.resetModules()
-    vi.doMock('@/server/company', () => ({ ensureCompany: vi.fn().mockRejectedValue(new Error('Prisma unavailable')) }))
-    const issueAccessToken = vi.fn()
-    vi.doMock('@/server/auth/jwt', () => ({ issueAccessToken, setAuthCookie: vi.fn() }))
+const request = (email = 'Person@Example.com') => ({
+  headers: new Headers({ 'x-forwarded-for': '203.0.113.25' }),
+  json: async () => ({ email, password: 'bad-password' }),
+}) as any
+
+beforeEach(() => {
+  reserve.mockResolvedValue({ allowed: true, retryAfterSeconds: 900 })
+  ensureCompany.mockResolvedValue(undefined)
+  findUser.mockResolvedValue(null)
+})
+
+describe('shared login guard', () => {
+  it('fails closed before provisioning, lookup or token issuance when the store is unavailable', async () => {
+    reserve.mockRejectedValue(new Error('database unavailable'))
     const { POST } = await import('@/app/api/auth/login/route')
-    const response = await POST(makeReq({ email: 'admin@company.local', password: 'change-me-please' }))
-    expect(response.status).toBe(500)
-    expect(issueAccessToken).not.toHaveBeenCalled()
+    const response = await POST(request())
+    expect(response.status).toBe(503)
+    expect(response.headers.get('retry-after')).toBe('60')
     expect(response.headers.get('set-cookie')).toBeNull()
+    expect(ensureCompany).not.toHaveBeenCalled()
+    expect(findUser).not.toHaveBeenCalled()
+    expect(issueToken).not.toHaveBeenCalled()
   })
-
-  it('blocks account guessing after 5 failures even with rotating forwarded IP headers', async () => {
-    vi.resetModules()
-
-    vi.doMock('@/server/db', () => ({
-      prisma: {
-        workforceUser: {
-          findUnique: vi.fn().mockResolvedValue(null),
-        },
-      },
-    }))
-    vi.doMock('@/server/company', () => ({ ensureCompany: vi.fn().mockResolvedValue(undefined) }))
-    vi.doMock('@/server/auth/jwt', () => ({
-      issueAccessToken: vi.fn(),
-      setAuthCookie: vi.fn(),
-    }))
-
+  it('returns a shared throttle decision without attempting authentication', async () => {
+    reserve.mockResolvedValue({ allowed: false, retryAfterSeconds: 743 })
     const { POST } = await import('@/app/api/auth/login/route')
-
-    for (let i = 0; i < 5; i++) {
-      const res = await POST(makeReq({ email: 'a@b.com', password: 'bad' }, `203.0.113.${i+1}`))
-      expect(res.status).toBe(401)
-    }
-
-    const limited = await POST(makeReq({ email: 'a@b.com', password: 'bad' }))
-    expect(limited.status).toBe(429)
-    expect(limited.headers.get('retry-after')).toBeTruthy()
+    const response = await POST(request())
+    expect(response.status).toBe(429)
+    expect(response.headers.get('retry-after')).toBe('743')
+    expect(reserve).toHaveBeenCalledWith('person@example.com')
+    expect(findUser).not.toHaveBeenCalled()
+    expect(issueToken).not.toHaveBeenCalled()
   })
-
+  it('reserves attempts for nonexistent accounts before checking their existence', async () => {
+    const { POST } = await import('@/app/api/auth/login/route')
+    expect((await POST(request())).status).toBe(401)
+    expect(reserve.mock.invocationCallOrder[0]).toBeLessThan(findUser.mock.invocationCallOrder[0])
+    expect(issueToken).not.toHaveBeenCalled()
+  })
 })
