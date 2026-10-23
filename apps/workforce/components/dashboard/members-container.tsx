@@ -47,6 +47,7 @@ export function MembersContainer({
   initialInvitations,
   roles,
   permissions,
+  emailAvailable,
 }: {
   initialMembers: Member[]
   initialTotal: number
@@ -54,6 +55,7 @@ export function MembersContainer({
   initialInvitations: Invitation[]
   roles: RoleOption[]
   permissions: string[]
+  emailAvailable: boolean
 }) {
   const tr = useTranslations()
 
@@ -124,6 +126,7 @@ export function MembersContainer({
       {canInvite ? (
         <InviteCard
           roleOptions={roleOptions}
+          emailAvailable={emailAvailable}
           onInvited={async (result) => {
             setInviteUrl(result.url)
             setEmailNotice(result.emailSent ? tr("تم إرسال الدعوة إلى البريد الإلكتروني.") : tr("لم يُرسل البريد. انسخ الرابط وأرسله يدوياً."))
@@ -284,9 +287,11 @@ export function MembersContainer({
 
 function InviteCard({
   roleOptions,
+  emailAvailable,
   onInvited,
 }: {
   roleOptions: Array<{ value: string; label: string }>
+  emailAvailable: boolean
   onInvited: (result: { url: string; emailSent: boolean }) => void
 }) {
   const tr = useTranslations()
@@ -294,6 +299,7 @@ function InviteCard({
   const [email, setEmail] = useState('')
   const defaultRole = roleOptions.some(option => option.value === 'EMPLOYEE') ? 'EMPLOYEE' : ''
   const [role, setRole] = useState(defaultRole)
+  const [delivery, setDelivery] = useState<'email' | 'link'>(emailAvailable ? 'email' : 'link')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [mode, setMode] = useState<'invite' | 'reactivate'>('invite')
@@ -308,7 +314,7 @@ function InviteCard({
           setPending(true)
           setError('')
           const endpoint = mode === 'reactivate' ? '/api/members/reactivate' : '/api/members/invite'
-          const body = mode === 'reactivate' ? { email } : { email, role }
+          const body = mode === 'reactivate' ? { email } : { email, role, delivery }
           const res = await apiFetch(endpoint, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -325,6 +331,7 @@ function InviteCard({
           }
           setEmail('')
           setRole(defaultRole)
+          setDelivery(emailAvailable ? 'email' : 'link')
           setMode('invite')
           onInvited({ url: json?.data?.inviteUrl ?? '', emailSent: Boolean(json?.data?.emailSent) })
         }}
@@ -350,9 +357,17 @@ function InviteCard({
             ))}
           </Select>
         </label>
+        <label className="block text-sm font-medium md:col-span-3">
+          {tr('طريقة الدعوة')}
+          <Select className="mt-2" value={delivery} disabled={mode === 'reactivate'} onChange={e => setDelivery(e.target.value as 'email' | 'link')}>
+            <option value="link">{tr('رابط دعوة خاص')}</option>
+            <option value="email" disabled={!emailAvailable}>{tr('البريد الإلكتروني')}</option>
+          </Select>
+          <span className="mt-1 block text-xs text-slate-500">{tr(delivery === 'link' ? 'شارك الرابط مع الشخص المدعو فقط. لن يُرسل بريد إلكتروني.' : 'ستُرسل الدعوة عبر البريد الإلكتروني.')}</span>
+        </label>
         {error ? <div className="md:col-span-3 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2 text-sm text-[#cf222e]">{error}</div> : null}
         <Button className="md:col-span-3 w-full" disabled={pending} type="submit">
-          {pending ? '...' : mode === 'reactivate' ? tr("إعادة التفعيل") : tr("إرسال الدعوة")}
+          {pending ? '...' : mode === 'reactivate' ? tr("إعادة التفعيل") : delivery === 'link' ? tr('إنشاء رابط دعوة') : tr("إرسال الدعوة")}
         </Button>
       </form>
     </Card>

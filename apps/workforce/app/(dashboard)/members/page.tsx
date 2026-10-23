@@ -5,6 +5,7 @@ import { getTranslations } from '@/lib/i18n/server'
 import { getServerSession } from '@/server/auth/server-session'
 import { FALLBACK_ADMIN_ID } from '@/server/company'
 import { prisma } from '@/server/db'
+import { readSmtpConfig } from '@/server/mail'
 import { MembersContainer } from '@/components/dashboard/members-container'
 import { VirtualLoginNotice } from '@/components/dashboard/virtual-login-notice'
 import { canViewAllEmails, redactEmailForViewer } from '@/lib/email-privacy'
@@ -113,6 +114,7 @@ export default async function MembersPage() {
         initialInvitations={safeInvitations as any}
         roles={roles as any}
         permissions={session.permissions as any}
+        emailAvailable={!sampleData && Boolean(readSmtpConfig())}
       />
     </main>
   )

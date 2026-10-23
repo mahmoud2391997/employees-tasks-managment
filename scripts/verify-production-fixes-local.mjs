@@ -54,6 +54,7 @@ async function call(path, { port = 4441, cookie = '', body, method = body === un
 async function login(email, port = 4441) { return (await call('/api/auth/login', { port, body: { email, password } })).cookie }
 try {
   await start(4441); await start(4442)
+  assert.deepEqual(await (await call('/api/health')).json(), { status: 'ok' }); checks++
   const adminCookie = await login(env.COMPANY_ADMIN_EMAIL)
   const owner = await db.workforceUser.findUniqueOrThrow({ where: { email: env.COMPANY_ADMIN_EMAIL }, include: { profile: true } })
   const teamId = owner.profile.teamId
@@ -72,6 +73,14 @@ try {
   const foreignOwner = await db.workforceUser.create({ data: { email: `foreign-owner-${tag}@example.invalid`, passwordHash } })
   const foreignTeam = await db.workforceTeam.create({ data: { name: 'Foreign fixture', ownerId: foreignOwner.id } })
   const foreign = await user('ADMIN', 'foreign', foreignTeam.id)
+  const manualEmail = `manual-${tag}@example.invalid`
+  const manual = (await (await call('/api/members/invite', { cookie: adminCookie, body: { email: manualEmail, role: 'EMPLOYEE', delivery: 'link' } })).json()).data
+  assert.equal(manual.emailSent, false); checks++
+  const accepted = await call('/api/invitations/accept', { body: { token: manual.invitation.token, password, firstName: 'Manual fixture' } })
+  assert(accepted.cookie); checks++
+  assert.equal((await db.workforceProfile.findUniqueOrThrow({ where: { email: manualEmail } })).teamId, teamId); checks++
+  await call('/api/invitations/accept', { body: { token: manual.invitation.token, password, firstName: 'Repeated' }, expected: 409 })
+  await call('/api/members/invite', { cookie: employee.cookie, body: { email: `forbidden-manual-${tag}@example.invalid`, role: 'EMPLOYEE', delivery: 'link' }, expected: 403 })
   const dep = await db.workforceDepartment.create({ data: { teamId, name: 'Managed fixture department', managerId: manager.id } })
   await db.workforceEmployee.create({ data: { teamId, profileId: employee.id, departmentId: dep.id, salary: '1234.56' } })
   const assigned = (await (await call('/api/tasks', { cookie: adminCookie, body: { title: `Assigned manager ${tag}`, assigneeId: manager.id, departmentId: dep.id } })).json()).data
@@ -134,6 +143,7 @@ try {
   await call('/api/auth/login', { body: { email: manager.email, password }, expected: 429 })
   await db.$executeRawUnsafe('ALTER TABLE "WorkforceLoginAttempt" RENAME TO "WorkforceLoginAttempt_fixture_unavailable"')
   try {
+    assert.deepEqual(await (await call('/api/health', { expected: 503 })).json(), { status: 'unavailable' }); checks++
     const outage = await call('/api/auth/login', { body: { email: env.COMPANY_ADMIN_EMAIL, password }, expected: 503 })
     assert.equal(outage.res.headers.get('set-cookie'), null); checks++
   } finally { await db.$executeRawUnsafe('ALTER TABLE "WorkforceLoginAttempt_fixture_unavailable" RENAME TO "WorkforceLoginAttempt"') }

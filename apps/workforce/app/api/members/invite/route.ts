@@ -15,6 +15,7 @@ export const runtime = 'nodejs'
 const bodySchema = z.object({
   email: z.string().email(),
   role: z.string().trim().min(1).optional(),
+  delivery: z.enum(['email', 'link']).default('email'),
 })
 
 async function generateUniqueToken() {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
   })
   if (pending) return NextResponse.json({ success: false, message: 'تم إرسال دعوة مسبقاً لهذا البريد' }, { status: 409 })
 
-  if (process.env.NODE_ENV === 'production' && !readSmtpConfig()) {
+  if (parsed.data.delivery === 'email' && process.env.NODE_ENV === 'production' && !readSmtpConfig()) {
     return NextResponse.json({ success: false, message: 'إعدادات البريد غير مكتملة' }, { status: 503 })
   }
 
@@ -89,6 +90,9 @@ export async function POST(req: NextRequest) {
         include: { invitedBy: { select: { id: true, email: true, firstName: true, lastName: true } } },
       })
       const inviteUrl = `${origin}/invite/${created.token}`
+      if (parsed.data.delivery === 'link') {
+        return NextResponse.json({ success: true, data: { invitation: created, inviteUrl, emailSent: false } })
+      }
       try {
         const delivery = await sendInvitationEmail({
           to: email,
